@@ -1,4 +1,4 @@
 lin-venv
 win-venv
 .env
-printoapp/__pycache__
+printoapp/__pycache__/
