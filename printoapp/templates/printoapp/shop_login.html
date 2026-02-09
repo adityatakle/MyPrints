@@ -1,0 +1,23 @@
+{% extends 'printoapp/layout.html' %}
+
+{% block body %}
+
+<form action="{% url 'shop_login' %}" method="POST">
+    {% csrf_token %}
+    
+    <div class="login-group">
+        <p>Shop Login</p>
+        
+        {% if message %}
+        <div style="color: red; margin-bottom: 10px; font-weight: bold;">
+            {{ message }}
+        </div>
+        {% endif %}
+
+        <input type="text" name="username" id="username" placeholder="Username/Email" autocomplete="username"><br>
+        <input type="password" name="password" id="password" placeholder="Password" autocomplete="current-password"><br>
+        <button type="submit">Login</button>
+    </div>
+</form>
+
+{% endblock %}

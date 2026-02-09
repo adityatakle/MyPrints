@@ -1,0 +1,59 @@
+{
+    "shop_token": "2",
+    "shop_id": "1",
+    "updated_timestamp": "2026-01-01 22:42:00",
+    "printer_info": [
+        {
+            "name": "OneNote (Desktop)",
+            "is_color": true,
+            "is_b2b": false,
+            "page_types": [
+                "US_Letter",
+                "US_Tabloid",
+                "US_Legal",
+                "US_Executive",
+                "A3",
+                "A4",
+                "B4_(JIS)",
+                "B5_(JIS)",
+                "US_Envelope_#10",
+                "US_Envelope_Monarch"
+            ]
+        },
+        {
+            "name": "Microsoft Print to PDF",
+            "is_color": true,
+            "is_b2b": false,
+            "page_types": [
+                "US_Letter",
+                "US_Tabloid",
+                "US_Legal",
+                "US_Statement",
+                "US_Executive",
+                "A3",
+                "A4",
+                "A5",
+                "B4_(JIS)",
+                "B5_(JIS)",
+                "US_Envelope_#9",
+                "US_Envelope_#10",
+                "C_size_sheet",
+                "D_size_sheet",
+                "E_size_sheet",
+                "Envelope_DL",
+                "Envelope_C5",
+                "Envelope_C4",
+                "Envelope_B5",
+                "US_Envelope_Monarch",
+                "Japanese_Postcard",
+                "A2",
+                "A6",
+                "Japanese_Envelope_Kaku_#2",
+                "Japanese_Envelope_Kaku_#3",
+                "Japanese_Envelope_Chou_#3",
+                "Japanese_Envelope_Chou_#4",
+                "Japanese_Envelope_You_#4"
+            ]
+        }
+    ]
+}

@@ -1,0 +1,41 @@
+{% extends 'printoapp/layout.html' %}
+{% load static %}
+{% block body %}
+    <div class="header">
+        <p class="header-name">MyPrints</p>
+        <div class="cart-container">
+            <a href = "{% url 'cart' shop_id=shop_id user_id=user_id%}"><img class="header-cart"  src = "{% static 'printoapp/cart.png' %}"><a href = "{% url 'cart' shop_id=shop_id user_id=user_id%}"></a>
+            <span id="header-number">{{item_number}}</span>
+        </div>
+    </div>
+    <div class="message">
+        {% if success_message %}
+            <p id="success_message">{{ success_message }}</p>
+        {% endif %}
+        {% if error_message %}
+            <p id="error_message">{{ error_message }}</p>
+        {% endif %}
+    </div>
+    <p class="title">UPLOAD DOCUMENT</p>
+    <form method="post" action="{% url 'upload' user_id=user_id shop_id=shop_id %}" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="hidden" name="user_id" id="user_id" value="{{user_id}}">
+        <input type="hidden" name="shop_id" id="shop_id" value="{{shop_id}}">
+        <div class="upload-data">
+            <input type="file" name="document" id="doc" class="hidden-doc" accept=".pdf">
+            <label for="doc" class="doc-label">
+                <svg class="upload-pic" viewBox="-2.4 -2.4 28.80 28.80" fill="none" xmlns="http://www.w3.org/2000/svg" transform="matrix(1, 0, 0, 1, 0, 0)rotate(0)"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round" stroke="#972b2b" stroke-width="0.048"></g><g id="SVGRepo_iconCarrier"> <path d="M18.5 20L18.5 14M18.5 14L21 16.5M18.5 14L16 16.5" stroke="#000000" stroke-width="0.8399999999999999" stroke-linecap="round" stroke-linejoin="round"></path> <path d="M12 19H5C3.89543 19 3 18.1046 3 17V7C3 5.89543 3.89543 5 5 5H9.58579C9.851 5 10.1054 5.10536 10.2929 5.29289L12 7H19C20.1046 7 21 7.89543 21 9V11" stroke="#000000" stroke-width="0.8399999999999999" stroke-linecap="round" stroke-linejoin="round"></path> </g></svg>
+                <h3 class="main-text">Choose a file or drag & drop it here.</h3>
+                <p class="sub-text">PDF format ONLY.</p>
+            </label>
+            <br>
+        </div>
+
+        <div class="page_type"></div>
+        <div class="item-info"></div>
+
+        <span class="cart-btn"><button ><a href="{% url 'cart' shop_id=shop_id user_id=user_id %}"> Cart </a> </button></span>
+
+        
+    </form>
+{% endblock %}

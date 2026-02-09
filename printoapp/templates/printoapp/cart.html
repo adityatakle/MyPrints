@@ -1,0 +1,67 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>{% block title %}MyPrints{% endblock %}</title>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+        <link href="{% static 'printoapp/style.css' %}" rel="stylesheet">
+        <script src="{% static 'printoapp/script.js' %}"></script>
+    </head>
+    <body>
+        <div class="body">
+            <div class="header">
+            <a href="{% url 'upload' user_id=user_id shop_id=shop_id %}" class="header-name">MyPrints</a>
+            <a href=""></a>
+        </div>
+        <form method="post" action="{% url 'cart' user_id=user_id shop_id=shop_id %}">
+            {% csrf_token %}
+            <div class="cart-item">
+                
+                <input type="hidden" value="{{user_id}}" name="user_id">
+                <input type="hidden" value="{{shop_id}}" name="shop_id">
+                {% if cart_items %}
+                    {% for item in cart_items %}
+                    <div class="item">
+                        <span class="item-name">{{item.file_id}}</span>
+                        <span class="item-quantity">
+                            <button type="submit" value="{{item.id}}" name ="subtract" class="subtract-quantity">-</button>
+                            <span>{{item.quantity}}</span>
+                            <button value="{{item.id}}" name="add" type="submit" class="add-quantity">+</button>
+                            
+                        </span>
+                        <button type="submit" name="remove-item" class="remove-item" value="{{ item.id }}"><img class="bin" src="{% static 'printoapp/bin.png' %}"></button>
+                        <span class="item-total">₹{{item.total_amount}}</span>
+                        
+                        <span class="item-details">
+                            <span class="item-pages">Pages: {{item.total_pages}}</span>
+                            {% if item.shop_item.is_color %}
+                                <span class="item-color">Color</span>
+                            {% else %}
+                                <span class="item-color">Black and White</span>
+                            {% endif %}
+
+                            {% if item.shop_item.is_b2b %}
+                                <span class="item-side">Double side</span>
+                            {% else %}
+                                <span class="item-side">Single side</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                    {% endfor %}
+                    <div>
+                        <span><bold>Cancellation policy:</bold><br>Please double-check your order details. Orders are non-refundable once placed. </span>
+                    </div>
+                    <div class="order-summary">
+                        <button class="total-amount"><span >Pay: {{total_amount }}</span></button>
+                    </div>
+                {% else %}
+                    <div>
+                        Nothing in cart. Add docs.
+                    </div>
+                {% endif %}    
+            </div>
+        </form>
+        </div>
+    </body>
+</html>

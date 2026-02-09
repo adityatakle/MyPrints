@@ -1,0 +1,32 @@
+{% extends 'printoapp/layout.html' %}
+{% load static %}
+{% block body %}
+    <div class="main-header">
+        <p id="name"> MyPrints </p>
+        
+        </div>
+    <div class="entry-content">
+        <img src="{%static 'printoapp/top_corner.svg'%}" id="top_corner">
+        <p id="tagline"> Print docs without worrying about<br> <strong> Privacy, Crowd and Headaches. </strong></p>
+        <img src="{%static 'printoapp/bottom-corner.svg'%}" id="bottom_corner"><br>
+        
+        <button id="shops-select"><a href="{%url 'shops'%}"> Order Print!</a></button><br>
+        <span class="lower-info"><strong>What is MyPrints?</strong><br>
+        Print any document securely at affordable price.<br>
+        MADE FOR STUDENTS BY STUDENT.<br>
+        No signups, No logins
+        Fast, Anonymous, Seamless.
+        Privacy first printing
+        Automatic deletions after collecting prints.
+        Skip the queue, use MyPrints
+        Privacy built in every step.</span>
+    </div>
+    <div class="feedback">
+
+    </div>
+    <div class="footer">
+
+    </div>
+    
+{% endblock %}
+

@@ -1,0 +1,46 @@
+{% extends 'printoapp/layout.html' %}
+
+{% block body %}
+<div class="greetings">
+    <span>Good {{time}}, {{username}}</span>
+    <a class="logout" href="{% url 'shop_logout' %}" > Logout </a>
+</div>
+<div class="container">
+    <div class="options">
+        <button id="selected">My Queue</button><br>
+        <button> My finances </button><br>
+        <button> My account </button>
+    </div>
+    {% if carts %}
+    <div class="content">
+        <table class="table table-bordered border-primary">
+            <thead>
+                <tr>
+                    <th>total pages</th>
+                    <th>total amount</th>
+                    <th>OTP</th>
+                    <th>verify</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cart in carts %}
+                <tr>
+                    <td>{{cart.total_pages}}</td>
+                    <td>{{cart.total_amount}}</td>
+                    <td>0</td>
+                    <td><button class="checkbox" type="submit" value="{{cart.id}}" name="verify">Print given</button></td>
+
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-message">
+    <span >Nothing to see here yet :( Lets wait for magic to happen...</span>
+    </div>
+    {% endif %}
+    
+        
+</div>
+{% endblock %}

@@ -1,0 +1,36 @@
+{% extends 'printoapp/layout.html' %}
+
+{% block body %}
+    <h3>Xerox Shops</h3>    
+    <form action="{% url 'shops' %}" method="POST" class="shops_form">
+        {% csrf_token %}
+        <input type="text" hidden id="user_id" name="user_id">
+        {% for shop in shops_info%}
+        {% if shop.status == "Active" %}
+            {% if now < shop.open_time or now > shop.close_time %}
+            
+                <button type="submit" disabled name="shop_id" value="{{ shop.id }}" class="shops_submit">
+                    <div class="shop-info">
+                        <span name="{{shop.id}}"></span>
+                        <span class="closed">Not open yet.</span><br>
+                        <span >{{shop.name}}</span><br>
+                        <span>{{shop.location}}, {{shop.landmark}}</span>
+                        <span>{{shop.city}}, {{shops.state}}</span><br>
+                        <span>Shop time: {{shop.open_time}} - {{shop.close_time}}</span>
+                    </div>
+                </button>
+            {% else %}
+            <button type="submit" name="shop_id" value="{{ shop.id }}" class="shops_submit">
+                <div class="shop-info">
+                    <span name="{{shop.id}}"></span>
+                    <span >{{shop.name}}</span><br>
+                    <span>{{shop.location}}, {{shop.landmark}}</span>
+                    <span>{{shop.city}}, {{shops.state}}</span><br>
+                    <span>Shop time: {{shop.open_time}} - {{shop.close_time}}</span>
+                </div>
+            </button>
+            {% endif %}
+        {% endif %}
+        {% endfor %}
+    </form>
+{% endblock %}
