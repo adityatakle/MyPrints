@@ -2,4 +2,4 @@ lin-venv
 win-venv
 .env
 printoapp/__pycache__/
-temp_folder
+temp_folder/
