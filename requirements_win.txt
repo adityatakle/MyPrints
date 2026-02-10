@@ -1,0 +1,11 @@
+Django
+fpdf2
+uuid
+Pillow
+pypdf
+boto3
+awscli
+python-dotenv
+requests
+pywin32
+pyinstaller

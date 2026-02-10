@@ -8,4 +8,4 @@ awscli
 python-dotenv
 requests
 cups
-pywin32
+pyinstaller
