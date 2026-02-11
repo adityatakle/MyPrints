@@ -8,8 +8,20 @@ import json
 import sys
 import time
 
-SUMATRA_PATH = r"C:\Users\adity\Downloads\printo\SumatraPDF-3.5.2-64.exe"
-FOLDER_PATH = r"C:\Users\adity\Downloads\printo\temp_folder"
+def write_log(message):
+    with open("printo_logs.txt", "a") as f:
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        f.write(f"[{timestamp}] {message}\n")
+        
+def get_base_path():    
+    if getattr(sys, 'frozen', False):
+        return os.path.dirname(sys.executable)
+    return os.path.dirname(os.path.abspath(__file__))
+
+BASE_PATH = get_base_path()
+SUMATRA_PATH = os.path.join(BASE_PATH, 'SumatraPDF-3.5.2-64.exe')
+FOLDER_PATH = os.path.join(BASE_PATH, 'temp_folder')
+
 BASE_URL = 'https://5cqwb04t-8000.inc1.devtunnels.ms/'
 # Page types supported
 ALL_PAGES_TYPES = {
@@ -50,7 +62,7 @@ def get_printer_capabilities(printer_name):
         
 
     except Exception as e:
-        print(f"Error checking {printer_name}: {e}")
+        write_log(f"Error checking {printer_name}: {e}")
         # Default to safe values
         supports_color = False
         supports_duplex = False
@@ -173,7 +185,7 @@ def decode_status_code(code):
 def print_file(file_path, printer_name, page_type):
     # 1. DEBUG: Check if file actually exists where we think it is
     if not os.path.exists(file_path):
-        print(f"[!] CRITICAL ERROR: File missing at: {file_path}")
+        write_log(f"[!] CRITICAL ERROR: File missing at: {file_path}")
         return False
 
     print_settings = f'paper={page_type},fit'
@@ -187,25 +199,25 @@ def print_file(file_path, printer_name, page_type):
             file_path
         ]
     except Exception as e:
-        print(f"Print issue: {e}")
+        write_log(f"Print issue: {e}")
     
-    print(f"Printing {file_path} by {printer_name}") # Debug command
+    write_log(f"Printing {file_path} by {printer_name}") # Debug command
 
     try:
         # 2. Run SumatraPDF
         result = subprocess.run(command, capture_output=True, text=True)
         
         if result.returncode == 0:
-            print(f"[✓] SumatraPDF sent file to spooler.")
+            write_log(f"[✓] SumatraPDF sent file to spooler.")
             return True
         else:
-            print(f"[X] SumatraPDF Failed. Exit Code: {result.returncode}")
-            print(f"    Error Output: {result.stderr}")
-            print(f"    Standard Output: {result.stdout}")
+            write_log(f"[X] SumatraPDF Failed. Exit Code: {result.returncode}")
+            write_log(f"    Error Output: {result.stderr}")
+            write_log(f"    Standard Output: {result.stdout}")
             return False
 
     except Exception as e:
-        print(f"[!] Python Exception trying to run subprocess : {e}")
+        write_log(f"[!] Python Exception trying to run subprocess : {e}")
         return False
 
 def printer_info():
@@ -233,14 +245,14 @@ def printer_info():
 
         # FIX: Save as "printer_info" because that is what your loop reads
         existing_data["printer_info"] = new_inventory
-        print(f"{existing_data}")
+        write_log(f"{existing_data}")
         with open(DATA_FILE, 'w') as f:
             json.dump(existing_data, f, indent=4)
             
-        print("Printer Inventory Updated Successfully.")
+        write_log("Printer Inventory Updated Successfully.")
 
     except Exception as e:
-        print(f"Error saving printer info: {e}")
+        write_log(f"Error saving printer info: {e}")
 
 
 if __name__ == "__main__":
@@ -256,7 +268,7 @@ if __name__ == "__main__":
     if not os.path.exists(DATA_FILE):
         with open(DATA_FILE, 'w') as f:
             json.dump(DEFAULT_CONFIG, f, indent=4)
-        print(f"OPEN {DATA_FILE} and fill required data manually.")
+        write_log(f"OPEN {DATA_FILE} and fill required data manually.")
         sys.exit()
 
         
@@ -264,7 +276,7 @@ if __name__ == "__main__":
         with open(DATA_FILE, 'r') as f:
             data = json.load(f)
         if data["shop_token"] == "" or data["shop_id"] == "":
-            print(f"DATA_FILE is empty. OPEN FILE AND FILL REQUIRED CREDENTIALS ('Shop_token' and 'Shop_id').")
+            write_log(f"DATA_FILE is empty. OPEN FILE AND FILL REQUIRED CREDENTIALS ('Shop_token' and 'Shop_id').")
             sys.exit()
         
         # FIX: Assign variables so they aren't empty in the URL request
@@ -272,7 +284,7 @@ if __name__ == "__main__":
         shop_id = data["shop_id"]
 
     except Exception as e:
-        print(f"DATA_FILE read error: {e}")
+        write_log(f"DATA_FILE read error: {e}")
     
     ist_offset = timezone(timedelta(hours=5, minutes=30))
             
@@ -289,7 +301,7 @@ if __name__ == "__main__":
         with open(DATA_FILE, 'w') as r:
             json.dump(data, r, indent=4)
     except Exception as e:
-        print(f"timestamp update write error: {e}")
+        write_log(f"timestamp update write error: {e}")
     
 
     while True:
@@ -300,17 +312,17 @@ if __name__ == "__main__":
             response = requests.post(url, headers={'Shop-token':Shop_token, 'Shop-id':shop_id})
             
             if response.status_code != 200:
-                print(f"❌ Error: {response.status_code}")
+                write_log(f"❌ Error: {response.status_code}")
                 
             if response.status_code == 200:
                 items = response.json()
                 items = items.get('items')
-                print(f"Received {len(items)} jobs.")
+                write_log(f"Received {len(items)} jobs.")
                 if not os.path.isdir(FOLDER_PATH):
                     try:
                         os.makedirs(FOLDER_PATH)
                     except Exception as e:
-                        print(f"Unable to make dir : {e}")
+                        write_log(f"Unable to make dir : {e}")
                 for item in items:
                     usable_printers = []
                     try:
@@ -323,10 +335,10 @@ if __name__ == "__main__":
                                             usable_printers.append(printer["name"])
      
                     except Exception as e:
-                        print(f"Exception while reading printers data : {e}")
+                        write_log(f"Exception while reading printers data : {e}")
                     if len(usable_printers) == 0:
-                        print(f"No printer satisfies item's configurations.")
-                        print("Moving to next item")
+                        write_log(f"No printer satisfies item's configurations.")
+                        write_log("Moving to next item")
                         continue
                     if len(usable_printers) != 0:
                         success = False
@@ -334,7 +346,7 @@ if __name__ == "__main__":
                             for printer in usable_printers:
                                 status = get_status(printer) 
                                 if status["error"]:
-                                    print(status)
+                                    write_log(status)
                                     if usable_printers[-1] == printer:
                                         time.sleep(20)
                                     continue
@@ -347,7 +359,7 @@ if __name__ == "__main__":
                                         response = requests.get(url, stream=True)
 
                                         if response.status_code != 200:
-                                            print("Server connection rejected.")
+                                            write_log("Server connection rejected.")
 
                                         if response.status_code == 200:
                                             if not os.path.exists(fr"{FOLDER_PATH}\{item['file_name']}"):
@@ -360,7 +372,7 @@ if __name__ == "__main__":
                                                     os.fsync(f.fileno()) 
                                             
                                                 # 2. WAIT for Windows to unlock the file (Crucial Step)
-                                                print("Download done. Waiting for file unlock...")
+                                                write_log("Download done. Waiting for file unlock...")
                                                 time.sleep(3)
                                             try:
                                                 file_path = fr"{FOLDER_PATH}\{item['file_name']}"
@@ -369,22 +381,22 @@ if __name__ == "__main__":
                                                     time.sleep(1)
                                                     check = get_status(printer)
                                                     if check != "Running":
-                                                        print(f"Error printing due to printer. {check}")
+                                                        write_log(f"Error printing due to printer. {check}")
                                                 except Exception as e:
-                                                    print(f"print error: {e}")
+                                                    write_log(f"print error: {e}")
                                                 if success:
-                                                    print("Added to queue for print.")
+                                                    write_log("Added to queue for print.")
                                                 
                                                 try:
                                                     url = f'{BASE_URL}my_shop/file_update/'
                                                     response = requests.post(url, headers={'Shop-token':Shop_token, 'Shop-id':shop_id, 'item-id':str(item["id"])})
                                                 except Exception as e:
-                                                    print(f"Error Updating status after printing: {e}")                                          
+                                                    write_log(f"Error Updating status after printing: {e}")                                          
                                                 break
                                             except Exception as e:
-                                                print(f"Error printing file. {e}")
+                                                write_log(f"Error printing file. {e}")
                                     except Exception as e:
-                                        print(f"Error while downloading file from server: {e}")
+                                        write_log(f"Error while downloading file from server: {e}")
                                     
                                     # If we broke out of the download/print block successfully
                                     if success:
@@ -397,12 +409,12 @@ if __name__ == "__main__":
                                 if (status["readable_status"] == "Ready" and status["queue_size"] != 0) or (status["readable_status"] == "Printing"):
                                     continue
                                 else:
-                                    print(status["readable_status"])
+                                    write_log(status["readable_status"])
                                     continue
                             
                             if success:
                                 break
         except Exception as e:
-            print(f"Connection error: {e}")
-        print("Waiting for file....")
+            write_log(f"Connection error: {e}")
+        write_log("Waiting for file....")
         time.sleep(5)
