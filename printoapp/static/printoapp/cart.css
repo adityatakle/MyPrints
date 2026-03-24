@@ -1,0 +1,498 @@
+/* ================================================================
+   MyPrints — cart.css
+   Place at: static/printoapp/cart.css
+   Mobile-first. Matches upload/shops/landing design tokens.
+   ================================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Readex+Pro:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap');
+
+/* ── TOKENS ──────────────────────────────────────────────────── */
+:root {
+  --blue:       #007BFF;
+  --blue-d:     #0062d6;
+  --blue-pale:  rgba(0,123,255,0.08);
+  --blue-glow:  rgba(0,123,255,0.22);
+  --mint:       #2DD4BF;
+  --green:      #10b981;
+  --dark:       #0d1117;
+  --mid:        #3d4a5c;
+  --soft:       #7b8a9e;
+  --border:     rgba(0,0,0,0.08);
+  --off:        #f4f6fb;
+  --card:       #ffffff;
+  --r:          16px;
+  --r-sm:       10px;
+  --shadow-sm:  0 1px 4px rgba(0,0,0,0.05);
+  --shadow-md:  0 4px 20px rgba(0,0,0,0.08);
+  --shadow-pay: 0 8px 32px rgba(0,123,255,0.32);
+  --transition: 0.2s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* ── BASE ────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+body.ct-body, body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--off);
+  background-image: radial-gradient(circle, rgba(0,123,255,0.05) 1px, transparent 1px);
+  background-size: 22px 22px;
+  color: var(--dark);
+  margin: 0; padding: 0;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+}
+
+.body { padding: 0 !important; max-width: 100% !important; }
+
+/* ── HEADER ──────────────────────────────────────────────────── */
+.ct-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  height: 58px;
+  padding: 0 16px;
+  background: rgba(255,255,255,0.88);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-bottom: 1px solid var(--border);
+}
+
+.ct-back-btn {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: var(--off);
+  border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--dark);
+  text-decoration: none;
+  flex-shrink: 0;
+  transition: background var(--transition), color var(--transition);
+}
+.ct-back-btn:hover { background: var(--blue-pale); color: var(--blue); }
+
+.ct-logo {
+  flex: 1;
+  text-align: center;
+  font-family: 'Readex Pro', sans-serif;
+  font-weight: 800;
+  font-size: 1.2rem;
+  letter-spacing: -0.03em;
+  color: var(--dark);
+  text-decoration: none;
+}
+.ct-logo em { font-style: normal; color: var(--blue); }
+
+.ct-header-right {
+  width: 38px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.ct-item-count {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--soft);
+  white-space: nowrap;
+}
+
+/* ── MAIN ────────────────────────────────────────────────────── */
+.ct-main {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 24px 16px 100px;
+}
+
+.ct-eyebrow {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--blue);
+  margin: 0 0 6px;
+}
+
+.ct-title {
+  font-family: 'Readex Pro', sans-serif;
+  font-size: clamp(1.5rem, 6vw, 2rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--dark);
+  margin: 0 0 20px;
+  line-height: 1.1;
+}
+
+/* ── CART LIST ───────────────────────────────────────────────── */
+.ct-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+/* ── CART ITEM CARD ──────────────────────────────────────────── */
+.ct-item {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 16px;
+  box-shadow: var(--shadow-sm);
+  transition:
+    transform var(--transition),
+    opacity var(--transition),
+    box-shadow var(--transition);
+  position: relative;
+  overflow: hidden;
+}
+
+/* blue left accent */
+.ct-item::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 12%; bottom: 12%;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--blue);
+  opacity: 0.7;
+}
+
+.ct-item:hover { box-shadow: var(--shadow-md); }
+
+/* remove animation */
+.ct-item--removing {
+  animation: ctRemove 0.35s ease forwards;
+}
+@keyframes ctRemove {
+  0%   { transform: translateX(0); opacity: 1; background: #fff; }
+  30%  { background: #fee2e2; }
+  100% { transform: translateX(60px); opacity: 0; max-height: 0; padding: 0; margin: 0; }
+}
+
+/* ── ITEM TOP ROW: icon · name · price ── */
+.ct-item-top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.ct-item-icon {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  background: var(--blue-pale);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--blue);
+  flex-shrink: 0;
+}
+
+.ct-item-name {
+  flex: 1;
+  font-family: 'Readex Pro', sans-serif;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--dark);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ct-item-price {
+  font-family: 'Readex Pro', sans-serif;
+  font-weight: 800;
+  font-size: 1rem;
+  color: var(--dark);
+  white-space: nowrap;
+}
+
+/* ── META TAGS ── */
+.ct-item-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.ct-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: var(--off);
+  color: var(--mid);
+  border: 1px solid var(--border);
+}
+.ct-tag--color {
+  background: rgba(45,212,191,0.1);
+  color: #0d9488;
+  border-color: rgba(45,212,191,0.25);
+}
+
+/* ── CONTROLS ROW: qty stepper + trash ── */
+.ct-item-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* quantity stepper */
+.ct-qty {
+  display: inline-flex;
+  align-items: center;
+  background: var(--off);
+  border: 1.5px solid var(--border);
+  border-radius: 50px;
+  overflow: hidden;
+  height: 40px;
+}
+
+.ct-qty-btn {
+  width: 40px; height: 40px;
+  border: none;
+  background: transparent;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--mid);
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition);
+  flex-shrink: 0;
+}
+.ct-qty-btn:hover { background: rgba(0,123,255,0.08); color: var(--blue); }
+.ct-qty-btn:active { background: rgba(0,123,255,0.15); }
+
+/* add button pulse on click */
+.add-quantity:active {
+  animation: ctQtyPulse 0.25s ease;
+}
+@keyframes ctQtyPulse {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.35); }
+  100% { transform: scale(1); }
+}
+
+.ct-qty-num {
+  min-width: 32px;
+  text-align: center;
+  font-family: 'Readex Pro', sans-serif;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--dark);
+  padding: 0 4px;
+  border-left: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  line-height: 40px;
+}
+
+/* remove button */
+.ct-remove {
+  background: transparent;
+  border: 1.5px solid var(--border);
+  border-radius: 50%;
+  width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: border-color var(--transition), background var(--transition);
+  padding: 0;
+  flex-shrink: 0;
+}
+.ct-remove:hover {
+  border-color: #fca5a5;
+  background: #fee2e2;
+}
+.ct-bin-img {
+  width: 18px; height: 18px;
+  object-fit: contain;
+  opacity: 0.55;
+  transition: opacity var(--transition);
+}
+.ct-remove:hover .ct-bin-img { opacity: 1; }
+
+/* ── CANCELLATION POLICY ─────────────────────────────────────── */
+.ct-policy {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: var(--r-sm);
+  padding: 12px 14px;
+  margin-bottom: 14px;
+}
+
+.ct-policy-icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+
+.ct-policy-text {
+  font-size: 0.78rem;
+  color: #92400e;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ── ORDER SUMMARY BOX ───────────────────────────────────────── */
+.ct-summary {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 16px;
+  margin-bottom: 14px;
+  box-shadow: var(--shadow-sm);
+}
+
+.ct-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.88rem;
+  color: var(--mid);
+  padding: 4px 0;
+}
+
+.ct-free { color: var(--green); font-weight: 700; }
+
+.ct-summary-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 10px 0;
+}
+
+.ct-summary-total {
+  font-family: 'Readex Pro', sans-serif;
+  font-weight: 800;
+  font-size: 1.05rem;
+  color: var(--dark);
+}
+
+/* ── PAY BUTTON ──────────────────────────────────────────────── */
+.ct-pay-btn {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  width: 100% !important;
+  padding: 18px 20px !important;
+  border-radius: 50px !important;
+  border: none !important;
+  background: var(--blue) !important;
+  color: #fff !important;
+  cursor: pointer !important;
+  box-shadow: var(--shadow-pay) !important;
+  transition: background var(--transition), transform var(--transition), box-shadow var(--transition) !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  position: relative;
+  overflow: hidden;
+  /* glow pulse */
+  animation: ctPayGlow 2.5s ease-in-out infinite;
+}
+@keyframes ctPayGlow {
+  0%, 100% { box-shadow: var(--shadow-pay); }
+  50%       { box-shadow: 0 8px 40px rgba(0,123,255,0.50); }
+}
+
+.ct-pay-btn:hover {
+  background: var(--blue-d) !important;
+  transform: translateY(-2px) !important;
+  animation: none !important;
+  box-shadow: 0 12px 36px rgba(0,123,255,0.40) !important;
+}
+.ct-pay-btn:active { transform: scale(0.98) !important; }
+
+.ct-pay-label {
+  font-family: 'Readex Pro', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.ct-pay-amount {
+  font-family: 'Readex Pro', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 800;
+  background: rgba(255,255,255,0.18);
+  border-radius: 50px;
+  padding: 4px 14px;
+}
+
+.ct-pay-arrow {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.18);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: transform var(--transition);
+}
+.ct-pay-btn:hover .ct-pay-arrow { transform: translateX(3px); }
+
+.ct-pay-note {
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--soft);
+  margin: 10px 0 0;
+}
+
+/* ── EMPTY STATE ─────────────────────────────────────────────── */
+.ct-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 60px 24px 40px;
+  gap: 12px;
+}
+
+.ct-empty-icon {
+  font-size: 4rem;
+  animation: ctEmptyBob 3s ease-in-out infinite;
+}
+@keyframes ctEmptyBob {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-10px); }
+}
+
+.ct-empty-title {
+  font-family: 'Readex Pro', sans-serif;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--dark);
+  margin: 0;
+}
+
+.ct-empty-sub {
+  font-size: 0.88rem;
+  color: var(--soft);
+  max-width: 260px;
+  line-height: 1.7;
+  margin: 0;
+}
+
+.ct-empty-btn {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 14px 28px;
+  border-radius: 50px;
+  background: var(--blue);
+  color: #fff;
+  font-family: 'Readex Pro', sans-serif;
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-decoration: none;
+  box-shadow: var(--shadow-pay);
+  transition: background var(--transition), transform var(--transition);
+}
+.ct-empty-btn:hover {
+  background: var(--blue-d);
+  transform: translateY(-2px);
+  color: #fff;
+  text-decoration: none;
+}
+
+/* ── DESKTOP ─────────────────────────────────────────────────── */
+@media (min-width: 640px) {
+  .ct-main { padding-top: 36px; padding-bottom: 120px; }
+  .ct-item { padding: 20px; }
+  .ct-item-name { font-size: 1rem; }
+  .ct-pay-btn { padding: 20px 24px !important; }
+}

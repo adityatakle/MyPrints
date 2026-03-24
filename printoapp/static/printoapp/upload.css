@@ -1,0 +1,507 @@
+/* ================================================================
+   MyPrints — upload.css
+   Place at:  static/printoapp/upload.css
+
+   Covers:
+     • upload.html static elements
+     • .row-info rows injected by script.js into .page_type & .item-info
+     • #submit-btn injected by script.js (overrides its inline styles)
+   ================================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Readex+Pro:wght@400;600;700;800&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap');
+
+/* ── TOKENS ──────────────────────────────────────────────────── */
+:root {
+  --blue:       #007BFF;
+  --blue-d:     #0062d6;
+  --blue-pale:  rgba(0, 123, 255, 0.08);
+  --blue-glow:  rgba(0, 123, 255, 0.20);
+  --green:      #10b981;
+  --green-pale: rgba(16, 185, 129, 0.10);
+  --red-pale:   rgba(239, 68, 68, 0.10);
+  --dark:       #0d1117;
+  --mid:        #3d4a5c;
+  --soft:       #7b8a9e;
+  --border:     rgba(0, 0, 0, 0.08);
+  --card-bg:    rgba(255, 255, 255, 0.85);
+  --off:        #f4f6fb;
+  --r:          16px;
+  --r-sm:       10px;
+  --shadow-sm:  0 1px 4px rgba(0,0,0,0.06);
+  --shadow-md:  0 4px 20px rgba(0,0,0,0.08);
+  --shadow-blue:0 6px 24px rgba(0,123,255,0.22);
+  --transition: 0.2s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* ── BASE ────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--off);
+  color: var(--dark);
+  margin: 0; padding: 0;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  -webkit-font-smoothing: antialiased;
+  /* subtle dot-grid background matching landing page */
+  background-image: radial-gradient(circle, rgba(0,123,255,0.06) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+/* Bootstrap .body override */
+.body { padding: 0 !important; max-width: 100% !important; }
+
+/* ── STICKY HEADER ───────────────────────────────────────────── */
+.up-header {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  height: 58px;
+  background: rgba(255,255,255,0.80);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.6);
+}
+
+.up-logo {
+  font-family: 'Readex Pro', sans-serif;
+  font-weight: 800;
+  font-size: 1.3rem;
+  letter-spacing: -0.03em;
+  color: var(--dark);
+  text-decoration: none;
+  line-height: 1;
+}
+.up-logo em { font-style: normal; color: var(--blue); }
+
+/* ── ALERTS ──────────────────────────────────────────────────── */
+.up-alerts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 16px 0;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.up-alert {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 16px;
+  border-radius: var(--r-sm);
+  font-size: 0.88rem;
+  font-weight: 600;
+  line-height: 1.4;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.up-alert--success {
+  background: rgba(16,185,129,0.12);
+  border: 1px solid rgba(16,185,129,0.3);
+  color: #065f46;
+}
+.up-alert--error {
+  background: rgba(239,68,68,0.10);
+  border: 1px solid rgba(239,68,68,0.25);
+  color: #991b1b;
+}
+
+/* ── MAIN STAGE ──────────────────────────────────────────────── */
+.up-main {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 28px 16px 80px;
+}
+
+/* hide the old .title style from style.css on this page */
+.up-main .title {
+  all: unset;
+  display: block;
+}
+
+.up-eyebrow {
+  font-size: 0.68rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.14em !important;
+  text-transform: uppercase !important;
+  color: var(--blue) !important;
+  margin-bottom: 6px !important;
+  font-family: 'DM Sans', sans-serif !important;
+}
+
+.up-title {
+  font-family: 'Readex Pro', sans-serif;
+  font-size: clamp(1.65rem, 6vw, 2.1rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.12;
+  color: var(--dark);
+  margin: 0 0 26px;
+}
+
+/* ── FORM ────────────────────────────────────────────────────── */
+.up-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ── DROP ZONE ───────────────────────────────────────────────── */
+.hidden-doc { display: none; }
+
+.doc-label,
+.up-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  padding: 36px 24px;
+  background: var(--card-bg);
+  border: 2px dashed rgba(0,123,255,0.28);
+  border-radius: 20px;
+  cursor: pointer;
+  text-align: center;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: var(--shadow-md);
+  transition:
+    border-color var(--transition),
+    background var(--transition),
+    box-shadow var(--transition),
+    transform var(--transition);
+  /* reset label default */
+  font-weight: normal;
+  margin: 0;
+}
+.doc-label:hover,
+.up-dropzone:hover {
+  border-color: var(--blue);
+  background: rgba(255,255,255,0.95);
+  box-shadow: 0 0 0 5px var(--blue-glow), var(--shadow-md);
+  transform: translateY(-2px);
+}
+.doc-label:active { transform: scale(0.99); }
+
+/* icon circle */
+.up-dz-icon-wrap {
+  width: 64px; height: 64px;
+  border-radius: 18px;
+  background: var(--blue-pale);
+  border: 1px solid rgba(0,123,255,0.14);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--blue);
+  flex-shrink: 0;
+  transition: background var(--transition);
+}
+.doc-label:hover .up-dz-icon-wrap { background: rgba(0,123,255,0.13); }
+
+/* the SVG itself (script.js targets .upload-pic indirectly via class) */
+.upload-pic,
+.up-dz-svg { width: 32px; height: 32px; }
+
+/* main-text: script.js sets this to green + replaces text on file select */
+.main-text,
+.up-dz-main {
+  font-family: 'Readex Pro', sans-serif !important;
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+  color: var(--dark);
+  margin: 0;
+  line-height: 1.4;
+  transition: color 0.25s;
+}
+
+/* sub-text: script.js sets display:none on file select */
+.sub-text,
+.up-dz-sub {
+  font-size: 0.78rem;
+  color: var(--soft);
+  margin: 0;
+}
+
+/* "Browse File" pill inside dropzone */
+.up-dz-btn {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 9px 22px;
+  border-radius: 50px;
+  background: var(--blue);
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 700;
+  font-family: 'Readex Pro', sans-serif;
+  letter-spacing: 0.01em;
+  box-shadow: var(--shadow-blue);
+  transition: background var(--transition), transform var(--transition);
+  pointer-events: none; /* label handles the click */
+}
+.doc-label:hover .up-dz-btn { background: var(--blue-d); }
+
+/* ── CONFIG PANEL WRAPPER ────────────────────────────────────── */
+.up-config-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* .page_type and .item-info — script.js sets display:flex via inline style */
+.page_type,
+.item-info {
+  display: none; /* initial; overridden by script.js */
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ── JS-INJECTED: .row-info ──────────────────────────────────── */
+/*
+   script.js injects rows like:
+     <div class="row-info">
+       <span>Label</span>
+       <select class="form-control"> ... </select>
+     </div>
+   We style them here.
+*/
+.row-info {
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--card-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 14px 16px;
+  box-shadow: var(--shadow-sm);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--mid);
+  min-height: 56px; /* thumb-tap friendly */
+  transition: box-shadow var(--transition);
+}
+.row-info:focus-within {
+  box-shadow: 0 0 0 3px var(--blue-glow);
+  border-color: rgba(0,123,255,0.3);
+}
+
+.row-info > span {
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: var(--mid);
+}
+
+/* ── form-control overrides (Bootstrap + custom) ── */
+.row-info .form-control,
+.page_type .form-control,
+.item-info .form-control {
+  flex: 1;
+  min-width: 0;
+  height: 44px;
+  padding: 0 36px 0 14px;    /* right pad for custom chevron */
+  background: var(--off);
+  border: 1.5px solid var(--border);
+  border-radius: var(--r-sm);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--dark);
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition);
+  cursor: pointer;
+
+  /* custom chevron via background SVG */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' viewBox='0 0 24 24'%3E%3Cpath stroke='%237b8a9e' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+}
+
+/* text & number inputs inside row-info */
+.row-info input.form-control {
+  padding: 0 14px;            /* no chevron, symmetric padding */
+  background-image: none;
+  cursor: text;
+}
+
+.row-info .form-control:focus {
+  border-color: var(--blue);
+  box-shadow: 0 0 0 3px var(--blue-glow);
+  background-color: #fff;
+}
+
+.row-info input[type="number"] { max-width: 100px; text-align: center; }
+.row-info input[type="text"]   { max-width: 200px; }
+
+/* ── JS-INJECTED: #submit-btn (Add to Cart) ──────────────────── */
+/*
+   script.js sets inline styles on this button:
+     submit_btn.style.marginTop    = '20px';
+     submit_btn.style.borderRadius = '10px';
+   We override those and everything else with !important where needed.
+*/
+#submit-btn {
+  display: block !important;
+  width: 100% !important;
+  padding: 17px 24px !important;
+  margin: 4px 0 0 !important;   /* JS sets marginTop:20px — this is ignored via !important */
+  border: none !important;
+  border-radius: 50px !important; /* overrides JS's 10px */
+  background: var(--blue) !important;
+  color: #fff !important;
+  font-family: 'Readex Pro', sans-serif !important;
+  font-size: 1.05rem !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.01em !important;
+  cursor: pointer !important;
+  -webkit-appearance: none !important;
+  appearance: none !important;
+  box-shadow: var(--shadow-blue) !important;
+  transition: background var(--transition), transform var(--transition), box-shadow var(--transition) !important;
+  min-height: 56px;
+}
+#submit-btn:hover {
+  background: var(--blue-d) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 10px 30px rgba(0,123,255,0.30) !important;
+}
+#submit-btn:active { transform: scale(0.98) !important; }
+
+/* the .row-info that wraps the submit button needs no card styling */
+.item-info .row-info:last-child {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  min-height: unset;
+}
+.item-info .row-info:last-child:focus-within { box-shadow: none; }
+
+/* ── VIEW CART LINK ──────────────────────────────────────────── */
+
+.cart-btn {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 0 !important;
+  width: 90%;
+  margin: 10px auto;
+  padding: 10px 10px 10px 20px !important;
+  border-radius: 40px !important;
+  background: #fff !important;
+  border: 1.5px solid var(--border) !important;
+  font-size: 5rem !important;
+  font-weight: 600 !important;
+  color: var(--dark) !important;
+  text-decoration: none !important;
+  box-shadow: var(--shadow-md) !important;
+  transition: all var(--transition) !important;
+  cursor: pointer !important;
+  min-height: 60px !important;
+  position: relative !important;
+}
+
+/* left side: icon */
+.up-cart-left {
+  display: flex;
+  align-items: left;
+  gap: 10px;
+}
+
+.up-cart-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.5;
+}
+
+.up-cart-icon-box {
+  width: 38px;
+  height: 38px;
+  margin-top: 10px;
+  border-radius: 50%;
+  background: var(--blue-pale);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--blue);
+  flex-shrink: 0;
+}
+
+.up-cart-label {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--dark);
+}
+
+.up-cart-sublabel {
+  display: block;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--soft);
+  margin-top: 1px;
+}
+
+.up-cart-arrow {
+  width: 36px;
+  height: 36px;
+  margin-top: 10px;
+  border-radius: 50%;
+  background: var(--blue);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background var(--transition), transform var(--transition);
+}
+
+/* hover state */
+.up-cart-link:hover,
+.cart-btn:hover {
+  border-color: rgba(0,123,255,0.25) !important;
+  box-shadow: 0 6px 24px rgba(0,123,255,0.14) !important;
+  text-decoration: none !important;
+  transform: translateY(-1px) !important;
+}
+.up-cart-link:hover .up-cart-arrow { background: var(--blue-d); transform: translateX(2px); }
+.up-cart-link:hover .up-cart-label { color: var(--blue) !important; }
+
+/* ── DISABLED (empty cart) ── */
+.up-cart-link[data-empty="true"],
+.up-cart-link.is-empty {
+  opacity: 0.45 !important;
+  pointer-events: none !important;
+  cursor: not-allowed !important;
+  filter: grayscale(0.3) !important;
+}
+.up-cart-link[data-empty="true"] .up-cart-chip,
+.up-cart-link.is-empty .up-cart-chip {
+  background: var(--soft) !important;
+}
+
+/* ── DESKTOP BREAKPOINT ──────────────────────────────────────── */
+@media (min-width: 640px) {
+  .up-main { padding-top: 40px; padding-bottom: 100px; }
+  .doc-label, .up-dropzone { padding: 52px 40px; }
+  .up-dz-icon-wrap { width: 72px; height: 72px; border-radius: 22px; }
+  .upload-pic, .up-dz-svg { width: 36px; height: 36px; }
+  .up-title { margin-bottom: 32px; }
+  .row-info { padding: 16px 20px; }
+}

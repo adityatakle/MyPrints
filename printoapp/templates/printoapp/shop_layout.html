@@ -1,10 +1,109 @@
 {% extends 'printoapp/layout.html' %}
-<div class="container">
-    <button> My Queue </button>
-    <button> My finances </button>
-    <button> My Account </button>
-    
-</div>
-{% block body %}
+{% load static %}
 
+{% block extra_head %}
+<link href="{% static 'printoapp/shop_index.css' %}" rel="stylesheet">
+{% block shop_extra_head %}{% endblock %}
+{% endblock %}
+
+{% block body %}
+<div class="sd-root">
+
+    <!-- ══════════════════════════════════
+         TOP BAR
+    ════════════════════════════════════ -->
+    <header class="sd-topbar">
+        <div class="sd-topbar-left">
+            <button class="sd-hamburger" id="sdHamburger" aria-label="Menu">
+                <span></span><span></span><span></span>
+            </button>
+            <a href="#" class="sd-topbar-logo">My<em>Prints</em> <span>Shop</span></a>
+        </div>
+        <div class="sd-topbar-center">
+            <span class="sd-greeting">Good <strong>{{ time }}</strong>, {{ username }} 👋</span>
+        </div>
+        <div class="sd-topbar-right">
+            <a href="{% url 'shop_logout' %}" class="sd-logout-btn">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                    <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"
+                          stroke="currentColor" stroke-width="2.2"
+                          stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Logout
+            </a>
+        </div>
+    </header>
+
+    <div class="sd-body">
+
+        <!-- ══════════════════════════════════
+             SIDEBAR
+        ════════════════════════════════════ -->
+        <aside class="sd-sidebar" id="sdSidebar">
+            <nav class="sd-nav">
+
+                <a href="{% url 'shop_index' %}"
+                   class="sd-nav-item {% block nav_queue %}{% endblock %}">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                        <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                              stroke="currentColor" stroke-width="1.8"
+                              stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    My Queue
+                </a>
+
+                <a href="#"
+                   class="sd-nav-item {% block nav_finances %}{% endblock %}">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"
+                              stroke="currentColor" stroke-width="1.8"
+                              stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    My Finances
+                </a>
+
+                <a href="{% url 'shop_catalogue' %}"
+                   class="sd-nav-item {% block nav_catalogue %}{% endblock %}">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                        <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z"
+                              stroke="currentColor" stroke-width="1.8"
+                              stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    My Catalogue
+                </a>
+
+            </nav>
+
+            <div class="sd-sidebar-footer">
+                <div class="sd-status-dot"></div>
+                <span>Shop is <strong>Live</strong></span>
+            </div>
+        </aside>
+
+        <!-- ══════════════════════════════════
+             MAIN CONTENT (child pages fill this)
+        ════════════════════════════════════ -->
+        <main class="sd-main">
+            {% block sd_content %}{% endblock %}
+        </main>
+
+    </div><!-- /.sd-body -->
+</div><!-- /.sd-root -->
+
+<script>
+    // hamburger toggle
+    document.getElementById('sdHamburger').addEventListener('click', function () {
+        document.getElementById('sdSidebar').classList.toggle('sd-sidebar--open');
+    });
+    // close sidebar on outside click (mobile)
+    document.addEventListener('click', function (e) {
+        const sidebar   = document.getElementById('sdSidebar');
+        const hamburger = document.getElementById('sdHamburger');
+        if (sidebar.classList.contains('sd-sidebar--open') &&
+            !sidebar.contains(e.target) &&
+            !hamburger.contains(e.target)) {
+            sidebar.classList.remove('sd-sidebar--open');
+        }
+    });
+</script>
 {% endblock %}

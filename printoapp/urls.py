@@ -8,10 +8,13 @@ urlpatterns = [
     path("cart/<int:shop_id>/<str:user_id>", views.cart, name="cart"),
     path("api/create_user", views.create_user, name="create_user"),
     path("api/item_list/<int:shop_id>", views.item_list, name="item_list"),
+    path("api/shop_list", views.shop_list, name="shop_list"),
+    path("api/verify_cart", views.verify_cart, name="verify_cart"),
     path("my_shop/login", views.shop_login, name="shop_login"),
     path("my_shop/index", views.shop_index, name="shop_index"),
     path("my_shop/logout", views.shop_logout, name="shop_logout"),
     path("my_shop/finances", views.shop_finance, name="shop_finances"),
     path("my_shop/shop_connect/", views.shop_connect, name="shop_connect"),
-    path("my_shop/file_update/", views.file_update, name="file_update")
+    path("my_shop/file_update/", views.file_update, name="file_update"),
+    path("my_shop/shop_catalogue", views.shop_catalogue, name="shop_catalogue")
 ]

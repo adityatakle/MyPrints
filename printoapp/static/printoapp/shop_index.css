@@ -1,0 +1,487 @@
+/* ================================================================
+   MyPrints — shop_dashboard.css
+   Place at: static/printoapp/shop_dashboard.css
+   Desktop-first with mobile sidebar collapse.
+   Table rows managed entirely by shop_index.js.
+   ================================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Readex+Pro:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap');
+
+/* ── TOKENS ──────────────────────────────────────────────────── */
+:root {
+    --blue:       #007BFF;
+    --blue-d:     #0062d6;
+    --blue-pale:  rgba(0,123,255,0.10);
+    --mint:       #2DD4BF;
+    --mint-pale:  rgba(45,212,191,0.12);
+    --green:      #10b981;
+    --sidebar-bg: #0f1923;
+    --sidebar-w:  240px;
+    --topbar-h:   58px;
+    --dark:       #0d1117;
+    --mid:        #3d4a5c;
+    --soft:       #7b8a9e;
+    --border:     rgba(0,0,0,0.08);
+    --off:        #f4f6fb;
+    --card:       #ffffff;
+    --r:          12px;
+    --shadow-sm:  0 1px 4px rgba(0,0,0,0.05);
+    --shadow-md:  0 4px 20px rgba(0,0,0,0.08);
+    --transition: 0.2s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* ── BASE ────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--off);
+    color: var(--dark);
+    margin: 0; padding: 0;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    -webkit-font-smoothing: antialiased;
+}
+.body { padding: 0 !important; max-width: 100% !important; }
+
+/* ── ROOT SHELL ──────────────────────────────────────────────── */
+.sd-root {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* ── TOP BAR ─────────────────────────────────────────────────── */
+.sd-topbar {
+    position: sticky;
+    top: 0;
+    z-index: 200;
+    height: var(--topbar-h);
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    gap: 16px;
+}
+
+.sd-topbar-left   { display: flex; align-items: center; gap: 12px; }
+.sd-topbar-center { flex: 1; text-align: center; }
+.sd-topbar-right  { display: flex; align-items: center; }
+
+.sd-topbar-logo {
+    font-family: 'Readex Pro', sans-serif;
+    font-weight: 800;
+    font-size: 1.15rem;
+    letter-spacing: -0.03em;
+    color: var(--dark);
+    text-decoration: none;
+}
+.sd-topbar-logo em { font-style: normal; color: var(--blue); }
+.sd-topbar-logo span {
+    font-size: 0.65rem;
+    font-weight: 600;
+    background: var(--blue-pale);
+    color: var(--blue);
+    border-radius: 20px;
+    padding: 2px 8px;
+    margin-left: 6px;
+    vertical-align: middle;
+    font-family: 'DM Sans', sans-serif;
+}
+
+.sd-greeting { font-size: 0.88rem; color: var(--soft); }
+.sd-greeting strong { color: var(--dark); }
+
+.sd-logout-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 50px;
+    background: #fee2e2;
+    color: #dc2626;
+    border: 1px solid #fca5a5;
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background var(--transition), transform var(--transition);
+    font-family: 'DM Sans', sans-serif;
+}
+.sd-logout-btn:hover {
+    background: #fecaca;
+    transform: translateY(-1px);
+    color: #dc2626;
+    text-decoration: none;
+}
+
+/* ── HAMBURGER (mobile only) ─────────────────────────────────── */
+.sd-hamburger {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    width: 36px; height: 36px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--off);
+    cursor: pointer;
+    padding: 8px;
+}
+.sd-hamburger span {
+    display: block;
+    height: 2px;
+    background: var(--dark);
+    border-radius: 2px;
+    transition: all var(--transition);
+}
+
+/* ── BODY ────────────────────────────────────────────────────── */
+.sd-body {
+    display: flex;
+    flex: 1;
+}
+
+/* ── SIDEBAR ─────────────────────────────────────────────────── */
+.sd-sidebar {
+    width: var(--sidebar-w);
+    flex-shrink: 0;
+    background: var(--sidebar-bg);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 24px 12px 20px;
+    position: sticky;
+    top: var(--topbar-h);
+    align-self: flex-start;
+    height: calc(100vh - var(--topbar-h));
+    overflow-y: auto;
+}
+
+.sd-nav { display: flex; flex-direction: column; gap: 4px; }
+
+.sd-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 11px 14px;
+    border: none;
+    border-radius: 10px;
+    background: transparent;
+    color: rgba(255,255,255,0.55);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: left;
+    text-decoration: none;
+    transition: background var(--transition), color var(--transition);
+}
+.sd-nav-item:hover {
+    background: rgba(255,255,255,0.07);
+    color: rgba(255,255,255,0.9);
+    text-decoration: none;
+}
+.sd-nav-item#selected,
+.sd-nav-item.sd-active {
+    background: var(--blue);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(0,123,255,0.35);
+}
+
+.sd-sidebar-footer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    font-size: 0.78rem;
+    color: rgba(255,255,255,0.4);
+}
+.sd-sidebar-footer strong { color: var(--mint); }
+
+.sd-status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--mint);
+    box-shadow: 0 0 6px var(--mint);
+    animation: sdPulse 2s infinite;
+    flex-shrink: 0;
+}
+@keyframes sdPulse {
+    0%,100% { opacity: 1; }
+    50%      { opacity: 0.4; }
+}
+
+/* ── MAIN CONTENT ────────────────────────────────────────────── */
+.sd-main {
+    flex: 1;
+    padding: 28px 24px;
+    overflow-x: hidden;
+}
+
+.sd-content-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-bottom: 22px;
+}
+
+.sd-section-title {
+    font-family: 'Readex Pro', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    color: var(--dark);
+    margin: 0 0 4px;
+    line-height: 1;
+}
+
+.sd-queue-badge {
+    display: inline-block;
+    background: rgba(0,123,255,0.1);
+    color: var(--blue);
+    font-size: 0.72rem;
+    font-weight: 700;
+    border-radius: 20px;
+    padding: 3px 10px;
+    border: 1px solid rgba(0,123,255,0.2);
+}
+
+/* ── SEARCH ──────────────────────────────────────────────────── */
+.sd-search-wrap {
+    display: flex;
+    align-items: center;
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 50px;
+    padding: 0 6px 0 14px;
+    box-shadow: var(--shadow-sm);
+    height: 42px;
+    transition: border-color var(--transition), box-shadow var(--transition);
+}
+.sd-search-wrap:focus-within {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(0,123,255,0.12);
+}
+
+.sd-search-icon { color: var(--soft); flex-shrink: 0; }
+
+.sd-search-input {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem;
+    color: var(--dark);
+    padding: 0 10px;
+    width: 180px;
+}
+.sd-search-input::placeholder { color: var(--soft); }
+
+
+/* ── TABLE WRAP ──────────────────────────────────────────────── */
+.sd-table-wrap {
+    background: var(--card);
+    border-radius: var(--r);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+}
+
+.sd-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+}
+
+.sd-table thead tr {
+    background: var(--off);
+    border-bottom: 1px solid var(--border);
+}
+
+.sd-table th {
+    padding: 13px 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 700;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--soft);
+    text-align: left;
+    white-space: nowrap;
+}
+
+/* ── TABLE ROWS ──────────────────────────────────────────────── */
+.sd-row {
+    border-bottom: 1px solid var(--border);
+    transition: background var(--transition), opacity 0.35s ease, transform 0.35s ease;
+}
+.sd-row:last-child { border-bottom: none; }
+.sd-row:hover { background: rgba(0,123,255,0.02); }
+
+.sd-table td {
+    padding: 14px 16px;
+    vertical-align: middle;
+}
+
+
+
+/* row being removed — JS adds this, then removes the element */
+.sd-row--removing {
+    opacity: 0;
+    transform: translateX(20px);
+    pointer-events: none;
+}
+
+/* ── TABLE CELL CONTENT ──────────────────────────────────────── */
+.sd-row-num {
+    color: var(--soft);
+    font-size: 0.8rem;
+    font-weight: 600;
+    width: 36px;
+}
+
+.sd-pages-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--off);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 10px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--mid);
+}
+
+.sd-amount {
+    font-family: 'Readex Pro', sans-serif;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--dark);
+}
+
+/* OTP — monospaced, prominent, easy to read at a glance */
+.sd-otp {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--blue);
+    letter-spacing: 0.18em;
+    background: var(--blue-pale);
+    padding: 4px 12px;
+    border-radius: 8px;
+    display: inline-block;
+    min-width: 60px;
+    text-align: center;
+}
+
+/* ── VERIFY BUTTON ───────────────────────────────────────────── */
+.sd-verify-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 50px;
+    border: 1px solid rgba(45,212,191,0.25);
+    background: var(--mint-pale);
+    color: #0d9488;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background var(--transition), transform var(--transition), box-shadow var(--transition);
+}
+.sd-verify-btn:hover {
+    background: #2DD4BF;
+    color: #fff;
+    border-color: #2DD4BF;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(45,212,191,0.35);
+}
+.sd-verify-btn:active { transform: scale(0.97); }
+
+/* verified state — UnVerify button, signals danger/mistake */
+.sd-verify-btn--done {
+    background: rgba(239,68,68,0.08);
+    color: #dc2626;
+    border-color: rgba(239,68,68,0.25);
+    cursor: pointer;
+}
+.sd-verify-btn--done:hover {
+    background: #ef4444;
+    color: #fff;
+    border-color: #ef4444;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(239,68,68,0.30);
+}
+
+/* in-flight state — while POST is pending */
+.sd-verify-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ── EMPTY STATE ─────────────────────────────────────────────── */
+.sd-empty {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 80px 24px;
+    gap: 12px;
+}
+
+.sd-empty-icon {
+    font-size: 3.5rem;
+    animation: sdBob 3s ease-in-out infinite;
+}
+@keyframes sdBob {
+    0%,100% { transform: translateY(0); }
+    50%      { transform: translateY(-10px); }
+}
+
+.sd-empty-title {
+    font-family: 'Readex Pro', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--dark);
+    margin: 0;
+}
+.sd-empty-sub {
+    font-size: 0.88rem;
+    color: var(--soft);
+    line-height: 1.7;
+    margin: 0;
+}
+
+/* ── MOBILE ──────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+    .sd-hamburger { display: flex; }
+    .sd-topbar-center { display: none; }
+
+    .sd-sidebar {
+        position: fixed;
+        top: var(--topbar-h);
+        left: 0;
+        height: calc(100vh - var(--topbar-h));
+        z-index: 150;
+        transform: translateX(-100%);
+        transition: transform var(--transition);
+        box-shadow: 4px 0 20px rgba(0,0,0,0.2);
+    }
+    .sd-sidebar--open { transform: translateX(0); }
+
+    .sd-main { padding: 20px 14px; }
+    .sd-section-title { font-size: 1.2rem; }
+    .sd-search-wrap { width: 100%; }
+    .sd-search-input { width: 120px; }
+    .sd-content-header { flex-direction: column; align-items: flex-start; }
+}

@@ -1,46 +1,61 @@
-{% extends 'printoapp/layout.html' %}
+{% extends 'printoapp/shop_layout.html' %}
+{% load static %}
 
-{% block body %}
-<div class="greetings">
-    <span>Good {{time}}, {{username}}</span>
-    <a class="logout" href="{% url 'shop_logout' %}" > Logout </a>
-</div>
-<div class="container">
-    <div class="options">
-        <button id="selected">My Queue</button><br>
-        <button> My finances </button><br>
-        <button> My account </button>
+{# Mark "My Queue" as active in the sidebar #}
+{% block nav_queue %}sd-active{% endblock %}
+
+{% block shop_extra_head %}
+    <script src="{% static 'printoapp/shop_index.js' %}" defer></script>
+{% endblock %}
+
+{% block sd_content %}
+
+    <!-- ── CONTENT HEADER ── -->
+    <div class="sd-content-header">
+        <div>
+            <h1 class="sd-section-title">My Queue</h1>
+            {# badge is hidden initially — shop_index.js shows/updates it #}
+            <span class="sd-queue-badge" style="display:none;"></span>
+        </div>
+        <div class="sd-search-wrap">
+            <svg class="sd-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="2"/>
+                <path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            <input
+                type="text"
+                class="sd-search-input"
+                placeholder="Search orders by OTP…"
+                autocomplete="off"
+                spellcheck="false"
+            >
+            
+        </div>
     </div>
-    {% if carts %}
-    <div class="content">
-        <table class="table table-bordered border-primary">
+
+    <!-- ── TABLE — tbody filled entirely by shop_index.js ── -->
+    <div class="sd-table-wrap table-responsive" style="display:none;">
+        <table class="sd-table">
             <thead>
                 <tr>
-                    <th>total pages</th>
-                    <th>total amount</th>
+                    <th>#</th>
+                    <th>Total Pages</th>
+                    <th>Amount</th>
                     <th>OTP</th>
-                    <th>verify</th>
+                    <th>Action</th>
                 </tr>
             </thead>
             <tbody>
-                {% for cart in carts %}
-                <tr>
-                    <td>{{cart.total_pages}}</td>
-                    <td>{{cart.total_amount}}</td>
-                    <td>0</td>
-                    <td><button class="checkbox" type="submit" value="{{cart.id}}" name="verify">Print given</button></td>
-
-                </tr>
-                {% endfor %}
+                {# rows injected by shop_index.js — do not add Django loop here #}
             </tbody>
         </table>
     </div>
-    {% else %}
-    <div class="empty-message">
-    <span >Nothing to see here yet :( Lets wait for magic to happen...</span>
+
+    <!-- ── EMPTY STATE — shown/hidden by shop_index.js ── -->
+    <div class="sd-empty" style="display:none;">
+        <div class="sd-empty-icon">🖨️</div>
+        <h2 class="sd-empty-title">Queue is clear!</h2>
+        <p class="sd-empty-sub">Nothing to see here yet.<br>Let's wait for magic to happen…</p>
     </div>
-    {% endif %}
-    
-        
-</div>
+
 {% endblock %}

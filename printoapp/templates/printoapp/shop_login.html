@@ -1,23 +1,126 @@
 {% extends 'printoapp/layout.html' %}
+{% load static %}
+
+{% block extra_head %}
+    <link href="{% static 'printoapp/shop_login.css' %}" rel="stylesheet">
+{% endblock %}
 
 {% block body %}
+<div class="sl-page">
 
-<form action="{% url 'shop_login' %}" method="POST">
-    {% csrf_token %}
-    
-    <div class="login-group">
-        <p>Shop Login</p>
-        
-        {% if message %}
-        <div style="color: red; margin-bottom: 10px; font-weight: bold;">
-            {{ message }}
+    <!-- ══════════════════════════════════
+         LEFT BRANDING PANEL (desktop)
+    ════════════════════════════════════ -->
+    <div class="sl-branding">
+        <div class="sl-branding-inner">
+            <a href="/" class="sl-brand-logo">My<em>Prints</em></a>
+            <h2 class="sl-brand-headline">
+                Empowering your<br>xerox shop.
+            </h2>
+            <p class="sl-brand-sub">
+                Receive print jobs digitally, verify with OTP,
+                and grow your walk-in revenue — all from one dashboard.
+            </p>
+            <div class="sl-brand-pills">
+                <span class="sl-pill">📄 Auto job queue</span>
+                <span class="sl-pill">🔐 OTP verified</span>
+            </div>
         </div>
-        {% endif %}
-
-        <input type="text" name="username" id="username" placeholder="Username/Email" autocomplete="username"><br>
-        <input type="password" name="password" id="password" placeholder="Password" autocomplete="current-password"><br>
-        <button type="submit">Login</button>
+        <div class="sl-dot-grid"></div>
     </div>
-</form>
 
+    <!-- ══════════════════════════════════
+         RIGHT LOGIN CARD
+    ════════════════════════════════════ -->
+    <div class="sl-right">
+        <div class="sl-card">
+
+            <!-- card header -->
+            <div class="sl-card-header">
+                <div class="sl-lock-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                        <rect x="3" y="11" width="18" height="11" rx="2"
+                              stroke="currentColor" stroke-width="2"
+                              stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M7 11V7a5 5 0 0110 0v4"
+                              stroke="currentColor" stroke-width="2"
+                              stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <div>
+                    <p class="sl-portal-label">SHOP PORTAL</p>
+                    <h1 class="sl-card-title">Shop Login</h1>
+                </div>
+            </div>
+
+            <!-- error toast -->
+            {% if message %}
+                <div class="sl-error-toast">
+                    <div class="sl-error-icon">!</div>
+                    <span>{{ message }}</span>
+                </div>
+            {% endif %}
+
+            <!-- form -->
+            <form action="{% url 'shop_login' %}" method="POST"
+                  class="sl-form" id="slForm">
+                {% csrf_token %}
+
+                <div class="sl-field">
+                    <input
+                        type="text"
+                        name="username"
+                        id="username"
+                        class="sl-input"
+                        placeholder=" "
+                        autocomplete="username"
+                        required
+                    >
+                    <label for="username" class="sl-label">
+                        Username / Email
+                    </label>
+                    <div class="sl-input-line"></div>
+                </div>
+
+                <div class="sl-field">
+                    <input
+                        type="password"
+                        name="password"
+                        id="password"
+                        class="sl-input"
+                        placeholder=" "
+                        autocomplete="current-password"
+                        required
+                    >
+                    <label for="password" class="sl-label">Password</label>
+                    <div class="sl-input-line"></div>
+                </div>
+
+                <button type="submit" class="sl-submit-btn" id="slSubmit">
+                    <span class="sl-btn-text">Login</span>
+                    <span class="sl-btn-spinner" aria-hidden="true"></span>
+                    <svg class="sl-btn-arrow" width="18" height="18"
+                         viewBox="0 0 24 24" fill="none">
+                        <path d="M5 12h14M13 6l6 6-6 6"
+                              stroke="currentColor" stroke-width="2.2"
+                              stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </button>
+
+            </form>
+
+        </div>
+
+        <p class="sl-watermark">Powered by <strong>MyPrints</strong></p>
+    </div>
+
+</div>
+
+<script>
+    document.getElementById('slForm').addEventListener('submit', function() {
+        const btn = document.getElementById('slSubmit');
+        btn.classList.add('sl-submit-btn--loading');
+        btn.disabled = true;
+    });
+</script>
 {% endblock %}

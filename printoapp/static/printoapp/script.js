@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
-    const heading = document.querySelector('.shop-info');
+    const heading = document.querySelector('.shops-container');
     const title = document.querySelector('#doc');
     if (heading) {
         let user_id = localStorage.getItem('printo_user_id');
@@ -25,6 +25,15 @@ document.addEventListener('DOMContentLoaded', function() {
     if (title){
         title.addEventListener('change', function() {
             if (this.files && this.files.length > 0) {
+                const file = this.files[0];
+                const MAX_SIZE_MB = 40;
+                const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
+
+                if (file.size > MAX_SIZE_BYTES) {
+                    alert(`File is too large! Max limit is ${MAX_SIZE_MB}MB.`);
+                    this.value = "";
+                    return;
+                }
                 let shop_id = document.querySelector('#shop_id')
                 shop_id = shop_id.value;
                 let main_text = document.querySelector('.main-text');

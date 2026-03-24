@@ -1,36 +1,62 @@
 {% extends 'printoapp/layout.html' %}
+{% load static %}
+
+{% block title %}Select Shop | MyPrints{% endblock %}
 
 {% block body %}
-    <h3>Xerox Shops</h3>    
+
+{% block extra_head %}
+<link href="{% static 'printoapp/shops.css' %}" rel="stylesheet">
+{% endblock %}
+
+<div class="sticky-header">
+        <h3 class="mb-3 font-weight-bold" style="font-size: 2rem;">
+            <span class="text-primary">MyPrints</span>
+        </h3>
+</div>
+
+<div class="shops-container">
     <form action="{% url 'shops' %}" method="POST" class="shops_form">
         {% csrf_token %}
         <input type="text" hidden id="user_id" name="user_id">
-        {% for shop in shops_info%}
-        {% if shop.status == "Active" %}
-            {% if now < shop.open_time or now > shop.close_time %}
-            
-                <button type="submit" disabled name="shop_id" value="{{ shop.id }}" class="shops_submit">
-                    <div class="shop-info">
-                        <span name="{{shop.id}}"></span>
-                        <span class="closed">Not open yet.</span><br>
-                        <span >{{shop.name}}</span><br>
-                        <span>{{shop.location}}, {{shop.landmark}}</span>
-                        <span>{{shop.city}}, {{shops.state}}</span><br>
-                        <span>Shop time: {{shop.open_time}} - {{shop.close_time}}</span>
-                    </div>
-                </button>
-            {% else %}
-            <button type="submit" name="shop_id" value="{{ shop.id }}" class="shops_submit">
-                <div class="shop-info">
-                    <span name="{{shop.id}}"></span>
-                    <span >{{shop.name}}</span><br>
-                    <span>{{shop.location}}, {{shop.landmark}}</span>
-                    <span>{{shop.city}}, {{shops.state}}</span><br>
-                    <span>Shop time: {{shop.open_time}} - {{shop.close_time}}</span>
-                </div>
-            </button>
+        
+        {% for shop in shops_info %}
+            {% if shop.status == "Active" %}
+                
+                {% if now < shop.open_time or now > shop.close_time %}
+                    <!-- Shop is Closed -->
+                    <button type="submit" disabled name="shop_id" value="{{ shop.id }}" class="shops_submit">
+                        <div class="shop-header">
+                            <span class="status-badge status-closed">Not open yet</span>
+                        </div>
+                        <span class="shop-name">{{ shop.name }}</span>
+                        <div class="shop-meta">
+                            {{ shop.location }}, {{ shop.landmark }}<br>
+                            {{ shop.city }}, {{ shop.state }}
+                        </div>
+                        <div class="shop-footer">
+                            <span class="time-info">Hours: {{ shop.open_time|time:"h:i A" }} - {{ shop.close_time|time:"h:i A" }}</span>
+                        </div>
+                    </button>
+                {% else %}
+                    <!-- Shop is Open -->
+                    <button type="submit" name="shop_id" value="{{ shop.id }}" class="shops_submit">
+                        <div class="shop-header">
+                            <span class="status-badge status-open">Open Now</span>
+                        </div>
+                        <span class="shop-name">{{ shop.name }}</span>
+                        <div class="shop-meta">
+                            {{ shop.location }}, {{ shop.landmark }}<br>
+                            {{ shop.city }}, {{ shop.state }}
+                        </div>
+                        <div class="shop-footer">
+                            <span class="time-info">Closes at {{ shop.close_time|time:"h:i A" }}</span>
+                        </div>
+                    </button>
+                {% endif %}
+
             {% endif %}
-        {% endif %}
         {% endfor %}
     </form>
+</div>
 {% endblock %}

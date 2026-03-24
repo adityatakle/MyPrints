@@ -1,32 +1,338 @@
 {% extends 'printoapp/layout.html' %}
 {% load static %}
+
+
+{% block title %}MyPrints - Print on the Go{% endblock %}
+
 {% block body %}
-    <div class="main-header">
-        <p id="name"> MyPrints </p>
-        
-        </div>
-    <div class="entry-content">
-        <img src="{%static 'printoapp/top_corner.svg'%}" id="top_corner">
-        <p id="tagline"> Print docs without worrying about<br> <strong> Privacy, Crowd and Headaches. </strong></p>
-        <img src="{%static 'printoapp/bottom-corner.svg'%}" id="bottom_corner"><br>
-        
-        <button id="shops-select"><a href="{%url 'shops'%}"> Order Print!</a></button><br>
-        <span class="lower-info"><strong>What is MyPrints?</strong><br>
-        Print any document securely at affordable price.<br>
-        MADE FOR STUDENTS BY STUDENT.<br>
-        No signups, No logins
-        Fast, Anonymous, Seamless.
-        Privacy first printing
-        Automatic deletions after collecting prints.
-        Skip the queue, use MyPrints
-        Privacy built in every step.</span>
-    </div>
-    <div class="feedback">
 
-    </div>
-    <div class="footer">
-
-    </div>
-    
+{# ── Extra styles & fonts for this page only ──────────────── #}
+{% block extra_head %}
+  <link href="{% static 'printoapp/landing.css' %}" rel="stylesheet">
+  <script src="{% static 'printoapp/landing.js' %}" defer></script>
 {% endblock %}
 
+{# Add landing-page class so our CSS can scope overrides cleanly #}
+  <script>document.body.classList.add('landing-page');</script>
+
+<!-- ══════════════════════════════════════════════
+     NAV
+════════════════════════════════════════════════ -->
+<nav class="mp-nav">
+    MyPrints
+  <ul class="mp-nav-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#how">How it Works</a></li>
+    <li><a href="#feedback">Give Feedback</a></li>
+    <li><a href="#contact">For Shops</a></li>
+  </ul>
+
+  <a href="{% url 'shops' %}" class="mp-nav-pill" id="nav-order-btn">
+    Select Shop! →
+  </a>
+</nav>
+
+<!-- ══════════════════════════════════════════════
+     HERO
+════════════════════════════════════════════════ -->
+<section class="mp-hero">
+  <div class="mp-hero-dot"></div>
+
+  {# ── Left / text column ── #}
+  <div class="mp-hero-text">
+
+    <div class="mp-hero-badge">
+      <span class="mp-badge-dot"></span>
+      Live on campus
+    </div>
+
+    <h1>Print on the go.<br><em>Collect in seconds.</em></h1>
+
+    <p class="mp-hero-sub">
+      Upload PDFs from your phone, pay via UPI
+      <strong>directly to the shop</strong>, and skip the queue.<br>
+      <strong>Secure. Private. HassleFree</strong>
+    </p>
+
+    <a href="{% url 'shops' %}" class="mp-btn-hero" id="hero-order-btn">
+      Select Shop &nbsp;→
+    </a>
+<!--
+    <div class="mp-hero-trust">
+      <div class="mp-avatars">
+        <div class="mp-av" style="background:var(--blue)">K</div>
+        <div class="mp-av" style="background:var(--mint);color:#0d1117">P</div>
+        <div class="mp-av" style="background:#f59e0b">R</div>
+        <div class="mp-av" style="background:#ec4899">A</div>
+      </div>
+      <span>1,200+ students already printing smarter</span>
+    </div>
+  </div>
+-->
+
+</section>
+
+<!-- ══════════════════════════════════════════════
+     TRUST STRIP
+════════════════════════════════════════════════ -->
+<div class="mp-trust-strip">
+  <div class="mp-trust-label">Printing at</div>
+  <div class="mp-trust-scroll">
+    <span class="mp-t-logo">Sandip University</span>
+    <span class ="mp-t-logo">Sandip Foudation</span>
+    
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     FEATURES
+════════════════════════════════════════════════ -->
+<section class="mp-section mp-features" id="features">
+  <div class="mp-reveal">
+    <div class="mp-sec-label">Why Students Love It</div>
+    <h2 class="mp-sec-heading">No gimmicks.<br>Just painkillers.</h2>
+    <p class="mp-sec-sub">
+      Built for the student who's late for class and needs 40 pages,
+      double-sided, right now.
+    </p>
+  </div>
+
+  <div class="mp-feat-grid">
+    <div class="mp-feat-card mp-reveal mp-d1">
+      <div class="mp-feat-icon">🙌</div>
+      <div class="mp-feat-title">No Sign-Up</div>
+      <div class="mp-feat-desc">Just open, upload, and print.<br>No account, <br>No tracking, <br>No worries.</div>
+      <span class="mp-feat-pill">Instant Access</span>
+    </div>
+    <div class="mp-feat-card mp-reveal mp-d2">
+      <div class="mp-feat-icon">⚡</div>
+      <div class="mp-feat-title">Instant UPI</div>
+      <div class="mp-feat-desc">One-tap to the shop's GPay or PhonePe. No wallets needed.</div>
+      <span class="mp-feat-pill">Instant</span>
+    </div>
+    <div class="mp-feat-card mp-reveal mp-d3">
+      <div class="mp-feat-icon">🔐</div>
+      <div class="mp-feat-title">OTP Secure</div>
+      <div class="mp-feat-desc">Your prints given only after you show a unique code.</div>
+      <span class="mp-feat-pill">Private</span>
+    </div>
+    <div class="mp-feat-card mp-reveal mp-d4">
+      <div class="mp-feat-icon">🗑️</div>
+      <div class="mp-feat-title">Auto-Delete</div>
+      <div class="mp-feat-desc">Files purged from the shop's PC right after you collect.</div>
+      <span class="mp-feat-pill">Zero Trail</span>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════
+     STATS BAND
+════════════════════════════════════════════════ -->
+<div class="mp-stats mp-reveal">
+  <div>
+    <div class="mp-stat-n">12K+</div>
+    <div class="mp-stat-l">Docs Printed</div>
+  </div>
+  <div>
+    <div class="mp-stat-n">₹0</div>
+    <div class="mp-stat-l">Platform Fees</div>
+  </div>
+  <div>
+    <div class="mp-stat-n">99.8%</div>
+    <div class="mp-stat-l">On-time Pickup</div>
+  </div>
+  <div>
+    <div class="mp-stat-n">8</div>
+    <div class="mp-stat-l">Campuses Live</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     HOW IT WORKS
+════════════════════════════════════════════════ -->
+<section class="mp-section mp-how" id="how">
+  <div class="mp-reveal">
+    <div class="mp-sec-label">The Process</div>
+    <h2 class="mp-sec-heading">5 steps.<br>Under 60 seconds.</h2>
+    <p class="mp-sec-sub">
+      From hostel to holding your prints — faster than finding a pen in your bag.
+    </p>
+  </div>
+
+  <div class="mp-steps">
+
+    <div class="mp-step-item mp-reveal">
+      <div class="mp-step-num">1</div>
+      <div>
+        <div class="mp-step-emoji">🏪</div>
+        <div class="mp-step-title">Select Your Shop</div>
+        <div class="mp-step-desc">Pick the nearest open xerox shop on campus from the list.</div>
+      </div>
+    </div>
+
+    <div class="mp-step-item mp-reveal mp-d1">
+      <div class="mp-step-num">2</div>
+      <div>
+        <div class="mp-step-emoji">📄</div>
+        <div class="mp-step-title">Upload & Configure</div>
+        <div class="mp-step-desc">Upload your PDF, choose B&W or colour, single or double-sided, number of copies.</div>
+      </div>
+    </div>
+
+    <div class="mp-step-item mp-reveal mp-d2">
+      <div class="mp-step-num">3</div>
+      <div>
+        <div class="mp-step-emoji">🛒</div>
+        <div class="mp-step-title">Review & Pay</div>
+        <div class="mp-step-desc">Check your order summary, then pay directly to the shop via GPay or PhonePe. We never touch your money.</div>
+      </div>
+    </div>
+
+    <div class="mp-step-item mp-reveal mp-d3">
+      <div class="mp-step-num">4</div>
+      <div>
+        <div class="mp-step-emoji">🔑</div>
+        <div class="mp-step-title">Get Your OTP</div>
+        <div class="mp-step-desc">A unique 6-digit code is generated for your order. Screenshot it — you'll need it at the counter.</div>
+      </div>
+    </div>
+
+    <div class="mp-step-item mp-reveal mp-d4">
+      <div class="mp-step-num done">5</div>
+      <div>
+        <div class="mp-step-emoji">📦</div>
+        <div class="mp-step-title">Walk In & Collect</div>
+        <div class="mp-step-desc">Show the OTP at the counter. Your prints are already waiting. No queue, no wait.</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════════
+    FEEDBACK      
+══════════════════════════════════════════════  --> 
+<section class="mp-section mp-contact" id="feedback">
+    <div class="mp-sec-label">FEEDBACK</div>
+    <h2 class="mp-sec-heading">Help us <br>IMPROVE</h2>
+
+  {# Student tab #}
+  <div id="mp-tab-student">
+    <form method="post" action="{% url 'index' %}">
+      {% csrf_token %}
+      <div class="mp-form-group">
+        <label for="id_name">Your Name</label>
+        <input type="text" id="id_name" name="name" maxlength="255" placeholder="Your name" required />
+      </div>
+      <div class="mp-form-group">
+        <label for="id_message">Message</label>
+        <textarea id="id_message" name="message" maxlength="255" placeholder="Feedback..." required></textarea>
+      </div>
+      <button type="submit" class="mp-btn-feedback">Send Message </button>
+    </form>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════════════════
+    CONTACT / PARTNER
+════════════════════════════════════════════════ -->
+<section class="mp-section mp-contact" id="contact">
+  <div class="mp-reveal">
+    <div class="mp-sec-label">Get In Touch</div>
+    <h2 class="mp-sec-heading">Contact us.</h2>
+  </div>
+
+  {# Shop tab #}
+    <div class="mp-shop-panel">
+      <div class="mp-sp-label">For Xerox Shops</div>
+      <h3 class="mp-sp-title">Join the Network 🖨️</h3>
+      <p class="mp-sp-sub">Become a MyPrints partner. We give you the tool — you just verify and earn.</p>
+      <ul class="mp-sp-perks">
+        <li class="mp-sp-perk">
+          <div class="mp-sp-check">✓</div>
+          <span><strong style="color:#fff">windows_script.exe</strong> — auto-receives jobs &amp; <strong>auto prints.</strong> No tech skills needed. Only verify.</span>
+        </li>
+        <li class="mp-sp-perk">
+          <div class="mp-sp-check">✓</div>
+          <span>Files auto-delete after collection. Zero liability on your end.</span>
+        </li>
+        <li class="mp-sp-perk">
+          <div class="mp-sp-check">✓</div>
+          <span>You set your own pricing. Students pay you directly via UPI. We never touch the money.</span>
+        </li>
+        <li class="mp-sp-perk">
+          <div class="mp-sp-check">✓</div>
+          <span>Onboard quickly. Dedicated WhatsApp support included.</span>
+        </li>
+      </ul>
+      
+      <p class="mp-sp-note">Demo period available.</p>
+    </div>
+    <div class="mp-contact-socials">
+      <a href="mailto:contact@myprints.in" class="mp-contact-pill">✉️ contact@myprints.in</a>
+      <a href="https://wa.me/919764308031" class="mp-contact-pill" target="_blank">💬 WhatsApp</a>
+    </div>
+</section>
+
+<footer class="mp-footer">
+
+  <!-- Top: brand + tagline -->
+  <div class="mp-footer-brand">
+    <a href=# class="mp-logo mp-footer-logo"> MyPrints </a>
+    <p class="mp-footer-tagline">
+      Smart campus printing. Upload anywhere,<br>collect in seconds.
+    </p>
+    <!-- Social / contact pills -->
+    <div class="mp-footer-socials">
+      <a href="mailto:contact@myprints.in" class="mp-footer-pill">✉️ contact@myprints.in</a>
+      <a href="https://wa.me/919764308031" class="mp-footer-pill" target="_blank">💬 WhatsApp</a>
+    </div>
+  </div>
+
+  <!-- Middle: link columns -->
+  <div class="mp-footer-cols">
+
+    <div class="mp-footer-col">
+      <div class="mp-footer-col-title">Product</div>
+      <a href="#how">How it Works</a>
+      <a href="{% url 'shops' %}">Find a Shop</a>
+      <a href="#features">Features</a>
+      <a href="#contact">Contact Us</a>
+    </div>
+
+    <div class="mp-footer-col">
+      <div class="mp-footer-col-title">For Shops</div>
+      <a href="#contact">Join the Network</a>
+      <a href="#contact">Register My Shop</a>
+      <a href="#contact">Partner Support</a>
+    </div>
+
+    <div class="mp-footer-col">
+      <div class="mp-footer-col-title">Legal</div>
+      <a href=#>Privacy Policy</a>
+      <a href=#>Terms &amp; Conditions</a>
+      <a href=#>Refund Policy</a>
+    </div>
+
+  </div>
+
+  <!-- Bottom bar -->
+  <div class="mp-footer-bottom">
+    <span>© 2026 MyPrints. All rights reserved.</span>
+    <span class="mp-footer-bottom-right">
+      Made with ❤️ in India &nbsp;🇮🇳
+    </span>
+  </div>
+
+</footer>
+
+<!-- ══════════════════════════════════════════════
+     STICKY MOBILE CTA
+     (hidden on desktop via CSS, slides up on scroll on mobile)
+════════════════════════════════════════════════ -->
+<div class="mp-sticky-cta hidden" id="mpStickyCta">
+  <a href="{% url 'shops' %}" id="sticky-order-btn">Select Shop! &nbsp;→</a>
+</div>
+
+{% endblock %}

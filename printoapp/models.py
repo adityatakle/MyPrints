@@ -60,5 +60,10 @@ class Cart_items(models.Model):
     total_pages = models.IntegerField()
     total_amount = models.DecimalField(max_digits=9, decimal_places=2)
     is_printed = models.BooleanField(default=False)
+    is_cleaned = models.BooleanField(default=False)
     cart = models.ForeignKey("Cart", on_delete=models.CASCADE)
     shop_item = models.ForeignKey("Shop_items", related_name="cart_items", on_delete=models.PROTECT)
+
+class Feedback(models.Model):
+    name = models.CharField(max_length=50)
+    message = models.CharField(max_length=255)

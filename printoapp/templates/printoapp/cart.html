@@ -1,67 +1,182 @@
 {% load static %}
-
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <title>{% block title %}MyPrints{% endblock %}</title>
-        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
-        <link href="{% static 'printoapp/style.css' %}" rel="stylesheet">
-        <script src="{% static 'printoapp/script.js' %}"></script>
-    </head>
-    <body>
-        <div class="body">
-            <div class="header">
-            <a href="{% url 'upload' user_id=user_id shop_id=shop_id %}" class="header-name">MyPrints</a>
-            <a href=""></a>
-        </div>
-        <form method="post" action="{% url 'cart' user_id=user_id shop_id=shop_id %}">
-            {% csrf_token %}
-            <div class="cart-item">
-                
-                <input type="hidden" value="{{user_id}}" name="user_id">
-                <input type="hidden" value="{{shop_id}}" name="shop_id">
-                {% if cart_items %}
-                    {% for item in cart_items %}
-                    <div class="item">
-                        <span class="item-name">{{item.file_id}}</span>
-                        <span class="item-quantity">
-                            <button type="submit" value="{{item.id}}" name ="subtract" class="subtract-quantity">-</button>
-                            <span>{{item.quantity}}</span>
-                            <button value="{{item.id}}" name="add" type="submit" class="add-quantity">+</button>
-                            
-                        </span>
-                        <button type="submit" name="remove-item" class="remove-item" value="{{ item.id }}"><img class="bin" src="{% static 'printoapp/bin.png' %}"></button>
-                        <span class="item-total">₹{{item.total_amount}}</span>
-                        
-                        <span class="item-details">
-                            <span class="item-pages">Pages: {{item.total_pages}}</span>
-                            {% if item.shop_item.is_color %}
-                                <span class="item-color">Color</span>
-                            {% else %}
-                                <span class="item-color">Black and White</span>
-                            {% endif %}
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cart — MyPrints</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+        integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh"
+        crossorigin="anonymous">
+  <link href="{% static 'printoapp/style.css' %}" rel="stylesheet">
+  <link href="{% static 'printoapp/cart.css' %}" rel="stylesheet">
+  <script src="{% static 'printoapp/script.js' %}"></script>
+</head>
+<body class="ct-body">
+<div class="body">
 
-                            {% if item.shop_item.is_b2b %}
-                                <span class="item-side">Double side</span>
-                            {% else %}
-                                <span class="item-side">Single side</span>
-                            {% endif %}
-                        </span>
-                    </div>
-                    {% endfor %}
-                    <div>
-                        <span><bold>Cancellation policy:</bold><br>Please double-check your order details. Orders are non-refundable once placed. </span>
-                    </div>
-                    <div class="order-summary">
-                        <button class="total-amount"><span >Pay: {{total_amount }}</span></button>
-                    </div>
-                {% else %}
-                    <div>
-                        Nothing in cart. Add docs.
-                    </div>
-                {% endif %}    
+  <!-- ══════════════════════════════════
+       STICKY HEADER
+  ════════════════════════════════════ -->
+  <header class="ct-header">
+    <a href="{% url 'upload' user_id=user_id shop_id=shop_id %}" class="ct-back-btn" aria-label="Back">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+        <path d="M19 12H5M5 12l7 7M5 12l7-7"
+              stroke="currentColor" stroke-width="2.2"
+              stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </a>
+    <a href="{% url 'upload' user_id=user_id shop_id=shop_id %}" class="ct-logo">
+      My<em>Prints</em>
+    </a>
+    <div class="ct-header-right">
+      {% if cart_items %}
+        <span class="ct-item-count">{{ cart_items|length }} item{% if cart_items|length != 1 %}s{% endif %}</span>
+      {% endif %}
+    </div>
+  </header>
+
+  <!-- ══════════════════════════════════
+       MAIN
+  ════════════════════════════════════ -->
+  <main class="ct-main">
+
+    <form method="post" action="{% url 'cart' user_id=user_id shop_id=shop_id %}">
+      {% csrf_token %}
+      <input type="hidden" value="{{ user_id }}" name="user_id">
+      <input type="hidden" value="{{ shop_id }}" name="shop_id">
+
+      {% if cart_items %}
+
+        <!-- page label -->
+        <p class="ct-eyebrow">Your Order</p>
+        <h1 class="ct-title">Review &amp; Pay</h1>
+        
+        <!-- ── ITEM LIST ── -->
+        <div class="ct-list">
+          {% for item in cart_items %}
+          <div class="ct-item" id="ct-item-{{ item.id }}">
+
+            <!-- filename + price row -->
+            <div class="ct-item-top">
+              <div class="ct-item-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"
+                        stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round"/>
+                  <polyline points="14 2 14 8 20 8"
+                            stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <span class="ct-item-name">{{ item.file_id }}</span>
+              <span class="ct-item-price">₹{{ item.total_amount }}</span>
             </div>
-        </form>
+
+            <!-- meta tags row -->
+            <div class="ct-item-meta">
+              <span class="ct-tag">📄 {{ item.total_pages }} pages</span>
+              {% if item.shop_item.is_color %}
+                <span class="ct-tag ct-tag--color">🎨 Color</span>
+              {% else %}
+                <span class="ct-tag">⬛ B&amp;W</span>
+              {% endif %}
+              {% if item.shop_item.is_b2b %}
+                <span class="ct-tag">↔️ Double side</span>
+              {% else %}
+                <span class="ct-tag">➡️ Single side</span>
+              {% endif %}
+            </div>
+
+            <!-- quantity + remove row -->
+            <div class="ct-item-controls">
+              <div class="ct-qty">
+                <button type="submit" value="{{ item.id }}" name="subtract"
+                        class="ct-qty-btn subtract-quantity" aria-label="Decrease">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                    <path d="M5 12h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                  </svg>
+                </button>
+                <span class="ct-qty-num item-quantity">{{ item.quantity }}</span>
+                <button type="submit" value="{{ item.id }}" name="add"
+                        class="ct-qty-btn add-quantity" aria-label="Increase">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                  </svg>
+                </button>
+              </div>
+
+              <button type="submit" name="remove-item" value="{{ item.id }}"
+                      class="ct-remove remove-item"
+                      onclick="this.closest('.ct-item').classList.add('ct-item--removing')"
+                      aria-label="Remove item">
+                <img src="{% static 'printoapp/bin.png' %}" class="bin ct-bin-img" alt="Remove">
+              </button>
+            </div>
+
+          </div>
+          {% endfor %}
         </div>
-    </body>
+
+        <!-- ── CANCELLATION POLICY ── -->
+        <div class="ct-policy">
+          <div class="ct-policy-icon">⚠️</div>
+          <p class="ct-policy-text">
+            <strong>Cancellation policy:</strong> Please double-check your order details.
+            Orders are non-refundable once placed.
+          </p>
+        </div>
+
+        <!-- ── ORDER SUMMARY ── -->
+        <div class="ct-summary">
+          <div class="ct-summary-row">
+            <span>Subtotal</span>
+            <span>₹{{ total_amount }}</span>
+          </div>
+          <div class="ct-summary-row">
+            <span>Platform fees</span>
+            <span class="ct-free">₹0 🎉</span>
+          </div>
+          <div class="ct-summary-divider"></div>
+          <div class="ct-summary-row ct-summary-total">
+            <span>Total</span>
+            <span>₹{{ total_amount }}</span>
+          </div>
+        </div>
+
+        <!-- ── PAY BUTTON ── -->
+        <button type="submit" class="ct-pay-btn total-amount order-summary">
+          <span class="ct-pay-label">Pay &amp; Print</span>
+          <span class="ct-pay-amount">₹{{ total_amount }}</span>
+          <span class="ct-pay-arrow">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M5 12h14M13 6l6 6-6 6"
+                    stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+        </button>
+
+        <p class="ct-pay-note">🔐 Secure UPI payment directly to the shop</p>
+
+      {% else %}
+
+        <!-- ── EMPTY STATE ── -->
+        <div class="ct-empty">
+          <div class="ct-empty-icon">🛒</div>
+          <h2 class="ct-empty-title">Your cart is empty</h2>
+          <p class="ct-empty-sub">Upload a PDF and configure your print job to get started.</p>
+          <a href="{% url 'upload' user_id=user_id shop_id=shop_id %}"
+             class="ct-empty-btn">
+            Upload a Document →
+          </a>
+        </div>
+
+      {% endif %}
+
+    </form>
+  </main>
+
+</div>
+</body>
 </html>
