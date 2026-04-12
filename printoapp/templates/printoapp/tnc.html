@@ -1,0 +1,81 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>{% block title %}Terms and Conditions | MyPrints{% endblock %}</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+        <link href="{% static 'printoapp/legal.css' %}" rel="stylesheet">
+         
+    </head>
+    <body>
+        <nav class="mp-nav">
+            MyPrints
+
+            <a href="{% url 'shops' %}" class="mp-nav-pill" id="nav-order-btn">
+                Select Shop! →
+            </a>
+        </nav>
+        <div class="page-data">
+            <p class="main-title"> TERMS OF SERVICE </p>
+            <p class="main-update"> <strong>Effective Date:</strong> March 30, 2026<br> <strong> Last Updated:</strong> March 30, 2026</p>
+
+            <p> Welcome to <strong>MyPrints </strong>(MyPrints.in), operated by <strong>Curio Labs </strong> (hereinafter referred to as "MyPrints", "we", "us", or "our"), an individual proprietorship based in Jalna, Maharashtra. These Terms of Service ("Terms") govern your access to and use of our web application and printing services. 
+
+            By accessing the Site or using our Services, you acknowledge that you have read, understood, and agree to be bound by these Terms and our <strong>Privacy Policy </strong> . If you do not agree, you must discontinue use of the Site immediately.</p>
+
+            <p class ="head"> 1. Access and Use of the Service </p>
+            <p class= "text"><strong>User Identity (UUID): </strong> MyPrints does not require account registration. Users are identified solely by a randomly generated <strong>Universally Unique Identifier (UUID) </strong> stored in browser cookies.
+            <br><strong>Responsibility: </strong> You are responsible for maintaining the privacy of your browser's cookies. If you clear your cookies, you may lose access to pending orders, and MyPrints is not liable for such loss.
+            <br><strong>Modifications: </strong> We reserve the right to modify or discontinue the Site (or any part thereof) at any time without notice.</p>
+
+            <p class ="head"> 2. User Content and Conduct </p>
+            <p class="text">You are solely responsible for the documents, images, or data ("User Content") you upload for printing. You agree <strong>NOT </strong> to use MyPrints to upload content that:
+            <br> - Infringes on any intellectual property, copyright, or trademark rights of any party.
+            <br> - Is unlawful, harmful, threatening, abusive, defamatory, obscene, or otherwise objectionable.
+            <br> - Contains software viruses or files designed to interrupt or limit the functionality of any computer hardware.
+            <br> - Violates any local, state, or national laws of India.
+            <br> <strong> Right to Refuse: </strong> MyPrints and its partner print shops reserve the right to refuse to print any content that, in our sole judgment, violates these Terms or is deemed objectionable.</p>
+
+            <p class ="head"> 3. Data Retention and Deletion </p>
+            <p class="text"> <strong>Secure Handling: </strong> Files are stored securely on <strong>AWS </strong> and processed through <strong>PythonAnywhere</strong>.
+            <br><strong>Auto-Purge: </strong> All User Content is permanently deleted from our servers <strong>24 hours after upload </strong> or <strong>immediately after the order is picked up </strong>, whichever occurs first.
+            <br><strong>No Liability: </strong> MyPrints has no responsibility or liability for the deletion of User Content once the retention period has passed.</p>
+
+            <p class ="head"> 4. Payments and Refunds </p>
+            <p class="text"> <strong>Payment Gateway: </strong> All payments are processed through <strong>Razorpay </strong>. By using our service, you agree to Razorpay’s terms and conditions.
+            <br><strong>No-Refund Policy: </strong> <strong>We do not provide refunds under any circumstances. </strong> Once an order is placed and payment is confirmed, the transaction is final.
+            <br><strong>Pricing: </strong> Prices for services are set by individual shops and are subject to change without notice.</p>
+
+            <p class ="head"> 5. Shortages or Quality Claims </p>
+            <p class="text"> <strong>Inspection: </strong> You must inspect all printed materials immediately upon receipt at the shop.
+            <br>  <strong>Notice: </strong> Any claims for damage or defects must be reported to the shop owner at the time of pickup. Once you leave the shop premises with the items, it constitutes your unconditional acceptance of the order.</p>
+
+            <p class ="head"> 6. Intellectual Property </p>
+            <p class="text"> <strong>Ownership: </strong> You retain all ownership rights to your User Content. 
+            <br>  <strong>License: </strong> By uploading User Content, you grant MyPrints a temporary, worldwide, royalty-free license to store and transmit your content solely for the purpose of fulfilling your print request.
+            <br>  <strong>Site Content: </strong> All software, logos, and designs on MyPrints are the intellectual property of <strong>Curio Labs </strong>. You agree not to copy, modify, or exploit any portion of the Site for commercial purposes.</p>
+
+            <p class ="head"> 7. Disclaimer of Warranties </p>
+            <p class="text"> YOUR USE OF THE SITE IS AT YOUR SOLE RISK. THE SITE IS PROVIDED ON AN "AS IS" AND "AS AVAILABLE" BASIS. MYPRINTS EXPRESSLY DISCLAIMS ALL WARRANTIES OF ANY KIND, INCLUDING BUT NOT LIMITED TO THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.</p>
+
+            <p class ="head"> 8. Limitation of Liability </p>
+            <p class="text"> YOU AGREE THAT <strong>CURIO LABS </strong> WILL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, OR CONSEQUENTIAL DAMAGES RESULTING FROM THE USE OR INABILITY TO USE THE SERVICE. IN NO EVENT WILL OUR TOTAL LIABILITY TO YOU EXCEED <strong>INR 5,000 (INDIAN RUPEES FIVE THOUSAND) </strong>.</p>
+
+            <p class ="head"> 9. Dispute Resolution by Binding Arbitration </p>
+            <p class="text"> <strong>Agreement to Arbitrate: </strong> Any disputes arising out of these Terms shall be resolved exclusively through final and binding arbitration under the <strong>Arbitration and Conciliation Act, 1996 </strong>.
+            <br>  <strong>Jurisdiction: </strong> The seat and venue of arbitration shall be <strong>Jalna, Maharashtra </strong>, and the language of arbitration shall be English, Hindi or Marathi.
+            <br>  <strong>Individual Basis: </strong> You may only bring claims against us on an individual basis and not as a plaintiff or class member in any representative proceeding.</p>
+
+            <p class ="head"> 10. Governing Law </p>
+            <p class="text"> These Terms shall be governed by and construed in accordance with the laws of <strong>India </strong>. For any disputes not subject to arbitration, you agree to submit to the exclusive jurisdiction of the courts located in <strong>Jalna, Maharashtra </strong>.</p>
+
+            <p class ="head"> 11. Contact Us </p>
+            <p class="text"> For questions regarding these Terms, please contact us at: <br>
+            <strong>Email: </strong> contact@myprints.in<br>
+            <strong>Entity: </strong>Curio Labs, Jalna, Maharashtra. </p>
+        </div>
+
+    </body>
+</html>

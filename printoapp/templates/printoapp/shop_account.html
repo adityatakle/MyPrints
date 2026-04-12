@@ -1,0 +1,55 @@
+{% extends 'printoapp/shop_layout.html' %}
+{% load static %}
+
+{% block shop_extra_head %}
+    <link href="{% static 'printoapp/shop_account.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block nav_account %}sd-active{% endblock %}
+
+{% block sd_content %}
+<div class="sc-page">
+    <div class="sc-page-header">
+        <div class="sc-page-header-left">
+            <h2 class="sc-title">Shop Account</h2>
+            <p class="sc-subtitle">View and manage your business profile details.</p>
+        </div>
+    </div>
+
+
+
+        <div class="account-details-grid">
+            <div class="detail-item">
+                <label>Shop Name</label>
+                <span>{{ shop.name }}</span>
+            </div>
+
+            <div class="detail-item">
+                <label>Location</label>
+                <span>{{ shop.location }}</span>
+            </div>
+
+            <div class="detail-item">
+                <label>Landmark</label>
+                <span>{{ shop.landmark }}</span>
+            </div>
+
+            <div class="detail-item">
+                <label>State</label>
+                <span>{{ shop.state }}</span>
+            </div>
+
+            <div class="detail-item detail-item--full">
+                <label>GPS Coordinates</label>
+                <div class="coordinates-badge">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"></path>
+                        <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
+                    {{ shop.latitude }}, {{ shop.longitude }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

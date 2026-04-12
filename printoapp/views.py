@@ -1,8 +1,9 @@
 from django.shortcuts import render, redirect, reverse, get_object_or_404
-from .models import Client, Shop_owner, Shop_info, Shop_items, Cart, Cart_items, Feedback
+from .models import Client, Shop_owner, Shop_info, Shop_items, Cart, Cart_items, Feedback, Shop_timing
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
+from django.core.serializers.json import DjangoJSONEncoder
 import json
 from django.http import JsonResponse, HttpResponse, HttpResponseRedirect
 from django.urls import reverse
@@ -19,8 +20,14 @@ import os
 from django.views.decorators.csrf import csrf_exempt
 from io import BytesIO
 from django.db.models import Sum, Q
+import razorpay
+from django.conf import settings
+from datetime import timedelta
 
 # Create your views here.
+
+razorpay_client = razorpay.Client(auth=(settings.RAZORPAY_KEY_TEST, settings.RAZORPAY_SECRET_TEST))
+
 def index(request):
     if request.method == "POST":
         name = request.POST.get('name')
@@ -29,16 +36,56 @@ def index(request):
         return redirect('index')
     return render(request,"printoapp/index.html")
 
+
+def privacy_policy(request):
+    return render(request, "printoapp/privacy_policy.html")
+
+def tnc(request):
+    return render(request, "printoapp/tnc.html")
+
 def shops(request):
     now = timezone.localtime()
-    now_day = now.weekday()
-    now = now.time() 
-    shops_info = Shop_info.objects.all()
+    now_day = now.strftime('%A')
+    now_time = now.time()
+    
+    shops_info = Shop_info.objects.filter(status='Active').prefetch_related('timings')
+    
+    # Prepare shop data for JavaScript
+    shops_data = []
+    for shop in shops_info:
+        today_open = shop.timings.filter(weekday=now_day).first()
+        is_open = False
+        
+        if today_open:
+            start = today_open.start_time
+            end = today_open.end_time
+            if start <= end:
+                is_open = start <= now_time <= end
+            else:
+                is_open = now_time >= start or now_time <= end
+        
+        shops_data.append({
+            "id": shop.id,
+            "name": shop.name,
+            "location": shop.location,
+            "landmark": shop.landmark,
+            "city": shop.city,
+            "state": shop.state,
+            "latitude": float(shop.latitude) if shop.latitude else None,
+            "longitude": float(shop.longitude) if shop.longitude else None,
+            "is_open": is_open
+        })
+
     if request.method == "POST":
         user_uuid = request.POST.get("user_id")
         shop_id = request.POST.get("shop_id")
         return redirect('upload', user_id=user_uuid, shop_id=shop_id)
-    return render(request, "printoapp/shops.html", {"shops_info":shops_info, "now":now, "now_day":now_day})
+
+    # Convert to JSON string safely
+    context = {
+        "shops_json": shops_data,
+    }
+    return render(request, "printoapp/shops.html", context)
 
 
 def upload(request, user_id, shop_id):
@@ -51,6 +98,24 @@ def upload(request, user_id, shop_id):
         print(f"User error: {e}")
         return redirect('shops')
     
+    # Define the expiration threshold
+    last_24_hours = timezone.now() - timedelta(hours=24)
+
+    # Delete the old cart directly using a filter
+    Cart.objects.filter(
+        user=current_user,
+        shop_info_id=shop_id,
+        cart_status="Open",
+        created_at__lte=last_24_hours  # "Less than or equal to" the threshold
+    ).delete()
+
+    # Get or create the fresh cart
+    cart, created = Cart.objects.get_or_create(
+        user=current_user,
+        shop_info_id=shop_id,
+        cart_status="Open",
+        defaults={'total_amount': 0.00}
+    )
     # Get context data
     item_number = Cart_items.objects.filter(
         cart__user__user_id=user_id, 
@@ -59,14 +124,6 @@ def upload(request, user_id, shop_id):
     ).count()
     
     shop_item_list = Shop_items.objects.filter(shop_info_id=shop_id)
-    
-    # Get or create cart
-    cart, _ = Cart.objects.get_or_create(
-        user=current_user,
-        shop_info_id=shop_id,
-        cart_status="Open",
-        defaults={'total_amount': 0.00}
-    )
     
     if request.method == "POST":
         if "document" in request.FILES:
@@ -160,6 +217,7 @@ def upload(request, user_id, shop_id):
             cart.total_pages += total_pages
             cart.total_amount += cart_item.total_amount
             cart.save()
+
             
             message = f"{file.name} added to cart successfully."
             item_number = Cart_items.objects.filter(cart=cart).count()
@@ -186,7 +244,7 @@ def cart(request, shop_id, user_id):
         item = cart_item.file_id.split('/')[-1]
         cart_item.file_id = item
         total_amount += cart_item.total_amount
-
+    shop = Shop_info.objects.filter(id=shop_id).first()
     if request.method == "POST":
         shop_id = request.POST.get("shop_id")
         user_id = request.POST.get("user_id")
@@ -224,6 +282,7 @@ def cart(request, shop_id, user_id):
         if "remove-item" in request.POST:
             item_id = request.POST.get("remove-item")
             item = get_object_or_404(Cart_items, id=item_id)
+            parent_cart = item.cart
             unit_price = item.shop_item.price * item.total_pages
             parent_cart.total_amount -= unit_price * item.quantity
             parent_cart.total_pages -= item.total_pages * item.quantity
@@ -240,9 +299,64 @@ def cart(request, shop_id, user_id):
         check_cart.total_amount = cart_amount
         check_cart.total_pages = cart_pages
         check_cart.save()
-        
         return redirect("cart", shop_id=shop_id, user_id=user_id)
-    return render(request, "printoapp/cart.html", {"cart_items":cart_items, "shop_id":shop_id, "user_id":user_id, "total_amount":total_amount})
+    
+    return render(request, "printoapp/cart.html", {"cart_items":cart_items, "shop_id":shop_id, "user_id":user_id, "total_amount":total_amount, "shop":shop})
+
+def create_order(request, amount):
+    amount = int(amount * 100)
+    currency = 'INR'
+    data = {
+        "amount": amount, 
+        "currency": currency
+        }
+    razorpay_order = razorpay_client.order.create(data=data)
+    return {"order-id":razorpay_order['id'], 'amount':amount}
+
+def initiate_payment(request, shop_id, user_id):
+    if request.method == 'POST':
+        # Get current cart items to calculate the fresh total
+        cart_items = Cart_items.objects.filter(
+            cart__user__user_id=user_id, 
+            cart__shop_info_id=shop_id, 
+            cart__cart_status="Open"
+        )
+        
+        total_amount = sum(item.total_amount for item in cart_items)
+
+        if total_amount <= 0:
+            return JsonResponse({'error': 'Cart is empty'}, status=400)
+
+        # Create the actual Razorpay Order
+        order_data = create_order(request, total_amount) 
+        
+        return JsonResponse({
+            'order_id': order_data['order-id'],
+            'amount': order_data['amount'],
+            'key_id': settings.RAZORPAY_KEY_TEST
+        })
+    else:
+        return JsonResponse({'error':'ONLY POST METHOD ALLOWED'})
+
+
+@csrf_exempt
+def payment_status(request):
+    if request.method == "POST":
+        payment_id = request.POST.get('razorpay_payment_id')
+        order_id = request.POST.get('razorpay_order_id')
+        signature = request.POST.get('razorpay_signature')
+
+        try:
+            razorpay_client.utility.verify_payment_signature({
+                'razorpay_order_id': order_id,
+                'razorpay_payment_id': payment_id,
+                'razorpay_signature': signature
+            })
+            return render(request, 'printoapp/success.html')
+        except Exception as e:
+            print(f"Verification Failed Error: {e}")
+            return render(request, 'printoapp/failure.html')
+
 
 def shop_login(request):
     if request.method == "POST":
@@ -391,13 +505,19 @@ def shop_catalogue(request):
         ).values(
             'id', 'page_type', 'is_color', 'is_b2b', 'price'
             ).order_by('page_type', 'is_color')
+    timings = Shop_timing.objects.filter(shop__shop_owner__user=request.user).first()
+    
     if request.method == "POST":
         request_type = request.POST.get('request_type')
         page_type = request.POST.get('page_type')
         is_color = request.POST.get('is_color') == 'on'
         is_b2b = request.POST.get('is_b2b') == 'on'
         price = request.POST.get('price')
-        if request_type == "Add":
+        weekday = request.POST.get('weekday')
+        start_time = request.POST.get('start_time')
+        end_time = request.POST.get('end_time')
+        
+        if request_type == "Add_catalogue":
             if Shop_items.objects.filter(shop_info=shop, page_type=page_type, is_color=is_color, is_b2b=is_b2b).exists():
                 return redirect('shop_catalogue')
             Shop_items.objects.create(
@@ -408,7 +528,7 @@ def shop_catalogue(request):
                 shop_info = shop
                 )
             
-        elif request_type == "Edit":
+        elif request_type == "Update_catalogue":
             item_id = request.POST.get('item_id')
             edit = Shop_items.objects.get(id = item_id, shop_info = shop)
             edit.page_type = page_type
@@ -416,13 +536,56 @@ def shop_catalogue(request):
             edit.is_b2b = is_b2b
             edit.price = price
             edit.save()
+        
+        elif request_type == "Delete_catalogue":
+            item_id = request.POST.get('item_id')
+            item = Shop_items.objects.get(id = item_id, shop_info = shop)
+            item.delete()
+            
+        elif request_type == "Add_timing":
+            if not Shop_timing.objects.filter(shop=shop, weekday=weekday).exists():
+                Shop_timing.objects.create(
+                    weekday=weekday,
+                    start_time=start_time,
+                    end_time=end_time,
+                    shop=shop
+                )
+        
+        elif request_type == "Update_timing":
+            timing_id = request.POST.get('timing_id')
+            timing = Shop_timing.objects.get(id = timing_id, shop = shop)
+            timing.weekday = weekday
+            timing.start_time = start_time
+            timing.end_time = end_time
+            timing.save()
+
+        elif request_type == "Delete_timing":
+            timing_id = request.POST.get('timing_id')
+            timing = Shop_timing.objects.get(id = timing_id, shop = shop)
+            timing.delete()
+
         return redirect('shop_catalogue')
     return render(request, 'printoapp/shop_catalogue.html', {
         'time': greeting,
         'username': request.user.username,
-        'shop_name': shop.name,
-        'items' : items
+        'shop_info': shop,
+        'items' : items,
+        'open_days': timings
     })
+
+@login_required
+def shop_account(request):
+    now_obj = timezone.localtime()
+    hour = now_obj.hour
+    greeting = "Morning" if 0 <= hour < 12 else "Noon" if hour == 12 else "Afternoon" if 12 < hour < 18 else "Evening"
+    shop = Shop_info.objects.get(shop_owner__user = request.user)
+    return render(request, 'printoapp/shop_account.html', {
+        'time': greeting,
+        'username': request.user.username,
+        'shop':shop
+    })
+
+
 
 
 # api routes

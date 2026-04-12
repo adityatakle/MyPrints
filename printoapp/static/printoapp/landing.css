@@ -494,12 +494,13 @@ a { text-decoration: none; color: inherit; }
   body.landing-page { padding-bottom: 0; }
   .mp-sticky-cta   { display: none; }
 
-  .mp-nav           { padding: 0 40px; height: 100px; }
+  .mp-nav           { padding: 0 40px; height: 70px; }
   .mp-nav-links     { display: flex; }
+  .mp-nav-links > li { padding-top: 10px;}
   .mp-hero {
     padding: 48px 40px 56px;
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1.15fr 1fr;
     align-items: center;
     gap: 40px;
     min-height: auto;           /* ← removed stretch */
@@ -508,7 +509,7 @@ a { text-decoration: none; color: inherit; }
   .mp-hero-phone-wrap { margin-top: 0; }
   .mp-mini-phone      { width: 220px; }
   .mp-hero h1         { font-size: clamp(2.8rem, 4.5vw, 3.8rem); }
-  .mp-btn-hero        { width: auto !important; padding: 16px 36px !important; }
+  .mp-btn-hero        { width: auto !important; padding: 16px 36px !important; margin: 0 45px;}
 
   .mp-section         { padding: 80px 40px; }
   .mp-feat-grid       { grid-template-columns: repeat(4, 1fr); }

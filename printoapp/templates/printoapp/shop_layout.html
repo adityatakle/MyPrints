@@ -17,7 +17,7 @@
             <button class="sd-hamburger" id="sdHamburger" aria-label="Menu">
                 <span></span><span></span><span></span>
             </button>
-            <a href="#" class="sd-topbar-logo">My<em>Prints</em> <span>Shop</span></a>
+            <a href="{% url 'shop_index' %}" class="sd-topbar-logo">My<em>Prints</em> <span>Shop</span></a>
         </div>
         <div class="sd-topbar-center">
             <span class="sd-greeting">Good <strong>{{ time }}</strong>, {{ username }} 👋</span>
@@ -70,6 +70,16 @@
                               stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                     My Catalogue
+                </a>
+
+                <a href="{% url 'shop_account' %}"
+                   class="sd-nav-item {% block nav_account %}{% endblock %}">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                        <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z"
+                              stroke="currentColor" stroke-width="1.8"
+                              stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    My Account
                 </a>
 
             </nav>

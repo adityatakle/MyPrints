@@ -367,6 +367,12 @@ body.ct-body, body {
 }
 
 /* ── PAY BUTTON ──────────────────────────────────────────────── */
+#key_id {
+  display: none;
+}
+#order_id {
+  display: none;
+}
 .ct-pay-btn {
   display: flex !important;
   align-items: center !important;

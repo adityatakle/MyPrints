@@ -505,3 +505,26 @@ body {
   .up-title { margin-bottom: 32px; }
   .row-info { padding: 16px 20px; }
 }
+
+.loading-panel {
+  display: none;
+
+}
+.up-loader-wrapper {
+  text-align: center;
+  margin: 20px auto;
+}
+
+.up-custom-spinner {
+  width: 64px;          /* Matches w-16 */
+  height: 64px;         /* Matches h-16 */
+  border: 4px dashed #eab308; /* Matches border-yellow-500 */
+  border-radius: 50%;   /* Matches rounded-full */
+  margin: 0 auto;
+  animation: up-spin 1.5s linear infinite; /* Matches animate-spin */
+}
+
+@keyframes up-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

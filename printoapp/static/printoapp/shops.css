@@ -35,7 +35,6 @@
 .shops-container {
     max-width: 600px;
     margin: 0 auto;
-    padding: 16px;
 }
 
 .shops_form {
@@ -49,8 +48,25 @@
 .shops_submit {
     background: var(--card-bg);
     border: 1.5px solid transparent;
-    border-radius: 20px;
-    padding: 20px;
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+    padding: 30px;
+    text-align: left;
+    cursor: pointer;
+    transition: transform 0.1s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    display: block;
+    width: 100%;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    appearance: none;
+    -webkit-appearance: none;
+    outline: none;
+}
+
+.shop_footer {
+    background: var(--card-bg);
+    border: 1.5px solid transparent;
+    
+    padding: 30px;
     text-align: left;
     cursor: pointer;
     transition: transform 0.1s ease, box-shadow 0.2s ease, border-color 0.2s ease;
@@ -62,8 +78,6 @@
     outline: none;
     margin-bottom: 10px;
 }
-
-
 
 /* Mobile Haptic Feedback Simulation */
 .shops_submit:active:not([disabled]) {

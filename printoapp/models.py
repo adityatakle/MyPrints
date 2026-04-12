@@ -18,9 +18,6 @@ class Shop_info(models.Model):
     state = models.CharField(max_length =255)
     latitude = models.DecimalField(max_digits=9, decimal_places=6)
     longitude = models.DecimalField(max_digits=9, decimal_places=6)
-    open_weekdays = models.CharField(max_length=7, default="0123456")
-    open_time = models.TimeField(max_length=5, default="10:00")
-    close_time = models.TimeField(max_length=5, default="17:00")
     join_date = models.DateField(auto_now_add=True)
     script_token = models.CharField(max_length=255, blank=True)
     shop_owner = models.ForeignKey("Shop_owner", related_name="shops", on_delete=models.CASCADE)
@@ -35,6 +32,13 @@ class Shop_info(models.Model):
         if not self.close_time:
             self.close_time = "17:00"
         super().save(*args, **kwargs)
+
+
+class Shop_timing(models.Model):
+    weekday = models.CharField(max_length=10)
+    start_time = models.TimeField()
+    end_time = models.TimeField()
+    shop = models.ForeignKey("Shop_info", related_name="timings", on_delete=models.CASCADE)
 
 
 class Shop_items(models.Model):
@@ -60,7 +64,7 @@ class Cart_items(models.Model):
     total_pages = models.IntegerField()
     total_amount = models.DecimalField(max_digits=9, decimal_places=2)
     is_printed = models.BooleanField(default=False)
-    is_cleaned = models.BooleanField(default=False)
+    is_cleaned = models.BooleanField(default=False) 
     cart = models.ForeignKey("Cart", on_delete=models.CASCADE)
     shop_item = models.ForeignKey("Shop_items", related_name="cart_items", on_delete=models.PROTECT)
 

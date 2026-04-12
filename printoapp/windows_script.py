@@ -201,9 +201,8 @@ def print_file(file_path, printer_name, page_type):
     write_log(f"Printing {file_path} by {printer_name}")
 
     try:
-        # 2. Run SumatraPDF
+        # Run SumatraPDF
         result = subprocess.run(command, capture_output=True, text=True)
-        
         if result.returncode == 0:
             write_log(f"[✓] SumatraPDF sent file {file_path}.")
             return True
@@ -409,7 +408,8 @@ if __name__ == "__main__":
                                                 except Exception as e:
                                                     write_log(f"print error: {e}")
                                                 if success:
-                                                    write_log("Added to queue for print.")
+                                                    write_log("Printed Successfully.")
+
                                                 
                                                 try:
                                                     url = f'{BASE_URL}my_shop/file_update/'

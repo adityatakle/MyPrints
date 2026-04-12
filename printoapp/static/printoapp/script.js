@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 localStorage.setItem('printo_user_id',user_id);
                 console.log(`Your user id is ${user_id}`);
                 document.querySelector('#user_id').value = user_id;
+                document.querySelector('#current_user').innerHTML = user_id;
             })
         
         }
@@ -21,6 +22,50 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log(`Your user id is: ${user_id}`);
             document.querySelector('#user_id').value = user_id;
         }
+
+        getPreciseLocation((location) => {
+            const shops = JSON.parse(document.getElementById('shops-data').textContent);
+            const shopsList = document.getElementById('shops-list');
+
+            // Calculate distances safely
+            for (let shop of shops) {
+                if (location === 'error' || !shop.latitude) {
+                    shop.distance = Infinity;
+                } else {
+                    shop.distance = calculate_distance(location[0], location[1], shop.latitude, shop.longitude);
+                }
+            }
+
+            // Sort by distance
+            shops.sort((a, b) => a.distance - b.distance);
+
+            let finalHTML = "";
+            for (let shop of shops) {
+                let isClosed = !shop.is_open;
+                let btn_type = isClosed ? 'disabled' : '';
+                let status = isClosed ? 'closed' : 'open';
+                let status_info = isClosed ? 'Closed now' : 'Open now';
+
+                finalHTML += `
+                <button type="submit" ${btn_type} name="shop_id" value="${shop.id}" class="shops_submit">
+                    <div class="shop-header">
+                        <span class="status-badge status-${status}">${isClosed ? 'Closed' : 'Open Now'}</span>
+                    </div>
+                    <span class="shop-name">${shop.name}</span>
+                    <div class="shop-meta">
+                        ${shop.location}, ${shop.landmark}<br>
+                        ${shop.city}, ${shop.state}
+                    </div>
+                    <div class="shop-footer">
+                        <span class="time-info">${status_info}</span>
+                    </div>
+                </button>
+                <div class='shop_footer'>
+                    https://www.google.com/maps/search/?api=1&query=${shop.latitude},${shop.longitude}
+                </div>`;
+            }
+            shopsList.innerHTML = finalHTML;
+        });
     }
     if (title){
         title.addEventListener('change', function() {
@@ -82,6 +127,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             }
         })
+        // Show loading overlay on form submission
+        document.querySelector('.up-form').addEventListener('submit', function() {
+            const loading = document.querySelector('.loading-panel');
+            const overlay = document.querySelector('.up-config-panel');
+            overlay.style.display = 'none';
+            loading.style.display = 'flex';
+        });
     }
 });
 
@@ -150,3 +202,32 @@ function display_info(file_name,result, selected_type) {
     submit_btn.style.marginTop ='20px';
     submit_btn.style.borderRadius='10px';
 };
+
+function getPreciseLocation(callback) {
+    const options = {
+        enableHighAccuracy: true,
+        timeout: 5000,
+        maximumAge: 0
+    };
+
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            callback([position.coords.latitude, position.coords.longitude]);
+            console.log([position.coords.latitude, position.coords.longitude])
+        },
+        (error) => {
+            console.error("Error fetching location:", error.message);
+            callback('error');
+        },
+        options
+    );
+};
+
+function calculate_distance(user_lat, user_long, shop_lat, shop_long){
+    let distance = (shop_long-user_long)**2 + (shop_lat-user_lat)**2 ;
+    return distance;
+};
+
+
+// maps link with route https://www.google.com/maps/dir/?api=1&destination=${lat},${long}&travelmode=walking
+// maps link of a place https://www.google.com/maps/search/?api=1&query=${lat},${long}

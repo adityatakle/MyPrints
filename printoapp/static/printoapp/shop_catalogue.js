@@ -96,3 +96,89 @@
         }
     });
 })();
+
+// Logic for Weekday Update
+(function () {
+    const scheduleForm = document.getElementById('scScheduleForm');
+    const openDaysInput = document.getElementById('scOpenDaysValue');
+    const scheduleBtn = document.getElementById('scScheduleBtn');
+
+    if (scheduleForm) {
+        scheduleForm.addEventListener('submit', function (e) {
+            // Collect all checked days as a string (e.g., "1,2,3,4,5")
+            const selected = Array.from(document.querySelectorAll('.sc-day-cb:checked'))
+                                  .map(cb => cb.value)
+                                  .join('');
+            
+            openDaysInput.value = selected;
+            
+            // Re-use your existing loading state styles
+            scheduleBtn.innerHTML = '<span class="scm-save-spinner" style="display:block; margin:0"></span>';
+            scheduleBtn.disabled = true;
+        });
+    }
+})();
+
+// --- TIMING MODAL LOGIC ---
+const tModal = document.getElementById('timingModal');
+const tId = document.getElementById('t_id');
+const tReqType = document.getElementById('t_request_type');
+const tWeekday = document.getElementById('t_weekday');
+const tStart = document.getElementById('t_start');
+const tEnd = document.getElementById('t_end');
+
+function openTimingModal(edit = false, data = {}) {
+    tReqType.value = edit ? "Update_timing" : "Add_timing";
+    tId.value = data.id || "";
+    tWeekday.value = data.day || "Monday";
+    tStart.value = data.start || "09:00";
+    tEnd.value = data.end || "21:00";
+    
+    tModal.classList.add('scm-overlay--open');
+}
+
+document.getElementById('newTimingBtn').addEventListener('click', () => openTimingModal());
+
+document.querySelectorAll('.timing-edit-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        openTimingModal(true, {
+            id: this.value,
+            day: this.dataset.day,
+            start: this.dataset.start,
+            end: this.dataset.end
+        });
+    });
+});
+
+document.getElementById('closeTimingModal').onclick = () => tModal.classList.remove('scm-overlay--open');
+document.getElementById('cancelTimingModal').onclick = () => tModal.classList.remove('scm-overlay--open');
+
+/**
+ * Global helper for handling deletions with confirmation.
+ * @param {string} id - The ID of the item/timing to delete.
+ * @param {string} type - The request_type (Delete_catalogue or Delete_timing).
+ */
+function handleDelete(id, type) {
+    const message = type === 'Delete_timing' 
+        ? "Remove these hours from your schedule?" 
+        : "Delete this service from your catalogue?";
+
+    if (confirm(message)) {
+        // Create a temporary form to submit the delete request
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = ''; // Current URL
+
+        const csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        
+        form.innerHTML = `
+            <input type="hidden" name="csrfmiddlewaretoken" value="${csrf}">
+            <input type="hidden" name="request_type" value="${type}">
+            <input type="hidden" name="item_id" value="${id}">
+            <input type="hidden" name="timing_id" value="${id}">
+        `;
+
+        document.body.appendChild(form);
+        form.submit();
+    }
+}

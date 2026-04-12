@@ -1,0 +1,75 @@
+@import url('https://fonts.googleapis.com/css2?family=Readex+Pro:wght@400;600;700;800&family=DM+Sans:wght@400;500&display=swap');
+
+/* ── RESET & TOKENS ────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --blue:      #007BFF;
+  --blue-d:    #0062d6;
+  --blue-glow: rgba(0, 123, 255, 0.32);
+  --mint:      #2DD4BF;
+  --mint-bg:   rgba(45, 212, 191, 0.12);
+  --dark:      #0d1117;
+  --mid:       #3d4a5c;
+  --soft:      #7b8a9e;
+  --border:    rgba(0, 0, 0, 0.08);
+  --off:       #f7f8fc;
+  --r:         18px;
+  --rs:        12px;
+}
+
+
+
+.mp-nav {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  height: 56px;
+}
+
+.mp-nav-pill {
+  background: var(--blue); color: #fff !important;
+  border-radius: 50px; padding: 8px 16px;
+  font-family: 'Readex Pro', sans-serif;
+  font-weight: 700; font-size: 0.8rem;
+  transition: background .2s;
+}
+.mp-nav-pill:hover { background: var(--blue-d); color: #fff !important; }
+
+@media (min-width: 640px) {
+    .mp-nav           { padding: 0 40px; height: 70px; }
+    .mp-btn-hero        { width: auto !important; padding: 16px 36px !important; margin: 0 45px;}
+}
+
+.page-data{
+    margin:25px 25px 75px 25px;
+    
+}
+
+.main-title{
+    text-align: center;
+    font-size: 40px;
+    font-weight: bold;
+}
+
+.main-update {
+    font-size: 15px;
+    color:grey;
+}
+
+.text {
+    font-size: 18px;
+}
+
+.head {
+    font-size: 20px;
+    font-weight: bold;
+}

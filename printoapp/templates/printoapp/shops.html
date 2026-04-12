@@ -15,48 +15,16 @@
         </h3>
 </div>
 
+{{ shops_json|json_script:"shops-data" }}
+
+
 <div class="shops-container">
     <form action="{% url 'shops' %}" method="POST" class="shops_form">
         {% csrf_token %}
         <input type="text" hidden id="user_id" name="user_id">
-        
-        {% for shop in shops_info %}
-            {% if shop.status == "Active" %}
-                
-                {% if now < shop.open_time or now > shop.close_time %}
-                    <!-- Shop is Closed -->
-                    <button type="submit" disabled name="shop_id" value="{{ shop.id }}" class="shops_submit">
-                        <div class="shop-header">
-                            <span class="status-badge status-closed">Not open yet</span>
-                        </div>
-                        <span class="shop-name">{{ shop.name }}</span>
-                        <div class="shop-meta">
-                            {{ shop.location }}, {{ shop.landmark }}<br>
-                            {{ shop.city }}, {{ shop.state }}
-                        </div>
-                        <div class="shop-footer">
-                            <span class="time-info">Hours: {{ shop.open_time|time:"h:i A" }} - {{ shop.close_time|time:"h:i A" }}</span>
-                        </div>
-                    </button>
-                {% else %}
-                    <!-- Shop is Open -->
-                    <button type="submit" name="shop_id" value="{{ shop.id }}" class="shops_submit">
-                        <div class="shop-header">
-                            <span class="status-badge status-open">Open Now</span>
-                        </div>
-                        <span class="shop-name">{{ shop.name }}</span>
-                        <div class="shop-meta">
-                            {{ shop.location }}, {{ shop.landmark }}<br>
-                            {{ shop.city }}, {{ shop.state }}
-                        </div>
-                        <div class="shop-footer">
-                            <span class="time-info">Closes at {{ shop.close_time|time:"h:i A" }}</span>
-                        </div>
-                    </button>
-                {% endif %}
-
-            {% endif %}
-        {% endfor %}
+        <div id="shops-list">
+            <p>Finding nearest shops...</p>
+        </div>
     </form>
 </div>
 {% endblock %}
