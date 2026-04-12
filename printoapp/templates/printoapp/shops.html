@@ -6,6 +6,10 @@
 {% block body %}
 
 {% block extra_head %}
+<script>
+    // Django will render this into a real path like "/static/printoapp/bin.png"
+    const PIN_ICON = "{% static 'printoapp/pin.jpg' %}";
+</script>
 <link href="{% static 'printoapp/shops.css' %}" rel="stylesheet">
 {% endblock %}
 

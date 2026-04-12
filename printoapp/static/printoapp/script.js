@@ -47,21 +47,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 let status_info = isClosed ? 'Closed now' : 'Open now';
 
                 finalHTML += `
-                <button type="submit" ${btn_type} name="shop_id" value="${shop.id}" class="shops_submit">
-                    <div class="shop-header">
-                        <span class="status-badge status-${status}">${isClosed ? 'Closed' : 'Open Now'}</span>
-                    </div>
-                    <span class="shop-name">${shop.name}</span>
-                    <div class="shop-meta">
-                        ${shop.location}, ${shop.landmark}<br>
-                        ${shop.city}, ${shop.state}
-                    </div>
-                    <div class="shop-footer">
+                <div class="shops_container">
+                    <button type="submit" ${btn_type} name="shop_id" value="${shop.id}" class="shops_submit">
+                        <div class="shop-header">
+                            <span class="status-badge status-${status}">${isClosed ? 'Closed' : 'Open Now'}</span>
+                        </div>
+                        <span class="shop-name">${shop.name}</span>
+                        <div class="shop-meta">
+                            ${shop.location}, ${shop.landmark}<br>
+                            ${shop.city}, ${shop.state}
+                        </div>
+                    </button>
+                    <div class='shop_footer'>
                         <span class="time-info">${status_info}</span>
+                        <a href="https://www.google.com/maps?q=${ shop.latitude },${ shop.longitude }" target="_blank">
+                            <img src="${PIN_ICON}" >
+                        </a>
                     </div>
-                </button>
-                <div class='shop_footer'>
-                    https://www.google.com/maps/search/?api=1&query=${shop.latitude},${shop.longitude}
                 </div>`;
             }
             shopsList.innerHTML = finalHTML;
