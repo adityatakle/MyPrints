@@ -105,7 +105,7 @@ def upload(request, user_id, shop_id):
     Cart.objects.filter(
         user=current_user,
         shop_info_id=shop_id,
-        cart_status="Open",
+        is_open=True,
         created_at__lte=last_24_hours  # "Less than or equal to" the threshold
     ).delete()
 
@@ -113,14 +113,13 @@ def upload(request, user_id, shop_id):
     cart, created = Cart.objects.get_or_create(
         user=current_user,
         shop_info_id=shop_id,
-        cart_status="Open",
-        defaults={'total_amount': 0.00}
+        is_open=True
     )
     # Get context data
     item_number = Cart_items.objects.filter(
         cart__user__user_id=user_id, 
         cart__shop_info_id=shop_id, 
-        cart__cart_status="Open"
+        cart__is_open=True
     ).count()
     
     shop_item_list = Shop_items.objects.filter(shop_info_id=shop_id)
@@ -236,9 +235,10 @@ def upload(request, user_id, shop_id):
         "item_number": item_number
     })
 
- 
+
 def cart(request, shop_id, user_id):
-    cart_items = Cart_items.objects.filter( cart__user__user_id=user_id, cart__shop_info_id=shop_id, cart__cart_status="Open")
+    cart = get_object_or_404(Cart, user__user_id =user_id, shop_info__id=shop_id, is_open=True)
+    cart_items = Cart_items.objects.filter( cart=cart)
     total_amount = 0
     for cart_item in cart_items:
         item = cart_item.file_id.split('/')[-1]
@@ -252,56 +252,62 @@ def cart(request, shop_id, user_id):
             item_id = request.POST.get("subtract")
             item = get_object_or_404(Cart_items , id=item_id)
             unit_price = item.shop_item.price * item.total_pages
-            parent_cart = item.cart
+            
             if item.quantity > 1:
-                parent_cart.total_pages -= item.total_pages 
-                parent_cart.total_amount -= unit_price
-                parent_cart.save()
+                cart.total_pages -= item.total_pages 
+                cart.total_amount -= unit_price
+                cart.save()
                 item.quantity -= 1
                 item.total_amount = item.quantity * unit_price
                 item.save()
                 
             else:
-                parent_cart.total_amount -= unit_price
-                parent_cart.total_pages -= item.total_pages
-                parent_cart.save()
+                cart.total_amount -= unit_price
+                cart.total_pages -= item.total_pages
+                cart.save()
                 item.delete()
 
         elif "add" in request.POST:
             item_id = request.POST.get("add")
             item = get_object_or_404(Cart_items , id=item_id)
             unit_price = item.shop_item.price * item.total_pages
-            parent_cart = item.cart
-            parent_cart.total_pages += item.total_pages
-            parent_cart.total_amount += item.shop_item.price * item.total_pages
-            parent_cart.save()
+            
+            cart.total_pages += item.total_pages
+            cart.total_amount += item.shop_item.price * item.total_pages
+            cart.save()
             item.quantity += 1
             item.total_amount = item.quantity * unit_price
             item.save()
             
-        if "remove-item" in request.POST:
+        elif "remove-item" in request.POST:
             item_id = request.POST.get("remove-item")
             item = get_object_or_404(Cart_items, id=item_id)
-            parent_cart = item.cart
+            
             unit_price = item.shop_item.price * item.total_pages
-            parent_cart.total_amount -= unit_price * item.quantity
-            parent_cart.total_pages -= item.total_pages * item.quantity
-            parent_cart.save()
+            cart.total_amount -= unit_price * item.quantity
+            cart.total_pages -= item.total_pages * item.quantity
+            cart.save()
             item.delete()
         
-        check_items = Cart_items.objects.filter( cart__user__user_id=user_id, cart__shop_info_id=shop_id, cart__cart_status="Open")
-        check_cart = Cart.objects.filter(user__user_id=user_id, shop_info_id =shop_id, cart_status="Open").first()
+        elif "add-priority" in request.POST:
+            cart.priority = 1
+            cart.save()
+        
+        elif "remove-priority" in request.POST:
+            cart.priority = 0
+            cart.save()
+
         cart_amount = 0
         cart_pages = 0
-        for item in check_items:
+        for item in cart_items:
             cart_amount += item.total_amount
             cart_pages += item.total_pages * item.quantity
-        check_cart.total_amount = cart_amount
-        check_cart.total_pages = cart_pages
-        check_cart.save()
+        cart.total_amount = cart_amount
+        cart.total_pages = cart_pages
+        cart.save()
         return redirect("cart", shop_id=shop_id, user_id=user_id)
     
-    return render(request, "printoapp/cart.html", {"cart_items":cart_items, "shop_id":shop_id, "user_id":user_id, "total_amount":total_amount, "shop":shop})
+    return render(request, "printoapp/cart.html", {"cart":cart, "cart_items":cart_items, "shop_id":shop_id, "user_id":user_id, "total_amount":total_amount, "shop":shop})
 
 def create_order(request, amount):
     amount = int(amount * 100)
@@ -319,7 +325,7 @@ def initiate_payment(request, shop_id, user_id):
         cart_items = Cart_items.objects.filter(
             cart__user__user_id=user_id, 
             cart__shop_info_id=shop_id, 
-            cart__cart_status="Open"
+            cart__is_open=True
         )
         
         total_amount = sum(item.total_amount for item in cart_items)
@@ -340,7 +346,7 @@ def initiate_payment(request, shop_id, user_id):
 
 
 @csrf_exempt
-def payment_status(request):
+def payment_status(request, shop_id, user_id):
     if request.method == "POST":
         payment_id = request.POST.get('razorpay_payment_id')
         order_id = request.POST.get('razorpay_order_id')
@@ -352,7 +358,11 @@ def payment_status(request):
                 'razorpay_payment_id': payment_id,
                 'razorpay_signature': signature
             })
-            return render(request, 'printoapp/success.html')
+            cart = get_object_or_404(Cart, user__user_id=user_id, shop_info_id=shop_id, is_open=True)
+            cart.is_open = False
+            cart.is_paid = True
+            cart.save()
+            return render(request, 'printoapp/success.html', {'cart':cart})
         except Exception as e:
             print(f"Verification Failed Error: {e}")
             return render(request, 'printoapp/failure.html')
@@ -387,23 +397,8 @@ def shop_index(request):
 
     my_shop = my_shop = Shop_info.objects.filter(shop_owner__user=request.user).first()
 
-    if request.method == "POST":
-        order_id = request.POST.get('order_id')
-        order = get_object_or_404(Cart, id=order_id, shop_info=my_shop)
-        order.cart_status = "Verified" if order.cart_status == "Paid" else "Paid"
-        order.save()
-        return redirect("shop_index")
-
-    carts = Cart.objects.filter(
-        shop_info=my_shop, 
-        cart_status__in=[ "Paid", "Verified"]
-    ).annotate(
-        pages_sum=Sum('cart_items__total_pages') 
-    ).order_by('cart_status', 'created_at')
-
     return render(request, "printoapp/shop_index.html", {
-        "time": greeting, 
-        "carts": carts,
+        "time": greeting,
         "username": request.user.username,
         "shop_name": my_shop.name
     })
@@ -422,7 +417,7 @@ def shop_connect(request):
         shop_id = request.headers.get('Shop-id')
         shop_data = get_object_or_404(Shop_info, id=shop_id, script_token=str(shop_token))
         if shop_data:
-            items = Cart_items.objects.filter(cart__cart_status="Paid", shop_item__shop_info__id = shop_id, is_printed=False)
+            items = Cart_items.objects.filter(cart__is_paid=True, shop_item__shop_info__id = shop_id, is_printed=False)
             print_list = []
             
             for item in items:
@@ -438,7 +433,7 @@ def shop_connect(request):
                         'copies':item.quantity
                     }
                     print_list.append(item_data)
-            items = Cart_items.objects.filter(cart__cart_status="Verified", shop_item__shop_info__id = shop_id, is_cleaned=False)
+            items = Cart_items.objects.filter(cart__is_verified=True, shop_item__shop_info__id = shop_id, is_cleaned=False)
             clean_list = []
             
             for item in items:
@@ -467,11 +462,16 @@ def file_update(request):
         try:
             get_object_or_404(Shop_info, id=shop_id, script_token=shop_token)
             item = Cart_items.objects.get(id=item_id)
-            field_name = f"is_{update_type}"
-            setattr(item, field_name, True) 
-            item.save()
-            
-            print(f"Job {item_id} marked as {update_type}.")
+            if update_type == 'processing':
+                parent_cart = item.cart
+                parent_cart.is_processing = True
+                parent_cart.save()
+                print(f"Cart {parent_cart.id} is now Active (Processing).")
+            else:
+                field_name = f"is_{update_type}"
+                setattr(item, field_name, True) 
+                item.save()
+                print(f"Job {item_id} marked as {update_type}.")
             
             return JsonResponse({'status': 'success'})
 
@@ -488,7 +488,7 @@ def file_update(request):
 @login_required
 def shop_finance(request):
     shop = get_object_or_404(Shop_info, Shop_owner = request.user)
-    trans = Cart_items.objects.filter(cart__shop_info=shop, cart__cart_status = "Verified")
+    trans = Cart_items.objects.filter(cart__shop_info=shop, cart__is_verified = True)
     trans = JsonResponse(list(trans))
     return trans
     
@@ -615,37 +615,38 @@ def item_list(request, shop_id):
 
 @login_required
 def shop_list(request):
-    shop = get_object_or_404(Shop_info, shop_owner__user = request.user)
-    carts = Cart.objects.filter(shop_info=shop, cart_status__in = ['Paid', 'Verified']).order_by(
-        'cart_status', 'created_at'
-        ).values(
-            'id', 'payment_id', 'pickup_code', 'total_pages', 'total_amount', 'cart_status'
-            )
-    response_data = {}
-    response_data['cart_info'] = list(carts)
-   
-    return JsonResponse(response_data)
+    shop = get_object_or_404(Shop_info, shop_owner__user=request.user)
+    
+    fields = [
+        'id', 'pickup_code', 'total_pages', 'total_amount', 
+        'cart_status', 'is_verified', 'is_processing', 'priority'
+    ]
+
+    active_carts = Cart.objects.filter(
+        shop_info=shop, is_paid=True, is_processing=True
+    ).order_by('updated_at').values(*fields)
+    
+    other_carts = Cart.objects.filter(
+        shop_info=shop, is_paid=True, is_processing=False
+    ).order_by('-priority', 'updated_at').values(*fields)
+
+    return JsonResponse({
+        'cart_info': list(active_carts) + list(other_carts)
+    })
+
 
 @login_required
 def verify_cart(request):
-    shop = get_object_or_404(Shop_info, shop_owner__user = request.user)
-    response_data = {}
+    shop = get_object_or_404(Shop_info, shop_owner__user=request.user)
     if request.method == 'POST':
         cart_id = request.headers.get('cart-id')
-        print(cart_id)
         cart = Cart.objects.filter(id=cart_id, shop_info=shop).first()
-        if cart:
-            if cart.cart_status == 'Paid':
-                cart.cart_status = 'Verified'
-                cart.save()
-                response_data['status'] = f'Cart id {cart_id} verified'
-            else:
-                cart.cart_status = 'Paid'
-                cart.save()
-                response_data['status'] = f'Cart id {cart_id} status changed back to PAID'
-        else:
-            response_data['status'] = 'db error'
-    else:
-        response_data['status'] = 'ONLY POST ALLOWED.'
-    print(response_data)
-    return JsonResponse(response_data)
+        
+        if cart and not cart.is_verified:
+            cart.is_verified = True
+            cart.cart_status = "Verified"
+            cart.save()
+            return JsonResponse({'status': 'Verified successfully'})
+            
+    return JsonResponse({'status': 'Failed or already verified'}, status=400)
+

@@ -343,7 +343,20 @@ if __name__ == "__main__":
                             write_log(f"File {item['file_name']} still exists after deletion attempt.")
                     except Exception as e:
                         write_log(f"Unable to remove file {item['file_name']} : {e}")
-                    
+                i = 0
+                parent_cart = []
+                for item in print_items:
+                    if i < 2:
+                        try:
+                            url = f'{BASE_URL}my_shop/file_update/'
+                            response = requests.post(url, headers={'Shop-token':Shop_token, 'Shop-id':shop_id, 'item-id':str(item["id"]), 'update_type':'processing'})
+                            if item.cart not in parent_cart:
+                                parent_cart.append(item['cart_id'])
+                                i += 1
+                            if response.status_code != 200:
+                                write_log(f'Error updating server: {response.status_code}')
+                        except Exception as e:
+                            write_log(f"Error updating server about cleaned file : {e}")
                 for item in print_items:
                     usable_printers = []
                     try:

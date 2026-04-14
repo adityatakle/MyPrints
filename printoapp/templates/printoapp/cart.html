@@ -13,9 +13,6 @@
 <body class="ct-body">
 <div class="body">
 
-  <!-- ══════════════════════════════════
-       STICKY HEADER
-  ════════════════════════════════════ -->
   <header class="ct-header">
     <a href="{% url 'upload' user_id=user_id shop_id=shop_id %}" class="ct-back-btn" aria-label="Back">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -33,34 +30,31 @@
       {% endif %}
     </div>
 </header>
-<form id="razorpay-form" action="{% url 'payment_status' %}" method="POST" style="display:none;">
+
+<form id="razorpay-form" action="{% url 'payment_status' shop_id=shop_id user_id=user_id %}" method="POST" style="display:none;">
     {% csrf_token %}
     <input type="hidden" name="razorpay_payment_id" id="razorpay_payment_id">
     <input type="hidden" name="razorpay_order_id" id="razorpay_order_id">
     <input type="hidden" name="razorpay_signature" id="razorpay_signature">
 </form>
-  <!-- ══════════════════════════════════
-       MAIN
-  ════════════════════════════════════ -->
+
   <main class="ct-main">
 
     <form method="post" action="{% url 'cart' user_id=user_id shop_id=shop_id %}">
         {% csrf_token %}
         <input type="hidden" value="{{ user_id }}" name="user_id" id="user_id">
         <input type="hidden" value="{{ shop_id }}" name="shop_id" id="shop_id">
-        <input type="hidden" id="status_url" value="{{ request.scheme }}://{{ request.get_host }}{% url 'payment_status' %}">
+        <input type="hidden" id="status_url" value="{{ request.scheme }}://{{ request.get_host }}{% url 'payment_status' shop_id=shop_id user_id=user_id %}">
+        
         {% if cart_items %}
 
-        <!-- page label -->
         <p class="ct-eyebrow">Your Order</p>
         <h1 class="ct-title">Review &amp; Pay</h1>
         
-        <!-- ── ITEM LIST ── -->
         <div class="ct-list">
           {% for item in cart_items %}
           <div class="ct-item" id="ct-item-{{ item.id }}">
 
-            <!-- filename + price row -->
             <div class="ct-item-top">
               <div class="ct-item-icon">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
@@ -76,7 +70,6 @@
               <span class="ct-item-price">₹{{ item.total_amount }}</span>
             </div>
 
-            <!-- meta tags row -->
             <div class="ct-item-meta">
               <span class="ct-tag">📄 {{ item.total_pages }} pages</span>
               {% if item.shop_item.is_color %}
@@ -91,7 +84,6 @@
               {% endif %}
             </div>
 
-            <!-- quantity + remove row -->
             <div class="ct-item-controls">
               <div class="ct-qty">
                 <button type="submit" value="{{ item.id }}" name="subtract"
@@ -121,7 +113,6 @@
           {% endfor %}
         </div>
 
-        <!-- ── CANCELLATION POLICY ── -->
         <div class="ct-policy">
           <div class="ct-policy-icon">⚠️</div>
           <p class="ct-policy-text">
@@ -130,7 +121,6 @@
           </p>
         </div>
 
-        <!-- SHOP INFO -->
         <div class="ct-summary">
           <div class="ct-summary-row ct-summary-total">
             <span>SHOP INFO</span>
@@ -141,7 +131,28 @@
           </div>
         </div>
 
-        <!-- ── ORDER SUMMARY ── -->
+        <div class="ct-priority-upgrade">
+            <div class="ct-priority-badge">⚡ PREMIUM</div>
+            
+            <div class="ct-priority-content">
+                <h3 class="ct-priority-title">Shorten Queue</h3>
+                <p class="ct-priority-text">Jump to the front of the shop's print list for faster pickup.</p>
+            </div>
+            
+            <div class="ct-priority-action">
+                {% if cart.priority == 1 %}
+                    <button type="submit" name="remove-priority" class="ct-priority-btn ct-priority-btn--enabled">
+                        <span class="ct-btn-icon">✓</span> Enabled
+                    </button>
+                {% else %}
+                    <button type="submit" name="add-priority" class="ct-priority-btn ct-priority-btn--enable">
+                        Enable ⚡
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+
+
         <div class="ct-summary">
           <div class="ct-summary-row">
             <span>Subtotal</span>
@@ -158,25 +169,21 @@
           </div>
         </div>
 
-        <!-- ── PAY BUTTON ── -->
-        
-		<div id="payment-data" 
-			data-key="{{ razorpay_key_id }}" 
-			data-amount="{{ total_amount }}" 
-			data-order="{{ razorpay_order_id }}" 
-			style="display:none;">
-		</div>
+        <div id="payment-data" 
+            data-key="{{ razorpay_key_id }}" 
+            data-amount="{{ total_amount }}" 
+            data-order="{{ razorpay_order_id }}" 
+            style="display:none;">
+        </div>
         <button type="submit" class="ct-pay-btn total-amount order-summary" id="pay_btn">
-			<span class="ct-pay-label">Pay &amp; Print</span>
-			<span class="ct-pay-amount"> ₹{{ total_amount }} </span>
-        	
+            <span class="ct-pay-label">Pay &amp; Print</span>
+            <span class="ct-pay-amount"> ₹{{ total_amount }} </span>
         </button>
 
         <p class="ct-pay-note">🔐 Secure UPI payment directly to the shop</p>
 
       {% else %}
 
-        <!-- ── EMPTY STATE ── -->
         <div class="ct-empty">
           <div class="ct-empty-icon">🛒</div>
           <h2 class="ct-empty-title">Your cart is empty</h2>

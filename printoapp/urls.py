@@ -5,7 +5,7 @@ urlpatterns = [
     path("", views.index, name="index"),
     path("shops", views.shops, name="shops"),
     path("upload/<str:user_id>/<int:shop_id>", views.upload, name="upload"),
-    path("cart/<int:shop_id>/<str:user_id>", views.cart, name="cart"),
+    path('cart/<int:shop_id>/<str:user_id>', views.cart, name='cart'),
     path("my_shop/login", views.shop_login, name="shop_login"),
     path("my_shop/index", views.shop_index, name="shop_index"),
     path("my_shop/logout", views.shop_logout, name="shop_logout"),
@@ -16,7 +16,7 @@ urlpatterns = [
     path("my_shop/account", views.shop_account, name="shop_account"),
     path("privacy_policy", views.privacy_policy, name="privacy_policy"),
     path("tnc", views.tnc, name="tnc"),
-    path('payment-status', views.payment_status, name='payment_status'),
+    path('payment-status/<int:shop_id>/<str:user_id>', views.payment_status, name='payment_status'),
 
 
     #apis

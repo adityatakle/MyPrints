@@ -502,3 +502,106 @@ body.ct-body, body {
   .ct-item-name { font-size: 1rem; }
   .ct-pay-btn { padding: 20px 24px !important; }
 }
+
+/* Premium Priority Upgrade Card */
+.ct-priority-upgrade {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative; /* For the badge */
+    
+    /* Subtle Blue Tint Gradient matching your button color */
+    background: linear-gradient(160deg, #f0f7ff 0%, #ffffff 100%);
+    
+    /* Matching your main card styling in the screenshot */
+    border: 1px solid #cce4ff; /* Light blue border to denote "feature" */
+    border-radius: 16px; /* Matches the item card and shop info box */
+    padding: 24px 20px 16px 20px; /* Extra top padding for the badge */
+    margin: 20px 0;
+    
+    /* Matching your subtle shadows */
+    box-shadow: 0 4px 6px -1px rgba(0, 123, 255, 0.05), 0 2px 4px -1px rgba(0, 123, 255, 0.03);
+    
+    transition: all 0.3s ease;
+}
+
+/* Optional: Hover effect to make it feel interactive */
+.ct-priority-upgrade:hover {
+    border-color: #007bff;
+    box-shadow: 0 10px 15px -3px rgba(0, 123, 255, 0.1);
+}
+
+/* Premium "Floating" Badge */
+.ct-priority-badge {
+    position: absolute;
+    top: -10px;
+    left: 20px;
+    background: #007bff; /* Your main blue */
+    color: #ffffff;
+    font-size: 0.7rem;
+    font-weight: 800;
+    padding: 3px 10px;
+    border-radius: 99px;
+    letter-spacing: 0.05em;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.ct-priority-content {
+    flex: 1;
+    padding-right: 15px;
+}
+
+.ct-priority-title {
+    margin: 0 0 4px 0;
+    font-size: 1rem;
+    font-weight: 700; /* Bold weight matching your screenshot headers */
+    color: #111827; /* Dark gray/black */
+}
+
+.ct-priority-text {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #6b7280; /* Muted gray matching your metadata tags */
+    line-height: 1.4;
+}
+
+/* The Buttons - Redesigned for attraction */
+.ct-priority-btn {
+    padding: 8px 20px;
+    border-radius: 10px; /* Sleek, rounded corners */
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    border: none;
+}
+
+/* "Enable" State: Matches main button style but smaller */
+.ct-priority-btn--enable {
+    background: #007bff;
+    color: #ffffff;
+    box-shadow: 0 2px 4px rgba(0, 123, 255, 0.2);
+}
+
+.ct-priority-btn--enable:hover {
+    background: #0069d9;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(0, 123, 255, 0.3);
+}
+
+/* "Enabled" State: Muted, clear, and distinct */
+.ct-priority-btn--enabled {
+    background: #e0f2fe; /* Very light blue */
+    color: #0369a1; /* Darker blue text */
+    border: 1px solid #bae6fd;
+}
+
+.ct-priority-btn--enabled:hover {
+    background: #bae6fd;
+}
+
+.ct-btn-icon {
+    margin-right: 4px;
+    font-weight: 800;
+}

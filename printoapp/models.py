@@ -51,10 +51,15 @@ class Shop_items(models.Model):
 class Cart(models.Model):
     payment_id = models.CharField(max_length =255, blank=True)
     pickup_code = models.CharField(max_length =10, blank=True)
-    cart_status = models.CharField(max_length =255, default="Open")
+    is_open = models.BooleanField(default=True)
+    is_paid = models.BooleanField(default=False)
+    is_verified = models.BooleanField(default=False)
+    is_processing = models.BooleanField(default=False)
     total_pages = models.IntegerField(default=0)
     total_amount = models.DecimalField(max_digits=9,decimal_places=2, default=0.00)
     created_at = models.DateTimeField(auto_now_add=True)
+    priority = models.IntegerField(default=0)
+    updated_at = models.DateTimeField(auto_now=True)
     user = models.ForeignKey("Client", on_delete=models.PROTECT)
     shop_info = models.ForeignKey("Shop_info", related_name="cart", on_delete=models.CASCADE)
 
