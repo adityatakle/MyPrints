@@ -30,7 +30,12 @@
     padding: 16px 20px;
 }
 
-
+.nav-logo {
+    height: 40px; /* Adjust to match your font size */
+    width: auto;
+    vertical-align: middle;
+    margin-left: 10px;
+}
 /* --- Main Layout Container --- */
 .shops-container {
     max-width: 600px;

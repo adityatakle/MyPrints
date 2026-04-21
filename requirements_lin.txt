@@ -9,3 +9,5 @@ python-dotenv
 requests
 cups
 pyinstaller
+razorpay
+reportlab

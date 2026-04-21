@@ -46,6 +46,8 @@ class Shop_items(models.Model):
     is_color = models.BooleanField(default=False)
     is_b2b = models.BooleanField(default=False)
     price = models.DecimalField(decimal_places=2, max_digits=6)
+    shop_percent = models.DecimalField(decimal_places=2, max_digits=5, default=100.00)
+    platform_percent = models.DecimalField(decimal_places=2, max_digits=5, default=0.00)
     shop_info = models.ForeignKey("Shop_info", related_name="items", on_delete=models.CASCADE)
 
 class Cart(models.Model):
@@ -54,25 +56,39 @@ class Cart(models.Model):
     is_open = models.BooleanField(default=True)
     is_paid = models.BooleanField(default=False)
     is_verified = models.BooleanField(default=False)
+    is_printed = models.BooleanField(default=False)
     is_processing = models.BooleanField(default=False)
+    is_cleaned = models.BooleanField(default=False)
     total_pages = models.IntegerField(default=0)
-    total_amount = models.DecimalField(max_digits=9,decimal_places=2, default=0.00)
     created_at = models.DateTimeField(auto_now_add=True)
     priority = models.IntegerField(default=0)
     updated_at = models.DateTimeField(auto_now=True)
     user = models.ForeignKey("Client", on_delete=models.PROTECT)
     shop_info = models.ForeignKey("Shop_info", related_name="cart", on_delete=models.CASCADE)
 
+class Cart_total(models.Model):
+    subtotal = models.DecimalField(max_digits=9,decimal_places=2, default=0.00)
+    shop_share = models.DecimalField(max_digits=9,decimal_places=2, default=0.00)
+    priority_percent = models.DecimalField(max_digits=9, decimal_places=2, default=25.00)
+    platform_share = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
+    platform_charges_percent = models.DecimalField(max_digits=5,decimal_places=2, default=20.00)
+    payment_gateway_percent = models.DecimalField(max_digits=5, decimal_places=2, default=2.00)
+    payment_gateway_gst_percent = models.DecimalField(max_digits=5, decimal_places=2, default=18.00)
+    grand_total = models.DecimalField(max_digits=9, decimal_places=2, default=0.00)
+    cart = models.ForeignKey("Cart", related_name='cart_total' ,on_delete=models.CASCADE)
+    
 class Cart_items(models.Model):
     file_id = models.CharField(max_length =255)
+    display_name = models.CharField(max_length=255, null=True, blank=True)
     quantity = models.IntegerField()
     total_pages = models.IntegerField()
     total_amount = models.DecimalField(max_digits=9, decimal_places=2)
     is_printed = models.BooleanField(default=False)
     is_cleaned = models.BooleanField(default=False) 
-    cart = models.ForeignKey("Cart", on_delete=models.CASCADE)
+    cart = models.ForeignKey("Cart", related_name="cart_items", on_delete=models.CASCADE)
     shop_item = models.ForeignKey("Shop_items", related_name="cart_items", on_delete=models.PROTECT)
 
 class Feedback(models.Model):
     name = models.CharField(max_length=50)
     message = models.CharField(max_length=255)
+    rating = models.IntegerField(null=True, blank=True)

@@ -51,6 +51,13 @@ h1, h2, h3, h4 {
 a { text-decoration: none; color: inherit; }
 
 /* ── NAV ───────────────────────────────────────────────────── */
+.nav-logo {
+    height: 30px; /* Adjust to match your font size */
+    width: auto;
+    vertical-align: middle;
+    margin-left: 10px;
+}
+
 .mp-nav {
   position: sticky;
   top: 0;

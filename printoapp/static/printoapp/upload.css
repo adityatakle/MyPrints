@@ -54,31 +54,27 @@ body {
 
 /* ── STICKY HEADER ───────────────────────────────────────────── */
 .up-header {
-  position: sticky;
-  top: 0;
-  z-index: 200;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 20px;
-  height: 58px;
-  background: rgba(255,255,255,0.80);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  border-bottom: 1px solid var(--border);
-  box-shadow: 0 1px 0 rgba(255,255,255,0.6);
+    position: sticky;
+    top: 0;
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    height: 58px;
+    background: rgba(255,255,255,0.80);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border-bottom: 1px solid var(--border);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.6);
 }
 
-.up-logo {
-  font-family: 'Readex Pro', sans-serif;
-  font-weight: 800;
-  font-size: 1.3rem;
-  letter-spacing: -0.03em;
-  color: var(--dark);
-  text-decoration: none;
-  line-height: 1;
+.nav-logo {
+    height: 35px; /* Adjust to match your font size */
+    width: auto;
+    vertical-align: middle;
+    margin-left: 10px;
 }
-.up-logo em { font-style: normal; color: var(--blue); }
 
 /* ── ALERTS ──────────────────────────────────────────────────── */
 .up-alerts {

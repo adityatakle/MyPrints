@@ -7,6 +7,8 @@ from datetime import timedelta, datetime, timezone
 import json
 import sys
 import time
+import shutil
+from pypdf import PdfReader
 
 def write_log(message):
     with open("printo_logs.txt", "a", encoding='utf-8') as f:
@@ -21,7 +23,7 @@ def get_base_path():
 BASE_PATH = get_base_path()
 SUMATRA_PATH = os.path.join(BASE_PATH, 'SumatraPDF-3.5.2-64.exe')
 FOLDER_PATH = os.path.join(BASE_PATH, 'temp_folder')
-BASE_URL = 'https://5cqwb04t-8000.inc1.devtunnels.ms/'
+BASE_URL = 'https://4l65k8g7-8000.inc1.devtunnels.ms'
 ALL_PAGES_TYPES = {
         1: "Letter",
         5: "Legal",
@@ -179,41 +181,87 @@ def decode_status_code(code):
     return ", ".join(active_errors)
 
 
-def print_file(file_path, printer_name, page_type):
+def print_file(file_path, printer_name, page_type, copies=1):
+    """
+    Sends a file to the specified printer using SumatraPDF.
+    Dynamically decides between 'shrink' and 'fit' using pypdf.
+    """
     
     if not os.path.exists(file_path):
         write_log(f"[!] CRITICAL ERROR: File missing at: {file_path}")
         return False
 
-    print_settings = f'paper={page_type},fit'
-
+    scaling_logic = "shrink"
     try:
-        command = [
-            SUMATRA_PATH,
-            "-print-to", printer_name,
-            "-print-settings", print_settings,
-            "-exit-on-print", 
-            file_path
-        ]
+        reader = PdfReader(file_path)
+        page = reader.pages[0]
+        width = float(page.mediabox.width)
+        height = float(page.mediabox.height)
+
+        # Logic for your 65cm "Posters" (1860+ points)
+        if width > 600 or height > 850:
+            scaling_logic = "shrink"
+            write_log(f"Detected Large File ({width:.0f}pts). Applying 'shrink'.")
+        
+        # Logic for small scans (e.g., ID cards) to ensure they are readable
+        elif width < 500 or height < 750:
+            scaling_logic = "fit"
+            write_log(f"Detected Small File ({width:.0f}pts). Applying 'fit'.")
+        
+        else:
+            scaling_logic = "shrink"
+            
     except Exception as e:
-        write_log(f"Print issue: {e}")
+        write_log(f"PDF Meta Error: {e}. Falling back to default 'shrink'.")
+
+    print_settings = f"{copies}x,paper={page_type},{scaling_logic}" 
     
-    write_log(f"Printing {file_path} by {printer_name}")
+    command = [
+        SUMATRA_PATH,
+        "-print-to", printer_name,
+        "-print-settings", print_settings,
+        "-exit-on-print",
+        file_path
+    ]
+
+    write_log(f"Attempting print: {os.path.basename(file_path)} -> {printer_name} ({scaling_logic})")
 
     try:
-        # Run SumatraPDF
-        result = subprocess.run(command, capture_output=True, text=True)
+        result = subprocess.run(
+            command, 
+            capture_output=True, 
+            text=True, 
+            check=False, 
+            timeout=30 
+        )
+
         if result.returncode == 0:
-            write_log(f"[✓] SumatraPDF sent file {file_path}.")
+            write_log(f"SUCCESS: {os.path.basename(file_path)} sent to spooler.")
             return True
         else:
-            write_log(f"[X] SumatraPDF Failed. Exit Code: {result.returncode}")
-            write_log(f"    Error Output: {result.stderr}")
-            write_log(f"    Standard Output: {result.stdout}")
+            write_log(f"SUMATRA ERROR (Code {result.returncode}):")
+            if result.stderr:
+                write_log(f"   Stderr: {result.stderr.strip()}")
+            
+            write_log("Retrying without specific print-settings...")
+            fallback_command = [SUMATRA_PATH, "-print-to", printer_name, "-exit-on-print", file_path]
+            fallback_result = subprocess.run(fallback_command, capture_output=True, text=True)
+            
+            if fallback_result.returncode == 0:
+                write_log("Fallback success.")
+                return True
+                
             return False
 
     except Exception as e:
-        write_log(f"[!] Python Exception trying to run subprocess : {e}")
+        write_log(f"Python Exception: {e}")
+        return False
+
+    except subprocess.TimeoutExpired:
+        write_log(f"TIMEOUT: Printer {printer_name} took too long to respond.")
+        return False
+    except Exception as e:
+        write_log(f"PYTHON EXCEPTION: {str(e)}")
         return False
 
 def printer_info():
@@ -303,154 +351,121 @@ if __name__ == "__main__":
             json.dump(data, r, indent=4)
     except Exception as e:
         write_log(f"timestamp update write error: {e}")
-    
-
+        
     while True:
-        # URL uses shop_id which is now correctly loaded
         try:
-            url = f'{BASE_URL}my_shop/shop_connect/'
-            
-            response = requests.post(url, headers={'Shop-token':Shop_token, 'Shop-id':shop_id})
+            url = f'{BASE_URL}/my_shop/shop_connect/'
+            response = requests.post(url, headers={'Shop-Token': Shop_token, 'Shop-Id': shop_id})
             
             if response.status_code != 200:
-                write_log(f" Error: {response.status_code}")
+                write_log(f" Error connecting server: {response.status_code}")
+                time.sleep(5)
+                continue
+            
+            data = response.json()
+            print_carts = data.get('print_carts', [])
+            clean_carts = data.get('clean_carts', [])
+            write_log(f'Received {len(print_carts)} jobs.')
+
+            # --- 1. CLEANUP ---
+            for cart_id in clean_carts:
+                try:
+                    cart_path = os.path.join(FOLDER_PATH, str(cart_id))
+                    if os.path.exists(cart_path):
+                        shutil.rmtree(cart_path)
+                        requests.post(f'{BASE_URL}/my_shop/file_update/', 
+                            headers={'Shop-Token': Shop_token, 'Shop-Id': shop_id, 'Cart-Id': str(cart_id), 'Update-Type': 'cleaned'})
+                        write_log(f"Cleaned up cart: {cart_id}")
+                except Exception as e:
+                    write_log(f'Cleanup issue: {e}')
+
+            # --- 2. MARK AS PROCESSING (Limit 2) ---
+            for i, cart in enumerate(print_carts):
+                if i >= 2: break
+                try:
+                    requests.post(f'{BASE_URL}/my_shop/file_update/', 
+                        headers={'Shop-Token': Shop_token, 'Shop-Id': shop_id, 'Cart-Id': str(cart["id"]), 'Update-Type': 'processing'})
+                except Exception as e:
+                    write_log(f'Processing update error: {e}')
+
+            # --- 3. PRINTING LOOP ---
+            for i, cart in enumerate(print_carts):
+                if i >= 2: break 
                 
-            if response.status_code == 200:
-                items = response.json()
-                print_items = items.get('print_items')
-                clean_items = items.get('clean_items')
-                write_log(f"Received {len(print_items)} jobs.")
+                cart_dir = os.path.join(FOLDER_PATH, str(cart['id']))
+                os.makedirs(cart_dir, exist_ok=True)
 
-                if not os.path.isdir(FOLDER_PATH):
-                    try:
-                        os.makedirs(FOLDER_PATH)
-                    except Exception as e:
-                        write_log(f"Unable to make dir : {e}")
-                for item in clean_items:
-                    try:
-                        file_path = fr"{FOLDER_PATH}\{item['file_name']}"
-                        if os.path.exists(file_path):
-                            os.remove(file_path)
-                        if not os.path.exists(file_path):
-                            try:
-                                url = f'{BASE_URL}my_shop/file_update/'
-                                response = requests.post(url, headers={'Shop-token':Shop_token, 'Shop-id':shop_id, 'item-id':str(item["id"]), 'update_type':'cleaned'})
-                                if response.status_code != 200:
-                                    write_log(f'Error updating server: {response.status_code}')
-                            except Exception as e:
-                                write_log(f"Error updating server about cleaned file : {e}")  
-                        else:
-                            write_log(f"File {item['file_name']} still exists after deletion attempt.")
-                    except Exception as e:
-                        write_log(f"Unable to remove file {item['file_name']} : {e}")
-                i = 0
-                parent_cart = []
-                for item in print_items:
-                    if i < 2:
-                        try:
-                            url = f'{BASE_URL}my_shop/file_update/'
-                            response = requests.post(url, headers={'Shop-token':Shop_token, 'Shop-id':shop_id, 'item-id':str(item["id"]), 'update_type':'processing'})
-                            if item.cart not in parent_cart:
-                                parent_cart.append(item['cart_id'])
-                                i += 1
-                            if response.status_code != 200:
-                                write_log(f'Error updating server: {response.status_code}')
-                        except Exception as e:
-                            write_log(f"Error updating server about cleaned file : {e}")
-                for item in print_items:
-                    usable_printers = []
-                    try:
-                        with open(DATA_FILE, 'r') as r:
-                            data = json.load(r)
-                            for printer in data["printer_info"]:
-                                if printer["name"] not in ['OneNote (Desktop)', 'Microsoft Print to PDF']:
-                                    if item["page_type"] in printer["page_types"] and item["is_color"] == printer["is_color"] :        
-                                        if printer["is_b2b"] or not item["is_b2b"]:
-                                            usable_printers.append({
-                                                'name':printer['name'],
-                                                'queue':printer['queue_size'],
-                                                'status':printer['readable_status']
-                                            })
-     
-                    except Exception as e:
-                        write_log(f"Exception while reading printers data : {e}")
-                    if len(usable_printers) == 0:
-                        write_log(f"No printer satisfies item's configurations.")
-                        time.sleep(2)
-                        write_log("Moving to next item")
-                        continue
-        
-                    else:
-                        usable_printers.sort(key=lambda x: x['queue'])
-                        success = False
-                        while True:
-                            for printer in usable_printers:
-                                status = get_status(printer['name']) 
-                                if status["error"]:
-                                    write_log(status)
-                                    if len(usable_printers) == 1:
-                                        time.sleep(10)
-                                    continue
-                                if status["readable_status"] == 'Ready':
-                                    url = item["file_url"]
-                                    file_name = item["file_name"]
-                                    
-                                    try:
-                                        response = requests.get(url, stream=True)
+                # --- PRINTER SELECTION ---
+                usable_printers = []
+                try:
+                    with open(DATA_FILE, 'r') as r:
+                        printer_data = json.load(r)
+                        for printer in printer_data["printer_info"]:
+                            # Relaxed filters for testing; re-enable B2B/Color checks for SITRC pilot
+                            if printer["name"] not in ['OneNote (Desktop)', 'Microsoft Print to PDF']:
+                                usable_printers.append(printer)
+                except Exception as e:
+                    write_log(f"Printer read error: {e}")
 
-                                        if response.status_code != 200:
-                                            write_log("Server connection rejected.")
-                                        else:
-                                            if not os.path.exists(fr"{FOLDER_PATH}\{item['file_name']}"):
-                                                with open(fr"{FOLDER_PATH}\{item['file_name']}", "wb") as f:
-                                                    for chunk in response.iter_content(chunk_size=8192): 
-                                                        f.write(chunk)
-                                                    f.flush()
-                                                    os.fsync(f.fileno()) 
-                                            
-                                                write_log("Download done. Waiting for file unlock...")
-                                                time.sleep(3)
-                                            try:
-                                                file_path = fr"{FOLDER_PATH}\{item['file_name']}"
-                                                try:
-                                                    success = print_file(file_path, printer['name'], item["page_type"])
-                                                    time.sleep(1)
-                                                    check = get_status(printer['name'])
-                                                    if check['readable_status'] != "Running":
-                                                        write_log(f"Error printing due to printer. {check}")
-                                                except Exception as e:
-                                                    write_log(f"print error: {e}")
-                                                if success:
-                                                    write_log("Printed Successfully.")
+                if not usable_printers:
+                    write_log(f"No printer for Cart {cart['id']}")
+                    continue
 
-                                                
-                                                try:
-                                                    url = f'{BASE_URL}my_shop/file_update/'
-                                                    response = requests.post(url, headers={'Shop-token':Shop_token, 'Shop-id':shop_id, 'item-id':str(item["id"]), 'updated_type':'printed'})
-                                                except Exception as e:
-                                                    write_log(f"Error Updating status after printing: {e}")                                          
-                                                break
-                                            except Exception as e:
-                                                write_log(f"Error printing file. {e}")
-                                    except Exception as e:
-                                        write_log(f"Error while downloading file from server: {e}")
-                                    
-                                    if success:
-                                        break 
-                                
-                                if usable_printers[-1] == printer:
-                                    time.sleep(2)
-                                    continue
-                                
-                                if (status["readable_status"] == "Ready" and status["queue_size"] != 0) or (status["readable_status"] == "Printing"):
-                                    continue
-                                else:
-                                    write_log(status["readable_status"])
-                                    continue
+                usable_printers.sort(key=lambda x: x.get('queue_size', 0))
+                target_printer = usable_printers[0]['name']
+
+                # --- ITEM DOWNLOAD & PRINT ---
+                for item in cart['items']:
+                    success = False
+                    while not success:
+                        status = get_status(target_printer)
+                        if status['readable_status'] == 'Ready':
+                            file_path = os.path.join(cart_dir, item['file_name'])
                             
-                            if success:
-                                break
+                            try:
+                                # A. DOWNLOAD (Robust Chunked Method)
+                                if not os.path.exists(file_path):
+                                    write_log(f"Downloading: {item['file_name']}...")
+                                    resp = requests.get(item['file_url'], stream=True, timeout=20)
+                                    
+                                    if resp.status_code == 200:
+                                        with open(file_path, "wb") as f:
+                                            for chunk in resp.iter_content(chunk_size=8192):
+                                                if chunk:
+                                                    f.write(chunk)
+                                            f.flush() # Force write to buffer
+                                            os.fsync(f.fileno()) # Force write to disk (prevents Windows lock issues)
+                                        
+                                        write_log("Download complete. Syncing...")
+                                        time.sleep(2) # Final buffer for SSD latency
+                                    else:
+                                        write_log(f"Download rejected by server: {resp.status_code}")
+                                        break
+
+                                # B. PRINT
+                                success = print_file(file_path, target_printer, item["page_type"], item["copies"])
+                                if success:
+                                    write_log(f"SUCCESS: {item['file_name']} is at the spooler.")
+                                    # Notify backend
+                                    requests.post(f'{BASE_URL}/my_shop/file_update/', 
+                                        headers={
+                                            'Shop-Token': Shop_token, 
+                                            'Shop-Id': shop_id, 
+                                            'Item-Id': str(item["id"]), 
+                                            'Update-Type': 'printed'
+                                        })
+                                else:
+                                    write_log(f"Retrying print for {item['file_name']}...")
+                                    time.sleep(5)
+
+                            except Exception as e:
+                                write_log(f"Item Processing Error: {e}")
+                                break 
+                        else:
+                            write_log(f"Waiting for {target_printer} to be Ready...")
+                            time.sleep(3) 
+
         except Exception as e:
-            write_log(f"Connection error: {e}")
-        write_log("Waiting for file....")
+            write_log(f"Main Loop Connection error: {e}")
+        
         time.sleep(5)

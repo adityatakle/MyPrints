@@ -1,6 +1,5 @@
 Django
 fpdf2
-uuid
 Pillow
 pypdf
 boto3
@@ -10,3 +9,4 @@ requests
 pywin32
 pyinstaller
 razorpay
+reportlab

@@ -4,3 +4,5 @@ win-venv
 printoapp/__pycache__
 temp_folder
 db.sqlite3
+win7_env
+venv

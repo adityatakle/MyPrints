@@ -14,9 +14,7 @@
 {% endblock %}
 
 <div class="sticky-header">
-        <h3 class="mb-3 font-weight-bold" style="font-size: 2rem;">
-            <span class="text-primary">MyPrints</span>
-        </h3>
+    <a href ="{% url 'index' %}"><img src="{% static 'printoapp/MyPrints_logo.svg' %}" alt="MyPrints Logo" class="nav-logo"></a>
 </div>
 
 {{ shops_json|json_script:"shops-data" }}

@@ -22,13 +22,16 @@
       </svg>
     </a>
     <a href="{% url 'upload' user_id=user_id shop_id=shop_id %}" class="ct-logo">
-      My<em>Prints</em>
+      <img src="{% static 'printoapp/MyPrints_logo.svg' %}" alt="MyPrints Logo" class="nav-logo">
     </a>
     <div class="ct-header-right">
-      {% if cart_items %}
-        <span class="ct-item-count">{{ cart_items|length }} item{% if cart_items|length != 1 %}s{% endif %}</span>
-      {% endif %}
+    {% if cart_items %}
+        <span class="ct-item-count">
+        {{ cart_items|length|add:"-1" }} item{% if cart_items|length|add:"-1" != 1 %}s{% endif %}
+        </span>
+    {% endif %}
     </div>
+
 </header>
 
 <form id="razorpay-form" action="{% url 'payment_status' shop_id=shop_id user_id=user_id %}" method="POST" style="display:none;">
@@ -45,14 +48,14 @@
         <input type="hidden" value="{{ user_id }}" name="user_id" id="user_id">
         <input type="hidden" value="{{ shop_id }}" name="shop_id" id="shop_id">
         <input type="hidden" id="status_url" value="{{ request.scheme }}://{{ request.get_host }}{% url 'payment_status' shop_id=shop_id user_id=user_id %}">
-        
-        {% if cart_items %}
+        {% if cart_items|length > 1 %}       
 
         <p class="ct-eyebrow">Your Order</p>
         <h1 class="ct-title">Review &amp; Pay</h1>
         
         <div class="ct-list">
           {% for item in cart_items %}
+          {% if not forloop.first %}  {# This hides the FrontPage.pdf #}
           <div class="ct-item" id="ct-item-{{ item.id }}">
 
             <div class="ct-item-top">
@@ -66,7 +69,7 @@
                             stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
               </div>
-              <span class="ct-item-name">{{ item.file_id }}</span>
+              <span class="ct-item-name">{{ item.display_name }}</span>
               <span class="ct-item-price">₹{{ item.total_amount }}</span>
             </div>
 
@@ -110,15 +113,8 @@
             </div>
 
           </div>
+          {% endif %}
           {% endfor %}
-        </div>
-
-        <div class="ct-policy">
-          <div class="ct-policy-icon">⚠️</div>
-          <p class="ct-policy-text">
-            <strong>Cancellation policy:</strong> Please double-check your order details.
-            Orders are non-refundable once placed.
-          </p>
         </div>
 
         <div class="ct-summary">
@@ -154,21 +150,43 @@
 
 
         <div class="ct-summary">
-          <div class="ct-summary-row">
-            <span>Subtotal</span>
-            <span>₹{{ total_amount }}</span>
-          </div>
-          <div class="ct-summary-row">
-            <span>Platform fees</span>
-            <span class="ct-free">₹0 🎉</span>
-          </div>
-          <div class="ct-summary-divider"></div>
-          <div class="ct-summary-row ct-summary-total">
-            <span>Total</span>
-            <span>₹{{ total_amount }}</span>
-          </div>
+            <div class="ct-summary-row">
+                <span>Subtotal</span>
+                <span>₹{{ display_subtotal }}</span>
+            </div>
+            
+            {% if cart.priority %}
+                <div class="ct-summary-row">
+                    <span>Priority fee</span>
+                    <span>₹{{ priority_fee }}</span>
+                </div>
+            {% endif %}
+            <div class="ct-summary-row">
+                <span>Platform fees</span>
+                <span>₹{{ p_fee }}</span>
+            </div>
+            
+            <div class="ct-summary-row">
+                <span>Payment gateway fees (incl. GST)</span>
+                <span>₹{{ pg_total_fee }}</span>
+            </div>
+            
+            <div class="ct-summary-divider"></div>
+            
+            <div class="ct-summary-row ct-summary-total">
+                <span>Total</span>
+                <span>₹{{ total_amount }}</span>
+            </div>
         </div>
-
+        
+        <div class="ct-policy">
+          <div class="ct-policy-icon">⚠️</div>
+          <p class="ct-policy-text">
+            <strong>Cancellation policy:</strong> Please double-check your order details.
+            Orders are non-refundable once placed.
+          </p>
+        </div>
+        
         <div id="payment-data" 
             data-key="{{ razorpay_key_id }}" 
             data-amount="{{ total_amount }}" 
