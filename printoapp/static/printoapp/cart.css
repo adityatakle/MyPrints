@@ -611,3 +611,75 @@ body.ct-body, body {
     margin-right: 4px;
     font-weight: 800;
 }
+
+/* Layout for buttons next to each other */
+.ct-actions-group {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.ct-action-btn {
+    background: #f3f4f6;
+    border: none;
+    padding: 8px;
+    border-radius: 8px;
+    color: #4b5563;
+    transition: 0.2s;
+}
+
+.ct-btn-remove { color: #ef4444; }
+.ct-edit-trigger { color: #2563eb; }
+
+/* Modal Styles */
+.ct-modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: none; /* Controlled by JS */
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.ct-modal-card {
+    background: white;
+    width: 100%;
+    max-width: 350px;
+    border-radius: 20px;
+    padding: 24px;
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.ct-modal-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 4px; }
+.ct-modal-subtitle { color: #6b7280; font-size: 0.9rem; margin-bottom: 20px; }
+
+/* Radio Options Styling */
+.ct-modal-options { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+.ct-option { cursor: pointer; display: block; }
+.ct-option input { display: none; }
+.ct-option-content {
+    padding: 12px;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    text-align: center;
+    transition: 0.2s;
+}
+.ct-option input:checked + .ct-option-content {
+    border-color: #2563eb;
+    background: #eff6ff;
+    color: #2563eb;
+}
+
+.ct-modal-actions { display: flex; gap: 10px; }
+.ct-btn-primary, .ct-btn-secondary {
+    flex: 1; padding: 12px; border-radius: 10px; border: none; font-weight: 600;
+}
+.ct-btn-primary { background: #2563eb; color: white; }
+.ct-btn-secondary { background: #f3f4f6; color: #4b5563; }

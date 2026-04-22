@@ -285,7 +285,19 @@ def cart(request, shop_id, user_id):
         elif "remove-priority" in request.POST:
             cart.priority = 0
             cart.save()
-
+        elif "edit" in request.POST:
+            item = get_object_or_404(Cart_items, id=request.POST.get('edit'))
+            side_preference = request.POST.get('side')
+            wants_b2b = (side_preference == 'b2b')
+            target_price_entry = get_object_or_404(
+                Shop_items, 
+                shop_info_id=shop_id, 
+                is_b2b=wants_b2b
+            )
+            item.shop_item = target_price_entry
+            item.is_b2b = wants_b2b
+            item.total_amount = item.quantity * (target_price_entry.price * item.total_pages)
+            item.save()
         return redirect("cart", shop_id=shop_id, user_id=user_id)
     
     # CALCULATION LOGIC
@@ -818,7 +830,7 @@ def test_local_pdf_stamping(pickup_code="0000"):
     template_path = os.path.join(static_base, 'FP_template.pdf')
 
     if not os.path.exists(template_path):
-        return None  # Return None so your view knows it failed
+        return None
 
     PW, PH = 1860.0, 2631.12
     otp_str = str(pickup_code).zfill(4)

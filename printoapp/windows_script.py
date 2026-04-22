@@ -328,7 +328,6 @@ if __name__ == "__main__":
             write_log(f"DATA_FILE is empty. OPEN FILE AND FILL REQUIRED CREDENTIALS ('Shop_token' and 'Shop_id').")
             sys.exit()
         
-        # FIX: Assign variables so they aren't empty in the URL request
         Shop_token = data["shop_token"]
         shop_id = data["shop_id"]
 
@@ -367,7 +366,7 @@ if __name__ == "__main__":
             clean_carts = data.get('clean_carts', [])
             write_log(f'Received {len(print_carts)} jobs.')
 
-            # --- 1. CLEANUP ---
+            # --- CLEANUP ---
             for cart_id in clean_carts:
                 try:
                     cart_path = os.path.join(FOLDER_PATH, str(cart_id))
@@ -379,7 +378,7 @@ if __name__ == "__main__":
                 except Exception as e:
                     write_log(f'Cleanup issue: {e}')
 
-            # --- 2. MARK AS PROCESSING (Limit 2) ---
+            # --- MARK AS PROCESSING (Limit 2) ---
             for i, cart in enumerate(print_carts):
                 if i >= 2: break
                 try:
@@ -388,20 +387,18 @@ if __name__ == "__main__":
                 except Exception as e:
                     write_log(f'Processing update error: {e}')
 
-            # --- 3. PRINTING LOOP ---
+            # --- PRINTING LOOP ---
             for i, cart in enumerate(print_carts):
                 if i >= 2: break 
                 
                 cart_dir = os.path.join(FOLDER_PATH, str(cart['id']))
                 os.makedirs(cart_dir, exist_ok=True)
 
-                # --- PRINTER SELECTION ---
                 usable_printers = []
                 try:
                     with open(DATA_FILE, 'r') as r:
                         printer_data = json.load(r)
                         for printer in printer_data["printer_info"]:
-                            # Relaxed filters for testing; re-enable B2B/Color checks for SITRC pilot
                             if printer["name"] not in ['OneNote (Desktop)', 'Microsoft Print to PDF']:
                                 usable_printers.append(printer)
                 except Exception as e:

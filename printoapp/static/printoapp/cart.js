@@ -56,3 +56,22 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+function openEditModal(itemId) {
+    document.getElementById(`modal-${itemId}`).style.display = 'flex';
+    // Prevent body scroll when modal is open
+    document.body.style.overflow = 'hidden';
+}
+
+function closeEditModal(itemId) {
+    document.getElementById(`modal-${itemId}`).style.display = 'none';
+    document.body.style.overflow = 'auto';
+}
+
+// Close modal if user clicks outside the card
+window.onclick = function(event) {
+    if (event.target.classList.contains('ct-modal-overlay')) {
+        event.target.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
+}
