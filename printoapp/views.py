@@ -841,7 +841,6 @@ def queue_size(request, shop_id, user_id=None):
                 user_position = queue_list.index(target_uuid)
                 return JsonResponse({'queue_size': user_position})
             except ValueError:
-                # If user_id is not in the list 
                 return JsonResponse({'queue_size': 0})
 
 
