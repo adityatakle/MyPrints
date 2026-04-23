@@ -28,6 +28,7 @@ from decimal import Decimal, ROUND_UP
 import random
 from reportlab.pdfgen import canvas
 from reportlab.lib.colors import HexColor
+import uuid
 # Create your views here.
 
 razorpay_client = razorpay.Client(auth=(settings.RAZORPAY_KEY_TEST, settings.RAZORPAY_SECRET_TEST))
@@ -836,8 +837,8 @@ def queue_size(request, shop_id, user_id=None):
         else:
             queue_list = list(active_queue.values_list('user__user_id', flat=True))
             try:
-                # .index() gives the number of items before the user_id
-                user_position = queue_list.index(user_id)
+                target_uuid = uuid.UUID(user_id) 
+                user_position = queue_list.index(target_uuid)
                 return JsonResponse({'queue_size': user_position})
             except ValueError:
                 # If user_id is not in the list 
