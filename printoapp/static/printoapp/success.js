@@ -1,40 +1,63 @@
-const statusUrl = "{% url 'cart_status' cart_id=cart.id %}";
+document.addEventListener('DOMContentLoaded', function() {
+    // Select UI Elements
+    const statusText = document.querySelector('#status-text');
+    const queueNumber = document.querySelector('#queue-number');
+    const statusDot = document.querySelector('#status-dot');
+    const feedbackSection = document.querySelector('#feedback-section');
+    const fbBtn = document.querySelector('#fb-submit-btn');
+    
+    // Get URLs and Token
+    const statusUrl = document.querySelector('#status_url').value;
+    const queueUrl = document.querySelector('#queue_url').value;
+    const csrfToken = document.querySelector('#csrf_token').value;
 
-function checkStatus() {
-    fetch(statusUrl, {
-        method: 'POST',
-        headers: { 'X-CSRFToken': '{{ csrf_token }}' }
-    })
-    .then(response => response.json())
-    .then(data => {
-        const statusText = document.getElementById('status-text');
-        const spinner = document.getElementById('status-spinner');
-        
-        if (data.cart_status === 'Printed') {
-            statusText.innerText = "Order is Printed! 📄";
-            statusText.classList.add('su-text-success');
-            spinner.style.display = 'none';
+    const updateLiveTracking = () => {
+        // --- 1. Update Order Status ---
+        fetch(statusUrl, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': csrfToken, 'Content-Type': 'application/json' }
+        })
+        .then(res => res.json())
+        .then(data => {
+            // Handle Printed State
+            if (data.cart_status === 'Printed') {
+                statusText.innerText = "Order is Printed! 📄";
+                statusText.style.color = "#10b981";
+                statusDot.style.backgroundColor = "#10b981";
+                queueNumber.innerText = "0"; // Position is effectively 0
+            }
+
+            // Handle Verified State (Order Finished)
+            if (data.is_verified) {
+                statusText.innerText = "Order Collected! ✨";
+                feedbackSection.classList.remove('su-feedback--locked');
+                fbBtn.disabled = false;
+                
+                // STOP ALL POLLING
+                clearInterval(pollingInterval);
+                console.log("Polling stopped: Journey Complete.");
+            }
+        })
+        .catch(err => console.error("Status Sync Error:", err));
+
+        // --- 2. Update Queue Position ---
+        // Only fetch queue if the order isn't printed yet
+        if (statusText.innerText.indexOf("Printed") === -1) {
+            fetch(queueUrl, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': csrfToken, 'Content-Type': 'application/json' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                queueNumber.innerText = data.queue_size;
+            })
+            .catch(err => console.log("Queue Sync Error:", err));
         }
-        
-        if (data.is_verified) {
-            statusText.innerText = "Order Collected! Thank you. ✨";
-            const section = document.getElementById('feedback-section');
-            const btn = document.getElementById('fb-submit-btn');
-            
-            section.classList.remove('su-feedback--locked');
-            btn.disabled = false;
-            document.getElementById('feedback-form').removeAttribute('disabled');
-            
-            // --- THE FIX: Stop the polling once verified ---
-            clearInterval(statusInterval);
-            console.log("Polling stopped: Order verified.");
-        }
-    })
-    .catch(err => console.error("Polling error:", err));
-}
+    };
 
-// Start polling
-const statusInterval = setInterval(checkStatus, 10000);
-
-// Run once immediately on load
-checkStatus();
+    // Run every 5 seconds
+    const pollingInterval = setInterval(updateLiveTracking, 5000);
+    
+    // Initial Run
+    updateLiveTracking();
+});

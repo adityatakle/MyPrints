@@ -25,5 +25,7 @@ urlpatterns = [
     path('api/item_list/<int:shop_id>', views.item_list, name='item_list'),
     path('api/shop_list', views.shop_list, name='shop_list'),
     path('api/verify_cart', views.verify_cart, name='verify_cart'),
-    path('api/cart_status/<int:cart_id>', views.cart_status, name='cart_status')
+    path('api/cart_status/<int:cart_id>', views.cart_status, name='cart_status'),
+    path('api/queue_size/<int:shop_id>', views.queue_size, name='queue_size'),
+    path('api/queue_size/<int:shop_id>/<str:user_id>', views.queue_size, name='queue_size_user')
 ]

@@ -1,11 +1,35 @@
 document.addEventListener('DOMContentLoaded', function() {
     const payBtn = document.getElementById('pay_btn');
+    const queue_number = document.querySelector('#queue_number')
+    if (queue_number) {
+        const shopId = document.querySelector('#shop_id').value;
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
+        const updateQueue = () => {
+            fetch(`/api/queue_size/${shopId}`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(result => {
+                queue_number.innerHTML = result.queue_size;
+            })
+            .catch(err => console.log("Queue update paused..."));
+        };
+
+        updateQueue();
+
+        // Refresh every 5 seconds
+        setInterval(updateQueue, 5000);
+    }
     if (payBtn) {
         payBtn.addEventListener('click', function(e) {
             e.preventDefault();
 
-            // Grab IDs (using name selectors as fallback for your Django inputs)
+            // Grab IDs
             const shopId = document.querySelector('#shop_id').value;
             const userId = document.querySelector('#user_id').value;
             const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;

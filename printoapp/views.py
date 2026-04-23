@@ -479,6 +479,8 @@ def success(request, user_id, shop_id):
 
     return render(request, 'printoapp/success.html', {
         'cart': cart,
+        'shop_id':shop_id,
+        'user_id':user_id,
         'pickup_code': cart.pickup_code,
         'shop_lat': cart.shop_info.latitude,
         'shop_long': cart.shop_info.longitude,
@@ -530,13 +532,11 @@ def shop_logout(request):
 @csrf_exempt
 def shop_connect(request):
     if request.method == 'POST':
-        # 1. Use hyphenated headers for better server compatibility
         shop_token = request.headers.get('Shop-Token')
         shop_id = request.headers.get('Shop-Id')
         
         shop_data = get_object_or_404(Shop_info, id=shop_id, script_token=str(shop_token))
         
-        # 2. Get Carts for PRINTING (Paid, but NOT yet printed)
         # Sorted by: Processing first, then Priority (Premium), then Oldest first (FIFO)
         print_query = Cart.objects.filter(
             is_paid=True, 
@@ -562,7 +562,7 @@ def shop_connect(request):
                         'page_type': item.shop_item.page_type,
                         'is_color': item.shop_item.is_color,
                         'is_b2b': item.shop_item.is_b2b,
-                        'copies': item.quantity  # FIXED: Renamed to match your script's 'copies'
+                        'copies': item.quantity
                     })
 
             print_carts.append({
@@ -821,6 +821,27 @@ def cart_status(request, cart_id):
             'cart_status': 'Printed' if cart.is_printed else 'Not Printed',
             'is_verified': cart.is_verified
         })
+
+
+def queue_size(request, shop_id, user_id=None):
+    if request.method == 'POST':
+        active_queue = Cart.objects.filter(
+            shop_info__id=shop_id,
+            is_paid=True,
+            is_verified=False,
+            is_printed=False
+        ).order_by('-is_processing', '-priority', 'created_at')
+        if not user_id:
+            return JsonResponse({'queue_size':active_queue.count()})
+        else:
+            queue_list = list(active_queue.values_list('user__user_id', flat=True))
+            try:
+                # .index() gives the number of items before the user_id
+                user_position = queue_list.index(user_id)
+                return JsonResponse({'queue_size': user_position})
+            except ValueError:
+                # If user_id is not in the list 
+                return JsonResponse({'queue_size': 0})
 
 
 #helper function
