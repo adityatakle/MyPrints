@@ -10,6 +10,7 @@ from django.urls import reverse
 from django.contrib.auth import authenticate, login, logout
 from django.utils import timezone
 from django.db.models import F
+from django.db import transaction
 import os
 from fpdf import FPDF
 from pypdf import PdfReader, PdfWriter
@@ -288,17 +289,18 @@ def cart(request, shop_id, user_id):
             cart.save()
         elif "edit" in request.POST:
             item = get_object_or_404(Cart_items, id=request.POST.get('edit'))
-            side_preference = request.POST.get('side')
-            wants_b2b = (side_preference == 'b2b')
-            target_price_entry = get_object_or_404(
-                Shop_items, 
-                shop_info_id=shop_id, 
-                is_b2b=wants_b2b
-            )
-            item.shop_item = target_price_entry
-            item.is_b2b = wants_b2b
-            item.total_amount = item.quantity * (target_price_entry.price * item.total_pages)
-            item.save()
+            side_preference = request.POST.get('side') == 'True'
+            if side_preference != item.shop_item.is_b2b:
+                new_item = get_object_or_404(
+                    Shop_items,
+                    shop_info_id=shop_id,
+                    page_type = item.shop_item.page_type,
+                    is_color = item.shop_item.is_color,
+                    is_b2b = side_preference    
+                )
+                item.shop_item = new_item
+                item.total_amount = item.quantity * (new_item.price * item.total_pages)
+                item.save()
         return redirect("cart", shop_id=shop_id, user_id=user_id)
     
     # CALCULATION LOGIC
@@ -429,10 +431,14 @@ def payment_status(request, shop_id, user_id):
             cart.is_paid = True
             while True:
                 pickup_code = random.randint(10,9999)
-                if not Cart.objects.filter(shop_info_id=shop_id, is_paid=True, is_verified=False, pickup_code=pickup_code).exists():
+                if not Cart.objects.filter(shop_info_id=shop_id,
+                                        is_paid=True, 
+                                        is_verified=False, 
+                                        pickup_code=pickup_code).exists():
                     cart.pickup_code = pickup_code
+                    cart.save()
                     break
-            cart.save()
+            
         
         
             front_page_item = Cart_items.objects.filter(

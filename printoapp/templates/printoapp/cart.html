@@ -116,13 +116,13 @@
                         
                         <div class="ct-modal-options">
                             <label class="ct-option">
-                                <input type="radio" name="side" value="single" {% if not item.is_b2b %}checked{% endif %}>
+                                <input type="radio" name="side" value="False" {% if not item.is_b2b %}checked{% endif %}>
                                 <div class="ct-option-content">
                                     <span>➡️ Single Side</span>
                                 </div>
                             </label>
                             <label class="ct-option">
-                                <input type="radio" name="side" value="b2b" {% if item.is_b2b %}checked{% endif %}>
+                                <input type="radio" name="side" value="True" {% if item.is_b2b %}checked{% endif %}>
                                 <div class="ct-option-content">
                                     <span>↔️ Double Side (B2B)</span>
                                 </div>

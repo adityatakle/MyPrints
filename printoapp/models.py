@@ -25,12 +25,6 @@ class Shop_info(models.Model):
     def save(self, *args, **kwargs):
         if not self.script_token:
             self.script_token = secrets.token_urlsafe(32)
-        if not self.open_weekdays:
-            self.open_weekdays = "0123456"
-        if not self.open_time:
-            self.open_time = "10:00"
-        if not self.close_time:
-            self.close_time = "17:00"
         super().save(*args, **kwargs)
 
 
@@ -52,7 +46,7 @@ class Shop_items(models.Model):
 
 class Cart(models.Model):
     payment_id = models.CharField(max_length =255, blank=True)
-    pickup_code = models.CharField(max_length =10, blank=True)
+    pickup_code = models.IntegerField(blank=True, null=True)
     is_open = models.BooleanField(default=True)
     is_paid = models.BooleanField(default=False)
     is_verified = models.BooleanField(default=False)
