@@ -757,7 +757,6 @@ def update_cart_financial_records(cart):
 def cart(request, shop_id, user_id):
     cart = get_object_or_404(Cart, user__user_id=user_id, shop_info__id=shop_id, is_open=True)
     cart_items = Cart_items.objects.filter(cart=cart)
-
     if request.method == "POST":
         # Wrap modifications inside a transaction block to maintain absolute database integrity
         with transaction.atomic():
@@ -944,7 +943,22 @@ def payment_status(request, shop_id, user_id):
 
             return redirect("success", shop_id=shop_id, user_id=user_id)
         except Exception as e:
-            return redirect("cart", shop_id=shop_id, user_id=user_id)
+            return redirect("failure", shop_id=shop_id, user_id=user_id)
+
+def failure(request, user_id, shop_id):
+    cart = Cart.objects.filter(
+        user__user_id=user_id,
+        shop_info_id=shop_id,
+        is_open=True
+    ).order_by('-id').first() 
+
+    if not cart:
+        return redirect('cart', shop_id=shop_id, user_id=user_id)
+    return render(request, 'printoapp/failure.html', {
+        'cart':cart,
+        'shop_id':shop_id,
+        'user_id':user_id
+    })
 
 def success(request, user_id, shop_id):
     cart = Cart.objects.filter(

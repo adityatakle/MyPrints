@@ -18,6 +18,7 @@ urlpatterns = [
     path('tnc', views.tnc, name='tnc'),
     path('payment-status/<int:shop_id>/<str:user_id>', views.payment_status, name='payment_status'),
     path('success/<int:shop_id>/<str:user_id>', views.success, name='success'),
+    path('failure/<int:shop_id>/<str:user_id>', views.failure, name='failure'),
 
     #apis
     path('initiate-payment/<int:shop_id>/<str:user_id>/', views.initiate_payment, name='initiate_payment'),

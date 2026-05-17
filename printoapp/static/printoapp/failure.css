@@ -1,0 +1,153 @@
+/* ================================================================
+   MyPrints — failure.css
+   Mobile-first layout matching cart.css tokens
+   ================================================================ */
+
+:root {
+    --blue:       #007BFF;
+    --blue-d:     #0062d6;
+    --red:        #ef4444;
+    --red-pale:   #fee2e2;
+    --dark:       #0d1117;
+    --mid:        #4b5563;
+    --off:        #f4f6fb;
+    --card:       #ffffff;
+    --r:          16px;
+    --shadow-md:  0 8px 30px rgba(0,0,0,0.06);
+    --transition: 0.2s cubic-bezier(0.4,0,0.2,1);
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+body.fp-body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--off);
+    /* Subtle red dotted background to indicate the error state nicely */
+    background-image: radial-gradient(circle, rgba(239, 68, 68, 0.08) 1px, transparent 1px);
+    background-size: 22px 22px;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 20px;
+    -webkit-font-smoothing: antialiased;
+}
+
+.fp-container {
+    width: 100%;
+    max-width: 420px;
+}
+
+.fp-card {
+    background: var(--card);
+    border-radius: var(--r);
+    padding: 40px 24px;
+    box-shadow: var(--shadow-md);
+    text-align: center;
+    border-top: 5px solid var(--red);
+    animation: slideUp 0.4s ease-out forwards;
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.fp-icon-wrapper {
+    width: 72px;
+    height: 72px;
+    background: var(--red-pale);
+    color: var(--red);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+    animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.fp-icon {
+    width: 36px;
+    height: 36px;
+}
+
+@keyframes popIn {
+    0%   { transform: scale(0); opacity: 0; }
+    60%  { transform: scale(1.1); opacity: 1; }
+    100% { transform: scale(1); }
+}
+
+.fp-title {
+    font-family: 'Readex Pro', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--dark);
+    margin: 0 0 14px;
+}
+
+.fp-message {
+    font-size: 0.95rem;
+    color: var(--mid);
+    line-height: 1.6;
+    margin: 0 0 32px;
+}
+
+.fp-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.fp-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 16px 20px;
+    border-radius: 50px;
+    font-family: 'Readex Pro', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    text-decoration: none;
+    transition: transform var(--transition), box-shadow var(--transition), background var(--transition), color var(--transition);
+}
+
+.fp-btn-primary {
+    background: var(--blue);
+    color: #fff;
+    box-shadow: 0 6px 20px rgba(0, 123, 255, 0.25);
+}
+
+.fp-btn-primary:hover {
+    background: var(--blue-d);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 123, 255, 0.35);
+    color: #fff;
+}
+
+.fp-btn-secondary {
+    background: #f3f4f6;
+    color: var(--mid);
+}
+
+.fp-btn-secondary:hover {
+    background: #e5e7eb;
+    color: var(--dark);
+}
+
+.fp-help {
+    margin-top: 28px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #9ca3af;
+}
+
+/* ── Mobile tweaks ── */
+@media (max-width: 400px) {
+    .fp-card { padding: 30px 20px; }
+    .fp-title { font-size: 1.4rem; }
+}

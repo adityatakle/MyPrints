@@ -1,6 +1,40 @@
-{% extends 'printoapp/layout.html' %}
 {% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Failed — MyPrints</title>
+    <link href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@400;600;700;800&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="{% static 'printoapp/failure.css' %}" rel="stylesheet">
+</head>
+<body class="fp-body">
+    <div class="fp-container">
+        <div class="fp-card">
+            
+            <div class="fp-icon-wrapper">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="fp-icon">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="15" y1="9" x2="9" y2="15"></line>
+                    <line x1="9" y1="9" x2="15" y2="15"></line>
+                </svg>
+            </div>
 
-{%block body %}
-    <h1>Payment Failed.</h1>
-{% endblock %}
+            <h1 class="fp-title">Payment Failed</h1>
+            
+            <p class="fp-message">
+                We couldn't process your payment. Your document settings are safely saved in your cart.<br><br>
+                <strong>Note:</strong> If any amount was deducted via UPI, it will automatically be refunded to your bank account within 3-5 business days.
+            </p>
+
+            <div class="fp-actions">
+                <a href="{% url 'cart' shop_id=shop_id user_id=user_id %}" class="fp-btn fp-btn-primary">
+                    Return to Cart
+                </a>
+            </div>
+
+            <p class="fp-help">Need help? Contact support at support@myprints.in</p>
+        </div>
+    </div>
+</body>
+</html>
