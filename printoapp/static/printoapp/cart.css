@@ -215,9 +215,9 @@ body.ct-body, body {
 
 /* ── META TAGS ── */
 .ct-item-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
+  display: grid;
+  grid-template-columns: max-content max-content; /* Forces 2 items per line */
+  gap: 8px 12px; /* 8px row gap, 12px column gap */
   margin-bottom: 12px;
 }
 
@@ -225,7 +225,7 @@ body.ct-body, body {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 600;
   padding: 3px 10px;
   border-radius: 20px;
@@ -237,6 +237,25 @@ body.ct-body, body {
   background: rgba(45,212,191,0.1);
   color: #0d9488;
   border-color: rgba(45,212,191,0.25);
+}
+
+/* ── WARNING TAG ── */
+.ct-tag--warning {
+  display: flex;
+  margin: 4px auto;
+  width: max-content;
+  background: #fffbeb; 
+  font-size: 1rem;
+  color: #92400e; 
+  border-color: #fde68a;
+  /* Optional: Add a subtle pulse animation to grab their attention */
+  animation: warningPulse 2s infinite;
+}
+
+@keyframes warningPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(253, 230, 138, 0.7); }
+  70%  { box-shadow: 0 0 0 4px rgba(253, 230, 138, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(253, 230, 138, 0); }
 }
 
 /* ── CONTROLS ROW: qty stepper + trash ── */
@@ -626,6 +645,7 @@ body.ct-body, body {
     border-radius: 8px;
     color: #4b5563;
     transition: 0.2s;
+    cursor: pointer;
 }
 
 .ct-btn-remove { color: #ef4444; }
@@ -643,6 +663,7 @@ body.ct-body, body {
     padding: 20px;
 }
 
+/* Modal Updates */
 .ct-modal-card {
     background: white;
     width: 100%;
@@ -650,6 +671,35 @@ body.ct-body, body {
     border-radius: 20px;
     padding: 24px;
     animation: slideUp 0.3s ease-out;
+    max-height: 90vh; /* Prevents modal from overflowing off screen on small mobile */
+    overflow-y: auto; /* Allows scrolling inside modal if needed */
+}
+
+/* New Modal Sections & Grid Options */
+.ct-modal-section { margin-bottom: 24px; }
+.ct-modal-label { 
+    font-size: 0.8rem; 
+    color: #6b7280; 
+    margin: 0 0 10px 0; 
+    font-weight: 700; 
+    text-transform: uppercase; 
+    letter-spacing: 0.05em; 
+}
+.ct-modal-options--grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Puts radio options side-by-side */
+    gap: 10px;
+    margin-bottom: 0;
+}
+
+.ct-option-content {
+    padding: 10px 8px; /* Slightly tighter padding for grid layout */
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    text-align: center;
+    transition: 0.2s;
+    font-size: 0.85rem;
+    font-weight: 600;
 }
 
 @keyframes slideUp {
@@ -736,4 +786,309 @@ body.ct-body, body {
     font-size: 0.85rem;
     color: #4b5563;
     margin-top: 4px;
+}
+
+/* ── QUEUE SPLIT LAYOUT ── */
+.ct-queue-split {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 8px;
+}
+
+.ct-queue-half {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.ct-queue-divider {
+    width: 1px;
+    height: 45px;
+    background: #e5e7eb;
+    margin: 0 10px;
+}
+
+/* Make the priority number and label pop with your brand blue */
+.ct-queue-val--priority {
+    color: var(--blue, #007bff);
+}
+
+.ct-queue-label--priority {
+    color: var(--blue, #007bff);
+    font-weight: 700;
+}
+
+
+
+/* ================================================================
+   PDF PREVIEW MODAL — paper-accurate aspect-ratio layout
+   ================================================================ */
+
+/*
+ * Outer card: sits centred in the overlay.
+ * .pdf-modal--portrait  → narrow card (A4 portrait  ~500 px)
+ * .pdf-modal--landscape → wide card   (A4 landscape ~750 px)
+ * Both are clamped to 95vw / 90vh so they never overflow the screen.
+ */
+.pdf-preview-card {
+    background: #3c3f41;          /* dark studio background */
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.55);
+    max-height: 90vh;
+    width: 95vw;                  /* safe default; overridden below */
+    transition: max-width 0.25s ease, width 0.25s ease;
+}
+
+/* Portrait card: narrow (A4 portrait is ~71% as wide as it is tall) */
+.pdf-preview-card.pdf-modal--portrait {
+    max-width: min(480px, 95vw);
+}
+
+/* Landscape card: wide (A4 landscape is ~141% as wide as it is tall) */
+.pdf-preview-card.pdf-modal--landscape {
+    max-width: min(780px, 95vw);
+}
+
+/* ── Toolbar ──────────────────────────────────────────────────── */
+.pdf-preview-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: #2b2d2f;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    flex-shrink: 0;
+    gap: 10px;
+}
+
+.pdf-preview-toolbar-left {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;           /* allow text-overflow to work */
+}
+
+.pdf-preview-title {
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #f0f0f0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 320px;
+}
+
+.pdf-preview-badges {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.preview-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.1);
+    color: #cbd5e1;
+    border: 1px solid rgba(255,255,255,0.15);
+    white-space: nowrap;
+}
+
+.preview-badge--warning {
+    background: #fffbeb;
+    color: #92400e;
+    border-color: #fde68a;
+}
+
+.preview-badge--color {
+    background: rgba(45,212,191,0.15);
+    color: #5eead4;
+    border-color: rgba(45,212,191,0.3);
+}
+
+.pdf-preview-close {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: #f0f0f0;
+    border-radius: 8px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1rem;
+    flex-shrink: 0;
+    transition: background 0.2s;
+}
+.pdf-preview-close:hover { background: rgba(255,255,255,0.18); }
+
+/* ── Stage: grey area surrounding the paper ───────────────────── */
+.pdf-preview-stage {
+    flex: 1;
+    overflow-y: auto;
+    background: #525659;            /* classic Acrobat grey */
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 20px;
+    -webkit-overflow-scrolling: touch;
+}
+
+/*
+ * Paper wrapper — aspect-ratio box trick.
+ *
+ * width: 100% of the stage (after padding).
+ * padding-bottom: set by JS to (1/A4_RATIO)*100%
+ *   → portrait  = (297/210)*100% ≈ 141.4%
+ *   → landscape = (210/297)*100% ≈  70.7%
+ * height: 0 so the element height comes entirely from padding-bottom.
+ * position: relative so the absolute iframe can fill it.
+ *
+ * The result: no matter how narrow or wide the screen is, the paper
+ * box is always exactly A4-proportioned.
+ */
+.pdf-paper-wrap {
+    position: relative;
+    width: 100%;
+    height: 0;                      /* height driven by padding-bottom */
+    background: #ffffff;
+    box-shadow:
+        0 0 0 1px rgba(0,0,0,0.15),
+        0 4px 24px rgba(0,0,0,0.35);
+    border-radius: 2px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.pdf-paper-iframe {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: block;
+}
+
+/* ── Footer note ──────────────────────────────────────────────── */
+.pdf-preview-note {
+    text-align: center;
+    font-size: 0.68rem;
+    color: rgba(255,255,255,0.4);
+    padding: 8px 16px;
+    margin: 0;
+    flex-shrink: 0;
+    background: #2b2d2f;
+    border-top: 1px solid rgba(255,255,255,0.06);
+}
+
+/* ── Mobile tweaks ────────────────────────────────────────────── */
+@media (max-width: 520px) {
+    .pdf-preview-stage { padding: 12px; }
+    .pdf-preview-card.pdf-modal--landscape { max-width: 95vw; }
+    .pdf-preview-title { max-width: 220px; }
+}
+
+.pdf-preview-card {
+    background: #fff;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    /* This makes the modal adapt to screen width automatically */
+    width: clamp(300px, 92vw, 850px); 
+    max-height: 92vh;
+    margin: auto;
+    box-shadow: 0 24px 48px rgba(0,0,0,0.4);
+}
+
+.pdf-preview-stage {
+    flex: 1;
+    overflow-y: auto;
+    background: #4a4d50; 
+    padding: 15px;
+    display: flex;
+    justify-content: center;
+}
+
+/* Force A4 Portrait Aspect Ratio (210mm by 297mm) */
+.pdf-paper-wrap {
+    position: relative;
+    width: 100%;
+    /* 1.414 aspect ratio = 141.4% padding-bottom */
+    padding-bottom: 141.4%; 
+    height: 0;
+    background: white;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.pdf-paper-iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+/* ── PAYMENT GATEWAY BREAKDOWN UI ── */
+.ct-info-link {
+    background: none;
+    border: none;
+    color: var(--blue);
+    font-size: 0.75rem;
+    cursor: pointer;
+    padding: 0 4px;
+    font-weight: 600;
+    transition: color var(--transition);
+}
+.ct-info-link:hover {
+    color: var(--blue-d);
+    text-decoration: underline;
+}
+
+.ct-pg-details {
+    display: none; /* Hidden by default */
+    background: var(--off);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-top: 8px;
+    font-size: 0.8rem;
+    color: var(--mid);
+    animation: slideDown 0.2s ease-out forwards;
+}
+
+.ct-pg-details.show {
+    display: block; /* Shown when toggled */
+}
+
+.ct-pg-detail-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+
+.ct-pg-note {
+    font-size: 0.7rem;
+    color: var(--soft);
+    margin: 6px 0 0 0;
+    border-top: 1px solid var(--border);
+    padding-top: 6px;
+    line-height: 1.4;
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
 }

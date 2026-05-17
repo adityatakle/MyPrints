@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const statusDot = document.querySelector('#status-dot');
     const feedbackSection = document.querySelector('#feedback-section');
     const fbBtn = document.querySelector('#fb-submit-btn');
-    
+    const homeContainer = document.querySelector('#home-action-container');
     // Get URLs and Token
     const statusUrl = document.querySelector('#status_url').value;
     const queueUrl = document.querySelector('#queue_url').value;
@@ -31,6 +31,9 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.is_verified) {
                 statusText.innerText = "Order Collected! ✨";
                 feedbackSection.classList.remove('su-feedback--locked');
+                if (homeContainer) {
+                    homeContainer.style.display = 'block';
+                }
                 fbBtn.disabled = false;
                 
                 // STOP ALL POLLING

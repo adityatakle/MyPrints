@@ -3,7 +3,7 @@
 
 {% block shop_extra_head %}
     <link href="{% static 'printoapp/shop_catalogue.css' %}" rel="stylesheet">
-    
+
 {% endblock %}
 {% block nav_catalogue %}sd-active{% endblock %}
 {% block sd_content %}
@@ -17,7 +17,7 @@
             <h1 class="sc-title">Shop Catalogue</h1>
             <p class="sc-subtitle">Manage your printing services and pricing.</p>
         </div>
- 
+
     </div>
     <div class="sc-card" style="margin-bottom: 24px;">
         <div class="sc-card-meta">
@@ -27,7 +27,7 @@
                 Add Hours
             </button>
         </div>
-        
+
         <div class="sc-table-wrap">
             <table class="sc-table">
                 <thead>
@@ -43,10 +43,10 @@
                         <td><span class="sc-page-type">{{ t.weekday }}</span></td>
                         <td><span class="sc-price">{{ t.start_time|time:"h:i A" }} - {{ t.end_time|time:"h:i A" }}</span></td>
                         <td class="sc-actions-cell">
-                            <button type="button" class="sc-edit-btn timing-edit-btn" 
-                                    value="{{ t.id }}" 
-                                    data-day="{{ t.weekday }}" 
-                                    data-start="{{ t.start_time|time:'H:i' }}" 
+                            <button type="button" class="sc-edit-btn timing-edit-btn"
+                                    value="{{ t.id }}"
+                                    data-day="{{ t.weekday }}"
+                                    data-start="{{ t.start_time|time:'H:i' }}"
                                     data-end="{{ t.end_time|time:'H:i' }}">
                                 Edit
                             </button>
@@ -71,8 +71,140 @@
         </div>
     </div>
 
+    <div class="sc-card" style="margin-bottom: 24px;">
+        <div class="sc-card-meta">
+            <span class="sc-count-badge">{{ coupons|length }} Coupon{% if coupons|length != 1 %}s{% endif %}</span>
+            <button type="button" class="sc-edit-btn" id="newCouponBtn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+                New Coupon
+            </button>
+        </div>
+
+        <div class="sc-table-wrap">
+        <table class="sc-table">
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Discount</th>
+                    <th>Limit / Validity</th>
+                    <th>Min. Cart Amount</th>
+                    <th>Disc. Limit</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in coupons %}
+                <tr class="sc-row">
+                    <td><span class="sc-page-type">{{ c.code }}</span></td>
+                    <td><span class="sc-badge sc-badge--color">{{ c.discount_percent }}% OFF</span></td>
+                    <td>
+                        <span class="sc-card-hint">
+                            {% if c.max_use %}
+                                Max {{ c.max_use }} uses
+                            {% elif c.days_valid %}
+                                {{ c.days_valid }} days
+                            {% else %}
+                                Unlimited
+                            {% endif %}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="sc-price">₹{{ c.min_cart_value|default:"0" }}</span>
+                    </td>
+                    <td>
+                        <span class="sc-price" style="color: var(--soft);">
+                            {% if c.max_amount %}₹{{ c.max_amount }}{% else %}—{% endif %}
+                        </span>
+                    </td>
+                    <td class="sc-actions-cell">
+                        <button type="button" class="sc-edit-btn sc-delete-btn" onclick="handleDelete('{{ c.id }}', 'Delete_coupon')">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M3 6h18m-2 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path>
+                            </svg>
+                        </button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="sc-empty-row">
+                        <div class="sc-empty" style="padding: 30px;">
+                            <p class="sc-empty-sub">No coupons active for this shop.</p>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    </div>
+
+    <div class="scm-overlay" id="couponModal">
+        <div class="scm-dialog">
+            <div class="scm-header">
+                <div>
+                    <p class="scm-header-label">Marketing</p>
+                    <h2 class="scm-header-title">Create Coupon</h2>
+                </div>
+                <button class="scm-close" id="closeCouponModal">&times;</button>
+            </div>
+            <form action="{% url 'shop_catalogue' %}" method="post" class="scm-form">
+                {% csrf_token %}
+                <input type="hidden" name="request_type" value="Add_coupon">
+
+                <div class="scm-grid">
+                    <div class="scm-field">
+                        <label class="scm-label">Coupon Code*</label>
+                        <input type="text" name="code" class="scm-select" placeholder="SAVE10" required maxlength="16" autocomplete="off" autocapitalize="on">
+                    </div>
+                    <div class="scm-field">
+                        <label class="scm-label">Discount (%)*</label>
+                        <input type="number" name="discount_percent" class="scm-select" placeholder="10" required min="1" max="99">
+                    </div>
+
+                    <div class="scm-field--full" style="padding: 16px; background: var(--off); border-radius: 12px; border: 1.5px solid var(--blue-pale);">
+                        <label class="scm-label" style="display: block; margin-bottom: 12px; color: var(--blue);">Expiration Logic (Must Choose One)</label>
+
+                        <div style="display: flex; gap: 10px; margin-bottom: 16px;">
+                            <label class="sc-day-pill">
+                                <input type="radio" name="expiry_type" value="max_use" checked>
+                                <span>Total Use Limit</span>
+                            </label>
+                            <label class="sc-day-pill">
+                                <input type="radio" name="expiry_type" value="days_valid">
+                                <span>Days Valid</span>
+                            </label>
+                        </div>
+
+                        <div id="max_use_input_wrap">
+                            <label class="scm-label">Maximum Number of Uses</label>
+                            <input type="number" name="max_use" id="c_max_use" class="scm-select" placeholder="e.g. 50" required>
+                        </div>
+
+                        <div id="days_valid_input_wrap" style="display: none;">
+                            <label class="scm-label">Valid for how many Days?</label>
+                            <input type="number" name="days_valid" id="c_days_valid" class="scm-select" placeholder="e.g. 30">
+                        </div>
+                    </div>
+
+                    <div class="scm-field">
+                        <label class="scm-label">Min Cart Value (Rupees)</label>
+                        <input type="number" name="min_cart_value" class="scm-select" placeholder="₹0" min="1">
+                    </div>
+                    <div class="scm-field">
+                        <label class="scm-label">Max Discount Amt (Rupees)</label>
+                        <input type="number" name="max_amount" class="scm-select" placeholder="₹500" min="1">
+                    </div>
+                </div>
+                <div class="scm-actions">
+                    <button type="button" class="scm-cancel-btn" id="cancelCouponModal">Cancel</button>
+                    <button type="submit" class="scm-save-btn">Create Coupon</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="scm-overlay" id="timingModal">
-        
+
         <div class="scm-dialog">
             <div class="scm-header">
                 <div>
@@ -132,7 +264,7 @@
                 </svg>
                 New Item
             </button>
-  
+
         </div>
 
         <form action="{% url 'shop_catalogue' %}" method="post" id="scMainForm">
@@ -177,7 +309,7 @@
                                 <span class="sc-price-unit">/page</span>
                             </td>
                             <td class="sc-actions-cell">
-                                <button type="submit" name="Update_catalogue"
+                                <button type="button"
                                         value="{{ item.id }}"
                                         class="sc-edit-btn edit_btn"
                                         data-pagetype="{{ item.page_type }}"
@@ -186,11 +318,7 @@
                                         data-b2b="{{ item.is_b2b }}">
                                     Edit
                                 </button>
-                                <button type="button" class="sc-edit-btn sc-delete-btn" onclick="handleDelete('{{ item.id }}', 'Delete_catalogue')">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M3 6h18m-2 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path>
-                                    </svg>
-                                </button>
+
                             </td>
                         </tr>
                         {% empty %}
@@ -277,7 +405,7 @@
                                placeholder="0.00" step="0.01" min="0"
                                required>
                     </div>
-                    
+
                     <p class="scm-field-error" id="scPriceError">
                         Please set a price to continue.
                     </p>

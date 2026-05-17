@@ -1,0 +1,36 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyPrints | Creator Portal</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="{% static 'printoapp/creator_login.css' %}">
+</head>
+<body class="glitch-effect">
+    <div class="scanline"></div>
+
+    <div class="login-card">
+        <h1>Creator Auth</h1>
+        
+        <form action="{% url 'creator_login' %}" method="POST">
+            {% csrf_token %}
+            <div class="form-group">
+                <label>Admin Username</label>
+                <input type="text" name="username" placeholder="USER_ID_74" required spellcheck="false" autocomplete="off">
+            </div>
+
+            <div class="form-group">
+                <label>Encrypted Password</label>
+                <input type="password" name="password" placeholder="••••••••" required autocomplete="new-password" autocomplete="off">
+            </div>
+
+            <button type="submit">Execute Login</button>
+        </form>
+
+    </div>
+</body>
+</html>

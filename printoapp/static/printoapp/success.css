@@ -46,3 +46,25 @@
 .su-text-success {
     color: #10b981 !important;
 }
+
+/* Add to success.css */
+.su-home-action { margin-top: 10px; }
+
+.su-btn-home {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: #111827;
+    color: white;
+    padding: 14px;
+    border-radius: 12px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: background 0.2s;
+}
+
+.su-btn-home:hover {
+    background: #1f2937;
+}

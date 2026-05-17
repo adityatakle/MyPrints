@@ -11,19 +11,15 @@
 <div class="sc-page">
     <div class="sc-page-header">
         <div class="sc-page-header-left">
-            <h2 class="sc-title">Shop Account</h2>
-            <p class="sc-subtitle">View and manage your business profile details.</p>
+            <h2 class="sc-title">Shop Info</h2>
+            <p class="sc-subtitle">View your business profile details.</p>
         </div>
     </div>
-
-
-
         <div class="account-details-grid">
             <div class="detail-item">
                 <label>Shop Name</label>
                 <span>{{ shop.name }}</span>
             </div>
-
             <div class="detail-item">
                 <label>Location</label>
                 <span>{{ shop.location }}</span>
@@ -48,6 +44,38 @@
                     </svg>
                     {{ shop.latitude }}, {{ shop.longitude }}
                 </div>
+            </div>
+        </div>
+    </div>
+    <div class="sc-page-header">
+        <div class="sc-page-header-left">
+            <h2 class="sc-title">Owner Info</h2>
+        </div>
+    </div>
+        <div class="account-details-grid">
+            <div class="detail-item">
+                <label>Owner name</label>
+                <span>{{ owner.user.first_name }} {{ owner.user.last_name }}</span>
+            </div>
+            <div class="detail-item">
+                <label>Mobile number</label>
+                <span>{{ owner.mobile_number }}</span>
+            </div>
+        </div>
+        <br><br>
+    <div class="sc-page-header">
+        <div class="sc-page-header-left">
+            <h2 class="sc-title">Contact me</h2>
+        </div>
+    </div>
+    <div class="account-details-grid">
+            <div class="detail-item">
+                <label>Name</label>
+                <span>Aditya Takle</span>
+            </div>
+            <div class="detail-item">
+                <label>Mobile number</label>
+                <span>+91 9764308031</span>
             </div>
         </div>
     </div>

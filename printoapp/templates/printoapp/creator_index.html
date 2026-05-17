@@ -1,0 +1,93 @@
+{% extends 'printoapp/creator_layout.html' %}
+{% load static %}
+
+{% block shop_extra_head %}
+<link href="{% static 'printoapp/creator_dashboard.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block sd_content %}
+<div class="dashboard-wrapper">
+    <div class="metrics-grid">
+        <div class="metric-card">
+            <h3>Today's Pages</h3>
+            <span class="value">{{ today_total_pages }}</span>
+            <p>{{ today_total_pages_printed }} Actually Printed</p>
+        </div>
+        <div class="metric-card">
+            <h3>Today's Revenue</h3>
+            <span class="value">₹{{ today_grand_total|floatformat:2 }}</span>
+            <p>Platform Share: ₹{{ today_my_share|floatformat:2 }}</p>
+        </div>
+        <div class="metric-card alert">
+            <h3>Settlements Pending</h3>
+            <span class="value">₹{{ to_pay|floatformat:2 }}</span>
+            <p>Owed to Shop Owners</p>
+        </div>
+        <div class="metric-card">
+            <h3>Avg. Order Value</h3>
+            <span class="value">₹{{ aov|floatformat:2 }}</span>
+            <p>Based on {{ all_time_cart_placed.count }} Orders</p>
+        </div>
+    </div>
+
+    <div class="content-split">
+        <div class="chart-container">
+            <div class="section-header">
+                <h3>Subscription Revenue Trends</h3>
+            </div>
+            <canvas id="revenueChart"></canvas>
+        </div>
+
+        <div class="side-info">
+            <div class="info-card">
+                <h3>Network Status</h3>
+                <div class="info-row">
+                    <span>Active Hubs:</span>
+                    <strong>{{ active_shops_onboard }} / {{ total_shops_onboard }}</strong>
+                </div>
+                <div class="info-row">
+                    <span>Total Customers:</span>
+                    <strong>{{ total_users }}</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="ledger-container">
+        <h3>Historical Subscription Data</h3>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Billing Cycle</th>
+                    <th>Revenue Collected</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in monthly_subscription_revenue %}
+                <tr>
+                    <td>{{ entry.month }}/{{ entry.year }}</td>
+                    <td>₹{{ entry.total_revenue|floatformat:2 }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="2" class="empty-state">No subscription revenue recorded yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+<div class="content-split">
+    <div class="chart-container">
+        <div class="section-header">
+            <h3>Subscription Revenue Trends</h3>
+        </div>
+        <canvas id="revenueChart"></canvas>
+    </div>
+</div>
+
+{{ monthly_subscription_revenue|json_script:"sub-revenue-data" }}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{% static 'printoapp/creator_dashboard.js' %}"></script>
+{% endblock %}

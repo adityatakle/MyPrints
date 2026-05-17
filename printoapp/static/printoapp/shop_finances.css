@@ -1,0 +1,121 @@
+/* Subtitle matching your design system */
+.sd-section-subtitle {
+    color: var(--soft);
+    font-size: 0.9rem;
+    margin: 4px 0 0 0;
+}
+
+/* Metrics Grid Layout */
+.sd-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+    margin-bottom: 24px;
+}
+
+/* Individual Metric Cards */
+.sd-metric-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 20px;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+/* Blue Highlight Card */
+.sd-metric-card--blue {
+    background: var(--blue);
+    border-color: var(--blue-d);
+}
+
+/* Card Header */
+.sd-metric-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.sd-metric-header h3 {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin: 0;
+    color: var(--dark);
+}
+
+.sd-metric-card--blue .sd-metric-header h3 {
+    color: #ffffff;
+}
+
+/* Badges */
+.sd-badge {
+    background: var(--off);
+    color: var(--soft);
+    font-size: 0.75rem;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-weight: 700;
+}
+
+.sd-badge--light {
+    background: rgba(255, 255, 255, 0.2);
+    color: #ffffff;
+}
+
+/* Values & Typography */
+.sd-metric-value {
+    font-family: 'Readex Pro', sans-serif;
+    font-size: 2.2rem;
+    font-weight: 800;
+    margin-bottom: 16px;
+    letter-spacing: -0.02em;
+}
+
+.text-green { color: var(--green); }
+.text-white { color: #ffffff; }
+.text-muted { color: var(--soft); }
+
+/* Card Footers */
+.sd-metric-footer {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--mid);
+    background: var(--off);
+    padding: 10px 14px;
+    border-radius: 8px;
+}
+
+.sd-footer--light {
+    background: rgba(255, 255, 255, 0.15);
+    color: #f8fafc;
+}
+
+.sd-empty-text {
+    font-size: 0.85rem;
+    color: var(--soft);
+    margin-top: auto;
+}
+
+/* Inline Form Inputs */
+.sd-filter-input {
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 0.85rem;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--dark);
+    background: var(--card);
+    cursor: pointer;
+    transition: border var(--transition);
+}
+
+.sd-filter-input:focus {
+    outline: none;
+    border-color: var(--blue);
+}

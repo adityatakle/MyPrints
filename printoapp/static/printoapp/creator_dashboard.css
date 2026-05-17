@@ -1,0 +1,109 @@
+:root {
+    --space-bg: #050b18;
+    --nebula-purple: #6b21a8;
+    --star-cyan: #22d3ee;
+    --void-card: rgba(15, 23, 42, 0.7);
+    --text-main: #f8fafc;
+}
+
+.cosmos-container {
+    padding: 20px;
+    background: radial-gradient(circle at top right, #1e1b4b, var(--space-bg));
+    min-height: 100vh;
+    color: var(--text-main);
+}
+
+/* Constellation Cards */
+.stat-constellation {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, min-minmax(240px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.nebula-card {
+    background: var(--void-card);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.nebula-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px -10px var(--star-cyan);
+}
+
+.glow-text {
+    font-size: 1.8rem;
+    font-weight: 800;
+    margin: 5px 0;
+    color: var(--star-cyan);
+    text-shadow: 0 0 15px rgba(34, 211, 238, 0.5);
+}
+
+/* Charts & Grids */
+.observatory-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.chart-void, .ledger-void, .metric-orbit {
+    background: var(--void-card);
+    border-radius: 16px;
+    padding: 25px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Table Styles */
+.star-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+.star-table th {
+    text-align: left;
+    color: #94a3b8;
+    padding-bottom: 15px;
+}
+
+.star-table td {
+    padding: 12px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.status-pulse {
+    display: inline-block;
+    padding: 4px 12px;
+    background: rgba(34, 211, 238, 0.1);
+    color: var(--star-cyan);
+    border-radius: 20px;
+    font-size: 0.8rem;
+}
+
+/* Fix the Topbar background to match the dashboard */
+.sd-topbar {
+    background: #050b18 !important;
+    border-bottom: 1px solid rgba(34, 211, 238, 0.2);
+}
+
+/* Make the Sidebar blend into the space void */
+.sd-sidebar {
+    background: #050b18 !important;
+    border-right: 1px solid rgba(34, 211, 238, 0.1);
+}
+
+/* Ensure the cards stay in their part and don't stretch vertically */
+.stat-constellation {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    align-items: start; /* Prevents cards from stretching */
+}

@@ -1,3 +1,126 @@
-{% extends 'printoapp/layout.html' %}
-{% block body %}
+{% extends 'printoapp/shop_layout.html' %}
+{% load static %}
+
+{% block shop_extra_head %}
+<link href="{% static 'printoapp/shop_finances.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block nav_finances %}sd-active{% endblock %}
+
+{% block sd_content %}
+<div class="sd-content-header">
+    <div>
+        <h1 class="sd-section-title">My Finances</h1>
+        <p class="sd-section-subtitle">Track your shop's revenue, order volume, and page counts.</p>
+    </div>
+</div>
+
+<div class="sd-metrics-grid">
+    
+    <div class="sd-metric-card">
+        <div class="sd-metric-header">
+            <h3>Daily Overview</h3>
+            <form method="GET" id="dayForm">
+                {% if selected_month %}<input type="hidden" name="month" value="{{ selected_month }}">{% endif %}
+                <input type="date" name="day" id="dayPicker" value="{{ selected_day }}" class="sd-filter-input">
+            </form>
+        </div>
+        <div class="sd-metric-value text-green">₹{{ day_stats.money|floatformat:2 }}</div>
+        <div class="sd-metric-footer">
+            <span>📦 {{ day_stats.orders }} Orders</span>
+            <span>📄 {{ day_stats.pages }} Pages</span>
+        </div>
+    </div>
+
+    <div class="sd-metric-card">
+        <div class="sd-metric-header">
+            <h3>Past 7 Days</h3>
+            <span class="sd-badge">Rolling</span>
+        </div>
+        <div class="sd-metric-value text-green">₹{{ week_stats.money|floatformat:2 }}</div>
+        <div class="sd-metric-footer">
+            <span>📦 {{ week_stats.orders }} Orders</span>
+            <span>📄 {{ week_stats.pages }} Pages</span>
+        </div>
+    </div>
+
+    <div class="sd-metric-card sd-metric-card--blue">
+        <div class="sd-metric-header">
+            <h3>Current Month</h3>
+            <span class="sd-badge sd-badge--light">Active</span>
+        </div>
+        <div class="sd-metric-value text-white">₹{{ current_month_stats.money|floatformat:2 }}</div>
+        <div class="sd-metric-footer sd-footer--light">
+            <span>📦 {{ current_month_stats.orders }} Orders</span>
+            <span>📄 {{ current_month_stats.pages }} Pages</span>
+        </div>
+    </div>
+
+    <div class="sd-metric-card">
+        <div class="sd-metric-header">
+            <h3>Monthly History</h3>
+            <form method="GET" id="monthForm">
+                {% if selected_day %}<input type="hidden" name="day" value="{{ selected_day }}">{% endif %}
+                <select name="month" id="monthPicker" class="sd-filter-input">
+                    <option value="">-- Select --</option>
+                    {% for m in available_months %}
+                        <option value="{{ m.month|date:'Y-m' }}" {% if selected_month == m.month|date:'Y-m' %}selected{% endif %}>
+                            {{ m.month|date:"M Y" }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </form>
+        </div>
+        {% if custom_month_stats %}
+            <div class="sd-metric-value text-green">₹{{ custom_month_stats.money|floatformat:2 }}</div>
+            <div class="sd-metric-footer">
+                <span>📦 {{ custom_month_stats.orders }} Orders</span>
+                <span>📄 {{ custom_month_stats.pages }} Pages</span>
+            </div>
+        {% else %}
+            <div class="sd-metric-value text-muted">₹0.00</div>
+            <div class="sd-empty-text">Select a month to view data.</div>
+        {% endif %}
+    </div>
+
+</div>
+
+<div class="sd-content-header" style="margin-top: 30px;">
+    <h2 class="sd-section-title" style="font-size: 1.2rem;">Daily Ledger</h2>
+</div>
+
+<div class="sd-table-wrap">
+    <table class="sd-table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Total Orders</th>
+                <th>Pages Printed</th>
+                <th style="text-align: right;">Shop Earnings</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in daily_ledger %}
+            <tr class="sd-row">
+                <td><strong>{{ row.day|date:"M d, Y" }}</strong></td>
+                <td><span class="sd-pages-chip">{{ row.daily_orders }}</span></td>
+                <td><span class="sd-pages-chip">{{ row.daily_pages }}</span></td>
+                <td style="text-align: right; color: var(--green); font-weight: 700; font-size: 1rem;">
+                    ₹{{ row.daily_earnings|floatformat:2 }}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4">
+                    <div class="sd-empty">
+                        <div class="sd-empty-icon">📊</div>
+                        <h3 class="sd-empty-title">No Revenue Yet</h3>
+                        <p class="sd-empty-sub">When orders are verified, your daily earnings will appear here.</p>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 {% endblock %}

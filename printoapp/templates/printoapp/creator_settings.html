@@ -1,0 +1,179 @@
+{% extends 'printoapp/creator_layout.html' %}
+{% load static %}
+
+{% block shop_extra_head %}
+<link href="{% static 'printoapp/creator_settings.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block nav_account %}sd-nav-item--active{% endblock %}
+
+{% block sd_content %}
+<div class="settings-wrapper">
+    <div class="settings-header">
+        <h1>Platform Settings</h1>
+        <p>Manage shop owners, register new campus print shops, and handle security.</p>
+    </div>
+
+    {% if message %}
+    <div class="alert-banner">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 11-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+        <span>{{ message }}</span>
+    </div>
+    {% endif %}
+
+    <div class="settings-card">
+        <div class="tabs-nav">
+            <button class="tab-btn active" data-target="tab-owner">1. Add Shop Owner</button>
+            <button class="tab-btn" data-target="tab-shop">2. Register Shop</button>
+            <button class="tab-btn" data-target="tab-security">3. Security</button>
+        </div>
+
+        <div class="tab-content active" id="tab-owner">
+            <h3>Register New Shop Owner</h3>
+            <p class="tab-desc">Create a user account and financial ledger for a new partner.</p>
+            
+            <form method="POST" action="{% url 'create_new_owner' %}">
+                {% csrf_token %}
+                <div class="form-grid">
+                    <div class="input-group">
+                        <label>First Name</label>
+                        <input type="text" name="first_name" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Last Name</label>
+                        <input type="text" name="last_name" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Username</label>
+                        <input type="text" name="username" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Password</label>
+                        <input type="password" name="password" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Mobile Number</label>
+                        <input type="tel" name="mobile_number" required>
+                    </div>
+                    
+                    <div class="full-width-heading">
+                        <h4>Bank Details (Settlements)</h4>
+                        <hr>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Payee Name</label>
+                        <input type="text" name="payee_name" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Nickname</label>
+                        <input type="text" name="nickname">
+                    </div>
+                    <div class="input-group">
+                        <label>Account Number</label>
+                        <input type="text" name="account_number" required>
+                    </div>
+                    <div class="input-group">
+                        <label>IFSC Code</label>
+                        <input type="text" name="IFSC_code" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Account Type</label>
+                        <select name="account_type" required>
+                            <option value="Current">Current</option>
+                            <option value="Savings">Savings</option>
+                            <option value="Overdraft account">Overdraft account</option>
+                            <option value="Cash Credit Account">Cash Credit Account</option>
+                            <option value="NRE">NRE</option>
+                            <option value="Load Account">Loan Account</option>
+                            <option value="Credit Card">Credit Card</option>
+                            <option value="Others">Others</option>
+                            
+
+                        </select>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">Create Owner Profile</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="tab-content" id="tab-shop">
+            <h3>Register Campus Print Shop</h3>
+            <p class="tab-desc">Link a physical location to an existing shop owner on MyPrints.in.</p>
+            
+            <form method="POST" action="{% url 'create_shop' %}">
+                {% csrf_token %}
+                <div class="form-grid">
+                    <div class="input-group full-width">
+                        <label>Assign to Owner Username</label>
+                        <input type="text" name="username" placeholder="e.g., sitrc_admin" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Shop Name</label>
+                        <input type="text" name="name" required>
+                    </div>
+                    <div class="input-group">
+                        <label>GST Number</label>
+                        <input type="text" name="gst_number" required>
+                    </div>
+                    <div class="input-group">
+                        <label>City</label>
+                        <input type="text" name="city" required>
+                    </div>
+                    <div class="input-group">
+                        <label>State</label>
+                        <input type="text" name="state" required>
+                    </div>
+                    <div class="input-group full-width">
+                        <label>Detailed Location</label>
+                        <input type="text" name="location" required>
+                    </div>
+                    <div class="input-group full-width">
+                        <label>Landmark</label>
+                        <input type="text" name="landmark" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Latitude</label>
+                        <input type="text" name="latitude" required>
+                    </div>
+                    <div class="input-group">
+                        <label>Longitude</label>
+                        <input type="text" name="longitude" required>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">Register Shop Location</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="tab-content" id="tab-security">
+            <h3>Account Security</h3>
+            <p class="tab-desc">Force a password reset for an existing partner account.</p>
+            
+            <form method="POST" action="{% url 'password_reset' %}" class="narrow-form">
+                {% csrf_token %}
+                <div class="input-group">
+                    <label>Target Username</label>
+                    <input type="text" name="username" required>
+                </div>
+                <div class="input-group">
+                    <label>New Password</label>
+                    <input type="password" name="password" required>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn-danger">Force Password Reset</button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+</div>
+
+<script src="{% static 'printoapp/creator_settings.js' %}"></script>
+{% endblock %}

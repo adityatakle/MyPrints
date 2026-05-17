@@ -4,23 +4,12 @@ document.addEventListener('DOMContentLoaded', function() {
     if (heading) {
         let user_id = localStorage.getItem('printo_user_id');
         if (!user_id){
-            console.log("No user id. New User!!!")
 
-            fetch("api/create_user")
-            .then(response => response.json())
-            .then(result => {
-                console.log(result);
-                let user_id = result.user_id;
-                localStorage.setItem('printo_user_id',user_id);
-                console.log(`Your user id is ${user_id}`);
-                document.querySelector('#user_id').value = user_id;
-                document.querySelector('#current_user').innerHTML = user_id;
-            })
+            create_user();
         
         }
         else{
-            console.log(`Your user id is: ${user_id}`);
-            document.querySelector('#user_id').value = user_id;
+            check_user(user_id);
         }
 
         getPreciseLocation((location) => {
@@ -60,8 +49,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     </button>
                     <div class='shop_footer'>
                         <span class="time-info">${status_info}</span>
-                        <a href="https://www.google.com/maps?q=${ shop.latitude },${ shop.longitude }" target="_blank">
-                            <img src="${PIN_ICON}" >
+                        <a href="https://maps.google.com/?q=${shop.latitude},${shop.longitude}" target="_blank">
+                            <img src="${window.PIN_ICON}" alt="Map Pin">
                         </a>
                     </div>
                 </div>`;
@@ -70,6 +59,16 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     if (title){
+        const toggleBtn = document.getElementById('catalogueToggle');
+        const contentPanel = document.getElementById('catalogueContent');
+        
+        if (toggleBtn && contentPanel) {
+            toggleBtn.addEventListener('click', function() {
+                const chevron = this.querySelector('.up-cat-chevron');
+                contentPanel.classList.toggle('is-open');
+                chevron.classList.toggle('is-rotated');
+            });
+        }
         title.addEventListener('change', function() {
             if (this.files && this.files.length > 0) {
                 const file = this.files[0];
@@ -94,7 +93,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 main_text.innerHTML = `Selected: ${file_name}${file_ext}`;
                 main_text.style.color = 'green';
-                console.log(`${main_text.innerHTML}`);
                 // ... Inside your fetch block ...
                 fetch(`/api/item_list/${shop_id}`)
                 .then(response => response.json())
@@ -121,7 +119,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (Object.keys(result).length > 1) {
                         pageTypeContainer.addEventListener('change', function(e) {
                             if (e.target.id == 'page_type') {
-                                console.log("Changed Element Value:", e.target.value);
                                 display_info(file_name, result, e.target.value);
                             }
                         });
@@ -139,6 +136,37 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+function create_user(){
+    fetch("/api/create_user") // Added absolute path
+    .then(response => response.json())
+    .then(result => {
+        let user_id = result.user_id;
+        localStorage.setItem('printo_user_id', user_id);
+        
+        // Safely set inputs if they exist on the page
+        const idField = document.querySelector('#user_id');
+        if (idField) idField.value = user_id;
+        
+        const userLabel = document.querySelector('#current_user');
+        if (userLabel) userLabel.innerHTML = user_id;
+    });
+}
+
+function check_user(uuid){
+    fetch(`/api/check_user/${uuid}`) // Added absolute path
+    .then(response => response.json())
+    .then(result => {
+        if (result.status === 'Create new'){
+            create_user();
+        } else {
+            // CRITICAL FIX: If user exists, you MUST put their ID in the hidden form field!
+            const idField = document.querySelector('#user_id');
+            if (idField) {
+                idField.value = uuid;
+            }
+        }
+    });
+}
 
 function display_info(file_name,result, selected_type) {
     // 1. Select the container
@@ -175,8 +203,7 @@ function display_info(file_name,result, selected_type) {
     is_b2b.forEach(val => {
         let text = val ? "Back to Back" : "Single Side";
         b2b_options += `<option value="${val}">${text}</option>`;
-    });
-
+    });    
 
     // 4. Inject everything at once using innerHTML
     // This is faster and cleaner than 3 separate appends
@@ -215,7 +242,6 @@ function getPreciseLocation(callback) {
     navigator.geolocation.getCurrentPosition(
         (position) => {
             callback([position.coords.latitude, position.coords.longitude]);
-            console.log([position.coords.latitude, position.coords.longitude])
         },
         (error) => {
             console.error("Error fetching location:", error.message);

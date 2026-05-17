@@ -147,12 +147,17 @@ def decode_status_code(code):
     return ", ".join(active_errors)
 
 
-def print_file(file_path, printer_name, page_type, copies=1):
+def print_file(file_path, printer_name, page_type, copies, is_duplex, is_color):
     """
     Sends a file to the specified printer using SumatraPDF.
     Dynamically decides between 'shrink' and 'fit' using pypdf.
     """
-    
+    color = 'monochrome,'
+    side = 'simplex,'
+    if is_duplex:
+        side = 'duplexlong,'
+    if is_color:
+        color = 'color,'
     if not os.path.exists(file_path):
         write_log(f"[!] CRITICAL ERROR: File missing at: {file_path}")
         return False
@@ -180,18 +185,18 @@ def print_file(file_path, printer_name, page_type, copies=1):
     except Exception as e:
         write_log(f"PDF Meta Error: {e}. Falling back to default 'shrink'.")
 
-    print_settings = f"{copies}x,paper={page_type},{scaling_logic}" 
-    
+    print_settings = f"{color}{side}{copies}x,paper={page_type},{scaling_logic}" 
+    write_log(f"Print settings: {print_settings}")
     command = [
         SUMATRA_PATH,
         "-print-to", printer_name,
         "-print-settings", print_settings,
-        "-exit-on-print",
+        "-exit-when-done",
         file_path
     ]
-
+    
     write_log(f"Attempting print: {os.path.basename(file_path)} -> {printer_name} ({scaling_logic})")
-
+    write_log(f"command sent to print: {command}")
     try:
         result = subprocess.run(
             command, 
@@ -206,17 +211,7 @@ def print_file(file_path, printer_name, page_type, copies=1):
             return True
         else:
             write_log(f"SUMATRA ERROR (Code {result.returncode}):")
-            if result.stderr:
-                write_log(f"   Stderr: {result.stderr.strip()}")
             
-            write_log("Retrying without specific print-settings...")
-            fallback_command = [SUMATRA_PATH, "-print-to", printer_name, "-exit-on-print", file_path]
-            fallback_result = subprocess.run(fallback_command, capture_output=True, text=True)
-            
-            if fallback_result.returncode == 0:
-                write_log("Fallback success.")
-                return True
-                
             return False
 
     except subprocess.TimeoutExpired:
@@ -342,14 +337,29 @@ if __name__ == "__main__":
                 except Exception as e:
                     write_log(f'Cleanup issue: {e}')
 
-            # mark 2 carts as processing
+            # mark 2 carts as processing and edit file_link
             for i, cart in enumerate(print_carts):
-                if i >= 2: break
-                try:
-                    requests.post(f'{BASE_URL}/my_shop/file_update/', 
-                        headers={'Shop-Token': Shop_token, 'Shop-Id': shop_id, 'Cart-Id': str(cart["id"]), 'Update-Type': 'processing'})
-                except Exception as e:
-                    write_log(f'Processing update error: {e}')
+                if i >= 2:
+                    break
+                if not cart['is_processing']:
+                    try:
+                        resp = requests.post(f'{BASE_URL}/my_shop/file_update/', 
+                            headers={'Shop-Token': Shop_token, 'Shop-Id': shop_id, 'Cart-Id': str(cart["id"]), 'Update-Type': 'processing'})
+                        if resp.status_code == 200:
+                            data = resp.json()
+                            
+                            # Create a fast lookup map: { item_id: file_url }
+                            new_links = {link['id']: link['file_url'] for link in data.get('cart_data', [])}
+                            
+                            # 2. Update local items in one pass
+                            for item in cart['items']:
+                                if item['id'] in new_links:
+                                    item['file_url'] = new_links[item['id']]
+                            
+                            # Mark locally as processing
+                            cart['is_processing'] = True
+                    except Exception as e:
+                        write_log(f'Processing update error: {e}')
 
             # --- PRINTING LOOP ---
             for i, cart in enumerate(print_carts):
@@ -406,14 +416,14 @@ if __name__ == "__main__":
                                                 os.fsync(f.fileno()) # Force write to disk (prevents Windows lock issues)
                                             
                                             write_log("Download complete. Syncing...")
-                                            time.sleep(2) # Final buffer for SSD latency
+                                            time.sleep(1.5) # Final buffer for SSD latency
                                         else:
                                             write_log(f"Download rejected by server: {resp.status_code}")
                                             retries += 1
                                             break
 
                                     # B. PRINT
-                                    success = print_file(file_path, printer['name'], item["page_type"], item["copies"])
+                                    success = print_file(file_path, printer['name'], item["page_type"], item["copies"], item["is_b2b"], item['is_color'])
                                     if success:
                                         write_log(f"SUCCESS: {item['file_name']} is at the spooler.")
                                         # Notify backend

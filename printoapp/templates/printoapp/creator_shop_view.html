@@ -1,0 +1,202 @@
+{% extends 'printoapp/creator_layout.html' %}
+{% load static %}
+
+{% block shop_extra_head %}
+<link href="{% static 'printoapp/creator_shop.css' %}" rel="stylesheet">
+{% endblock %}
+
+{% block nav_catalogue %}sd-nav-item--active{% endblock %}
+
+{% block sd_content %}
+<div class="shop-view-wrapper">
+
+    {% if not shop_name %}
+    <div class="selection-state">
+        <div class="selector-card">
+            <h2>Select a Hub</h2>
+            <p>Choose a partner shop to view its analytics and ledgers.</p>
+            <form method="POST" action="{% url 'creator_shop_view' %}">
+                {% csrf_token %}
+                <div class="form-group">
+                    <select name="shop_id" class="shop-select" required>
+                        <option value="" disabled selected>-- Select a Shop --</option>
+                        {% for s in shops %}
+                            <option value="{{ s.id }}">{{ s.name }} ({{ s.city }})</option>
+                        {% empty %}
+                            <option disabled>No active shops available.</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn-primary">View Analytics</button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if shop_name %}
+    <div class="dashboard-state">
+        
+        <div class="shop-header">
+            <div>
+                <a href="{% url 'creator_shop_view' %}" class="btn-back">← Back to Shop List</a>
+                <h1>{{ shop_name }}</h1>
+                <p class="location-text">📍 {{ shop_location }}, {{ shop_landmark }}, {{ shop_city }} - {{ shop_state }}</p>
+            </div>
+            <div>
+                <span class="status-badge {% if shop_status == 'Active' %}active{% else %}inactive{% endif %}">
+                    {{ shop_status }}
+                </span>
+            </div>
+        </div>
+
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <h3>Total Pages Printed</h3>
+                <span class="value">{{ all_time_total_pages }}</span>
+                <p>Today: {{ today_total_pages }}</p>
+            </div>
+            <div class="metric-card">
+                <h3>Shop's All-Time Earnings</h3>
+                <span class="value">₹{{ all_time_shop_share|floatformat:2 }}</span>
+                <p>Today: ₹{{ today_shop_share|floatformat:2 }}</p>
+            </div>
+            <div class="metric-card highlight">
+                <h3>Platform Share (Your Cut)</h3>
+                <span class="value">₹{{ all_time_my_share|floatformat:2 }}</span>
+                <p>Today: ₹{{ today_my_share|floatformat:2 }}</p>
+            </div>
+        </div>
+
+        <div class="catalogue-section">
+            <div class="section-header">
+                <h3>Hub Catalogue & Pricing Configuration</h3>
+                <p class="tab-desc">Adjust the platform surcharge added to each page type for this specific hub.</p>
+            </div>
+            
+            <div class="ledger-card">
+                <table class="data-table pricing-table">
+                    <thead>
+                        <tr>
+                            <th>Page Type</th>
+                            <th>Color/B&W</th>
+                            <th>Layout</th>
+                            <th>Shop Price (₹)</th>
+                            <th>Platform Cut (₹)</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in shop_items %}
+                        <tr>
+                            <td><strong>{{ item.page_type }}</strong></td>
+                            <td>
+                                {% if item.is_color %}
+                                    <span class="badge-color">Color</span>
+                                {% else %}
+                                    <span class="badge-bw">B&W</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if item.is_b2b %}
+                                    <span class="badge-b2b">Back-to-Back</span>
+                                {% else %}
+                                    <span class="badge-single">Single Sided</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-secondary">₹{{ item.price|floatformat:2 }}</td>
+                            
+                            <form method="POST" action="{% url 'creator_shop_view' %}" class="inline-price-form">
+                                {% csrf_token %}
+                                <input type="hidden" name="shop_id" value="{{ shop_id }}">
+                                <input type="hidden" name="update_price" value="1">
+                                <input type="hidden" name="shop_item_id" value="{{ item.id }}">
+                                
+                                <td>
+                                    <div class="price-input-wrapper">
+                                        <span class="currency-symbol">₹</span>
+                                        <input type="number" step="0.01" min="0" name="platform_price" 
+                                               value="{{ item.platform_price }}" class="inline-input" required>
+                                    </div>
+                                </td>
+                                <td>
+                                    <button type="submit" class="btn-save-small">Save</button>
+                                </td>
+                            </form>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="6" class="empty-state">This shop has not configured their printer catalog yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <br>
+
+        <div class="chart-section">
+            <div class="section-header">
+                <h3>Revenue Split History</h3>
+            </div>
+            <div class="canvas-wrapper">
+                <canvas id="shopRevenueChart"></canvas>
+            </div>
+        </div>
+
+        <div class="ledgers-split">
+            <div class="ledger-card">
+                <h3>Recent Settlements (Payouts)</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Amount</th>
+                            <th>Transaction ID</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sett in shop_settlements_details %}
+                        <tr>
+                            <td>{{ sett.sett_time|date:"M d, Y" }}</td>
+                            <td><strong class="text-success">₹{{ sett.sett_amount|floatformat:2 }}</strong></td>
+                            <td class="mono">{{ sett.sett_id }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="3" class="empty-state">No settlements recorded.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="ledger-card">
+                <h3>SaaS Subscriptions</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for sub in shop_sub_details %}
+                        <tr>
+                            <td>{{ sub.trans_time|date:"M d, Y" }}</td>
+                            <td><strong>₹{{ sub.trans_money|floatformat:2 }}</strong></td>
+                            <td><span class="badge-blue">Paid</span></td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="3" class="empty-state">No subscriptions recorded.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    {{ shop_monthly_revenue|json_script:"shop-rev-data" }}
+    {{ my_monthly_revenue|json_script:"platform-rev-data" }}
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{% static 'printoapp/creator_shop.js' %}"></script>
+    {% endif %}
+</div>
+{% endblock %}

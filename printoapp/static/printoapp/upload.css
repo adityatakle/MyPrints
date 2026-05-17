@@ -524,3 +524,138 @@ body {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+
+/* ── SHOP CATALOGUE ACCORDION ────────────────────────────────── */
+.up-catalogue-wrapper {
+  width: 100%;
+  margin-bottom: 24px;
+}
+
+.up-catalogue-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  background: var(--card-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  box-shadow: var(--shadow-sm);
+  color: var(--dark);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all var(--transition);
+  outline: none;
+  position: relative;
+  z-index: 2;
+}
+
+.up-catalogue-toggle:hover {
+  border-color: rgba(0,123,255,0.3);
+  box-shadow: 0 2px 8px rgba(0,123,255,0.1);
+}
+
+.up-cat-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.up-cat-left svg { color: var(--blue); }
+
+.up-cat-chevron {
+  transition: transform var(--transition);
+  color: var(--soft);
+}
+.up-cat-chevron.is-rotated { transform: rotate(180deg); }
+
+.up-catalogue-content {
+  display: none;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 var(--r-sm) var(--r-sm);
+  padding: 20px 16px 16px;
+  margin-top: -10px; /* Pulls up slightly behind the toggle */
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  z-index: 1;
+}
+
+.up-catalogue-content.is-open {
+  display: block;
+  animation: slideDown 0.2s cubic-bezier(0.4,0,0.2,1);
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Mobile: 1 column. Desktop: 2 columns */
+.up-cat-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+@media (min-width: 480px) {
+  .up-cat-grid { grid-template-columns: 1fr 1fr; }
+}
+
+.up-cat-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--off);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.up-cat-details {
+  display: flex;
+  align-items: center;
+  gap: 6px; /* Reduced gap slightly to fit more badges */
+  flex-wrap: wrap; /* Allows badges to wrap on very small screens */
+}
+
+.up-cat-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--mid);
+}
+
+.up-cat-badge {
+  font-size: 0.65rem;
+  padding: 3px 6px;
+  border-radius: 4px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.badge-color {
+  background: rgba(16, 185, 129, 0.15);
+  color: #065f46;
+}
+
+.badge-bw {
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--mid);
+}
+
+.up-cat-price {
+  font-family: 'Readex Pro', sans-serif;
+  font-weight: 700;
+  color: var(--dark);
+  font-size: 0.95rem;
+}
+
+.badge-b2b {
+  background: rgba(0, 123, 255, 0.12);
+  color: var(--blue-d);
+  border: 1px solid rgba(0, 123, 255, 0.2);
+}

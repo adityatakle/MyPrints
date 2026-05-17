@@ -35,7 +35,45 @@
      MAIN STAGE
 ════════════════════════════════════ -->
 <main class="up-main">
+  {% if shop_item_list %}
+    <div class="up-catalogue-wrapper">
+      <button type="button" class="up-catalogue-toggle" id="catalogueToggle">
+        <span class="up-cat-left">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+            <line x1="7" y1="7" x2="7.01" y2="7"></line>
+          </svg>
+          <span>View Shop Rates</span>
+        </span>
+        <svg class="up-cat-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </button>
+      
+      <div class="up-catalogue-content" id="catalogueContent">
+        <div class="up-cat-grid">
+          {% for item in shop_item_list %}
+          <div class="up-cat-item">
+            <div class="up-cat-details">
+                <span class="up-cat-name">{{ item.page_type }}</span>
+                
+                {% if item.is_color %}
+                <span class="up-cat-badge badge-color">Color</span>
+                {% else %}
+                <span class="up-cat-badge badge-bw">B&W</span>
+                {% endif %}
 
+                {% if item.is_b2b %}
+                <span class="up-cat-badge badge-b2b">B2B</span>
+                {% endif %}
+            </div>
+            <span class="up-cat-price">₹{{ item.final_price|floatformat:"-2" }}/page</span>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    {% endif %}
   <p class="up-eyebrow title">Upload Document</p>
   <h1 class="up-title">What are we<br>printing today?</h1>
 
