@@ -226,7 +226,7 @@
                 </div>
             {% endif %}
             <div class="ct-summary-row">
-                <span>Platform fees {%if total_data.total_pages < 5%}  (Add {{ needed_pages }} more page{%if needed_pages > 1%}s{%endif%} to make it 0){%endif%}</span>
+                <span>Platform fees {%if total_data.total_pages < 10%}  (Add {{ needed_pages }} more page{%if needed_pages > 1%}s{%endif%} to make it 0){%endif%}</span>
                 <span>₹{{ platform_fee|floatformat:"2" }}</span>
             </div>
 

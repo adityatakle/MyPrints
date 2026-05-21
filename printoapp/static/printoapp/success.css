@@ -68,3 +68,52 @@
 .su-btn-home:hover {
     background: #1f2937;
 }
+
+/* ── Beautiful Interactive Star Rating ── */
+.su-rating {
+    display: flex;
+    flex-direction: row-reverse; /* Reverses order for the hover effect trick */
+    justify-content: center;
+    gap: 10px; /* Gives the stars nice breathing room */
+    margin: 20px 0;
+}
+
+/* Hide the default radio circles */
+.su-rating input {
+    display: none;
+}
+
+/* Style the base (empty) stars */
+.su-rating label {
+    font-size: 2.8rem; /* Make them large and tap-friendly for mobile */
+    color: #e5e7eb; /* Soft, premium light grey */
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Subtle base shadow for depth */
+    text-shadow: 0 2px 4px rgba(0,0,0,0.05); 
+}
+
+/* Add a floating scale effect when a student drags their finger/mouse over them */
+.su-rating label:hover {
+    transform: scale(1.15);
+}
+
+/* Fill the stars with a vibrant gold and add a beautiful glow */
+.su-rating input:checked ~ label,
+.su-rating label:hover,
+.su-rating label:hover ~ label {
+    color: #fbbf24; /* Rich gold */
+    text-shadow: 0 0 18px rgba(251, 191, 36, 0.45); /* The glowing effect */
+}
+
+/* Add a satisfying bouncy 'pop' animation specifically to the star they click */
+.su-rating input:checked + label {
+    animation: starPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+/* The Bounce Keyframes */
+@keyframes starPop {
+    0%   { transform: scale(1); }
+    50%  { transform: scale(1.35); }
+    100% { transform: scale(1.1); } /* Leaves the clicked star slightly larger */
+}

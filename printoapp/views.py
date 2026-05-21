@@ -727,7 +727,7 @@ def update_cart_financial_records(cart):
     total_data.subtotal = sub_total
     total_data.shop_share = shop_share
     total_data.platform_share = platform_share
-    if cart.total_pages < 5:
+    if cart.total_pages < 10:
         platform_fee = fp_price
     total_data.platform_fee = platform_fee
     # Cast fields using explicit String to Decimal formatting bounds
@@ -832,8 +832,8 @@ def cart(request, shop_id, user_id):
     round_up = total_data.round_up
     grand_total = total_data.grand_total
     needed_pages = 0
-    if total_data.total_pages < 5:
-        needed_pages = 5 - total_data.total_pages
+    if total_data.total_pages < 10:
+        needed_pages = 10 - total_data.total_pages
     is_round_down = round_up < 0
     abs_round_up = abs(round_up)
     
