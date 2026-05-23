@@ -5,6 +5,19 @@
     text-align: center; border: 1px solid #f3f4f6;
 }
 
+.mp-beta-badge {
+    font-size: .75rem;
+    font-weight: 800;
+    color: #ffffff;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    padding: 3px 6px;
+    border-radius: 6px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+    transform: translateY(-20px); 
+}
+
 /* Pickup Code */
 .su-card--code { background: #111827; color: white; border: none; }
 .su-otp-value { font-size: 3.5rem; font-weight: 800; letter-spacing: 4px; margin: 10px 0; color: #10b981; }

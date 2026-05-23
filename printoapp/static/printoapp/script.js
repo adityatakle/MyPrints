@@ -233,6 +233,8 @@ function display_info(file_name,result, selected_type) {
 };
 
 function getPreciseLocation(callback) {
+    callback('error');
+    /*
     const options = {
         enableHighAccuracy: true,
         timeout: 5000,
@@ -248,7 +250,7 @@ function getPreciseLocation(callback) {
             callback('error');
         },
         options
-    );
+    ); */
 };
 
 function calculate_distance(user_lat, user_long, shop_lat, shop_long){

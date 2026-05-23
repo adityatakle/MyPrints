@@ -13,7 +13,7 @@
 {% endblock %}
 
 <div class="sticky-header">
-    <a href ="{% url 'index' %}"><img src="{% static 'printoapp/MyPrints_logo.svg' %}" alt="MyPrints Logo" class="nav-logo"></a>
+    <a href ="{% url 'index' %}"><img src="{% static 'printoapp/MyPrints_logo.svg' %}" alt="MyPrints Logo" class="nav-logo"><span class="mp-beta-badge">BETA</span></a>
 </div>
 
 {{ shops_json|json_script:"shops-data" }}

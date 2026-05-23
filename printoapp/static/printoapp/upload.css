@@ -76,6 +76,19 @@ body {
     margin-left: 10px;
 }
 
+.mp-beta-badge {
+    font-size: .75rem;
+    font-weight: 800;
+    color: #ffffff;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    padding: 3px 6px;
+    border-radius: 6px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+    transform: translateY(-20px); 
+}
+
 /* ── ALERTS ──────────────────────────────────────────────────── */
 .up-alerts {
   display: flex;

@@ -22,7 +22,7 @@
       </svg>
     </a>
     <a href="{% url 'upload' user_id=user_id shop_id=shop_id %}" class="ct-logo">
-      <img src="{% static 'printoapp/MyPrints_logo.svg' %}" alt="MyPrints Logo" class="nav-logo">
+      <img src="{% static 'printoapp/MyPrints_logo.svg' %}" alt="MyPrints Logo" class="nav-logo"> <span class="mp-beta-badge">BETA</span>
     </a>
     <div class="ct-header-right">
     {% if cart_items %}
