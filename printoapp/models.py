@@ -130,4 +130,5 @@ class Feedback(models.Model):
     name = models.CharField(max_length=50, blank=True, null=True)
     message = models.CharField(max_length=255, null=True, blank=True)
     rating = models.IntegerField(null=True, blank=True)
+    email = models.EmailField(blank=True, null=True)
     shop = models.ForeignKey("Shop_info", related_name='feedback_shops', on_delete=models.SET_NULL, null=True, blank=True)

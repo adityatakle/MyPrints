@@ -78,9 +78,7 @@
 <div class="mp-trust-strip">
   <div class="mp-trust-label">Printing at</div>
   <div class="mp-trust-scroll">
-    <span class="mp-t-logo">Sandip University</span>
-    <span class ="mp-t-logo">Sandip Foudation</span>
-    
+    <span class ="mp-t-logo">Sandip Foudation</span> 
   </div>
 </div>
 
@@ -222,11 +220,15 @@
       {% csrf_token %}
       <div class="mp-form-group">
         <label for="id_name">Your Name</label>
-        <input type="text" id="id_name" name="name" maxlength="255" placeholder="Your name" required />
+        <input type="text" id="id_name" name="name" maxlength="255" placeholder="Your name" autocomplete="off" required >
       </div>
       <div class="mp-form-group">
         <label for="id_message">Message</label>
-        <textarea id="id_message" name="message" maxlength="255" placeholder="Feedback..." required></textarea>
+        <textarea id="id_message" name="message" maxlength="255" placeholder="Feedback..." autocomplete="off" required></textarea>
+      </div>
+      <div class="mp-form-group">
+        <label for="id_message">Email</label>
+        <input type="email" name="email" placeholder="Your Email address" autocomplete="off">
       </div>
       <button type="submit" class="mp-btn-feedback">Send Message </button>
     </form>

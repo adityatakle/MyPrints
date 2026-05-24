@@ -33,7 +33,8 @@ def index(request):
     if request.method == "POST":
         name = request.POST.get('name')
         message = request.POST.get('message')
-        Feedback.objects.create(name=name, message=message)
+        email  = request.POST.get('email')
+        Feedback.objects.create(name=name, message=message, email=email)
         return redirect('index')
     return render(request,"printoapp/index.html")
 
@@ -744,7 +745,7 @@ def update_cart_financial_records(cart):
         sub_total += item_total
         shop_share += (item.shop_item.price) * item.total_pages * item.quantity
         platform_share += (item.shop_item.platform_price) * item.total_pages * item.quantity
-        if item.file_id == 'FrontPage.pdf':
+        if item.display_name == 'FrontPage.pdf' or item.display_name == 'Receipt_Cover.pdf':
             fp_price = item.shop_item.final_price * item.total_pages * item.quantity
             sub_total -= fp_price
 
@@ -757,7 +758,7 @@ def update_cart_financial_records(cart):
     total_data.subtotal = sub_total
     total_data.shop_share = shop_share
     total_data.platform_share = platform_share
-    if cart.total_pages < 10:
+    if cart.total_pages < 11:
         platform_fee = fp_price
     total_data.platform_fee = platform_fee
     # Cast fields using explicit String to Decimal formatting bounds
@@ -775,7 +776,7 @@ def update_cart_financial_records(cart):
     total_data.payment_gateway_total_fee = pg_total_fee
     raw_total = (sub_total + pg_total_fee + priority_fee + platform_fee).quantize(Decimal('0.01'))
 
-    rounded_total = (raw_total * Decimal('2')).quantize(Decimal('1'), rounding=ROUND_HALF_UP) / Decimal('2')
+    rounded_total = raw_total.quantize(Decimal('1'), rounding=ROUND_UP).quantize(Decimal('0.01'))
     total_data.round_up = rounded_total - raw_total
     total_data.raw_total = raw_total
     total_data.grand_total = rounded_total
@@ -876,8 +877,8 @@ def cart(request, shop_id, user_id):
     round_up = total_data.round_up
     grand_total = total_data.grand_total
     needed_pages = 0
-    if total_data.total_pages < 10:
-        needed_pages = 10 - total_data.total_pages
+    if total_data.total_pages < 11:
+        needed_pages = 11 - total_data.total_pages
     is_round_down = round_up < 0
     abs_round_up = abs(round_up)
     
@@ -902,13 +903,18 @@ def cart(request, shop_id, user_id):
     })
 
 
-def create_order(request, amount):
+def create_order(request, amount, shop_id, user_id):
+    cart = get_object_or_404(Cart, is_open=True, shop_info_id=shop_id, user__user_id=user_id)
     amount = int(amount * 100)
     currency = 'INR'
+    cart_id =  cart.id
     data = {
         "amount": amount,
-        "currency": currency
+        "currency": currency,
+        'notes':{
+            'cart_id':cart_id
         }
+    }
     razorpay_order = razorpay_client.order.create(data=data)
     return {"order-id":razorpay_order['id'], 'amount':amount}
 
@@ -923,13 +929,20 @@ def initiate_payment(request, shop_id, user_id):
 
         if not cart.payment_id:
             # Create the actual Razorpay Order
-            order_data = create_order(request, total_amount)
+            order_data = create_order(request, total_amount, shop_id, user_id)
             
             cart.payment_id = order_data['order-id']
             cart.save()
             return JsonResponse({
                 'order_id': order_data['order-id'],
                 'amount': order_data['amount'],
+                'key_id': settings.RAZORPAY_KEY_TEST
+            })
+        else:
+            order_id = cart.payment_id
+            return JsonResponse({
+                'order_id': order_id,
+                'amount': total_amount,
                 'key_id': settings.RAZORPAY_KEY_TEST
             })
     else:

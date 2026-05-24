@@ -281,10 +281,10 @@
         </div>
         <button type="submit" class="ct-pay-btn total-amount order-summary" id="pay_btn">
             <span class="ct-pay-label">Pay &amp; Print</span>
-            <span class="ct-pay-amount"> ₹{{ total_amount }} </span>
+            <span class="ct-pay-amount"> ₹{{ total_amount|floatformat:"2" }} </span>
         </button>
 
-        <p class="ct-pay-note">🔐 Secure UPI payment directly to the shop</p>
+        <p class="ct-pay-note">🔐 Secure UPI payment via Razorpay.</p>
 
       {% else %}
 
