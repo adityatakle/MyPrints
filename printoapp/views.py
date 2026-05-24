@@ -568,6 +568,36 @@ def upload(request, user_id, shop_id):
                 if re.fullmatch(r"[A-Za-z0-9_]+", file_rename) and file_rename.strip() != file.name:
                     file.name = f"{file_rename}.pdf"
 
+            front_page_item = Cart_items.objects.filter(
+                file_id='FrontPage.pdf',
+                display_name='FrontPage.pdf',
+                cart=cart
+            ).first()
+
+            if front_page_item and "stamped" not in front_page_item.file_id:
+                cart = get_object_or_404(Cart, user__user_id=user_id, shop_info_id=shop_id, is_open=True)
+                while True:
+                    pickup_code = random.randint(10,9999)
+                    if not Cart.objects.filter(shop_info_id=shop_id,
+                                            is_verified=False,
+                                            pickup_code=pickup_code).exists():
+                        cart.pickup_code = pickup_code
+                        cart.save()
+                        break
+
+                # Generate the buffer using your ReportLab logic
+                stamped_buffer = test_local_pdf_stamping(cart.pickup_code)
+
+                # Define the new filename
+                s3_filename = f"uploads/{cart.id}/FrontPage_stamped.pdf"
+
+                # Upload to S3 and update the database
+                success_upload = upload_file_to_s3(stamped_buffer, s3_filename)
+                if success_upload:
+                    front_page_item.file_id = s3_filename
+                    front_page_item.display_name = "Receipt_Cover.pdf"
+                    front_page_item.save()
+
             try:
                 reader = PdfReader(file)
                 raw_pages_count = len(reader.pages)
@@ -756,6 +786,20 @@ def update_cart_financial_records(cart):
 
 def cart(request, shop_id, user_id):
     cart = get_object_or_404(Cart, user__user_id=user_id, shop_info__id=shop_id, is_open=True)
+    if cart.payment_id:
+        if cart.is_paid and not cart.is_open:
+            return redirect("success", shop_id=shop_id, user_id=user_id)
+        else:
+            try:
+                rzp_order = razorpay_client.order.fetch(cart.payment_id)
+                if rzp_order['status'] == 'paid':
+                    cart.is_paid = True
+                    cart.is_open = False
+                    cart.save()
+                    return redirect("success", shop_id=shop_id, user_id=user_id)
+                    
+            except Exception as e:
+                return redirect("failure", shop_id=shop_id, user_id=user_id)
     cart_items = Cart_items.objects.filter(cart=cart)
     if request.method == "POST":
         # Wrap modifications inside a transaction block to maintain absolute database integrity
@@ -870,24 +914,24 @@ def create_order(request, amount):
 
 def initiate_payment(request, shop_id, user_id):
     if request.method == 'POST':
-        cart_total = Cart_total.objects.filter(
-            cart__user__user_id=user_id,
-            cart__shop_info_id=shop_id,
-            cart__is_open=True
-        ).first()
+        cart = get_object_or_404(Cart, shop_info_id=shop_id, user__user_id=user_id, is_open=True)
+        cart_total = Cart_total.objects.filter(cart=cart).first()
         total_amount = cart_total.grand_total
 
         if total_amount <= 0:
             return JsonResponse({'error': 'Cart is empty'}, status=400)
 
-        # Create the actual Razorpay Order
-        order_data = create_order(request, total_amount)
-
-        return JsonResponse({
-            'order_id': order_data['order-id'],
-            'amount': order_data['amount'],
-            'key_id': settings.RAZORPAY_KEY_TEST
-        })
+        if not cart.payment_id:
+            # Create the actual Razorpay Order
+            order_data = create_order(request, total_amount)
+            
+            cart.payment_id = order_data['order-id']
+            cart.save()
+            return JsonResponse({
+                'order_id': order_data['order-id'],
+                'amount': order_data['amount'],
+                'key_id': settings.RAZORPAY_KEY_TEST
+            })
     else:
         return JsonResponse({'error':'ONLY POST METHOD ALLOWED'})
 
@@ -905,43 +949,8 @@ def payment_status(request, shop_id, user_id):
                 'razorpay_payment_id': payment_id,
                 'razorpay_signature': signature
             })
-            cart = get_object_or_404(Cart, user__user_id=user_id, shop_info_id=shop_id, is_open=True)
-            cart.is_open = False
-            cart.is_paid = True
-            while True:
-                pickup_code = random.randint(10,9999)
-                if not Cart.objects.filter(shop_info_id=shop_id,
-                                        is_paid=True,
-                                        is_verified=False,
-                                        pickup_code=pickup_code).exists():
-                    cart.pickup_code = pickup_code
-                    cart.save()
-                    break
 
-
-
-            front_page_item = Cart_items.objects.filter(
-                file_id='FrontPage.pdf',
-                display_name='FrontPage.pdf',
-                cart=cart
-            ).first()
-
-            if front_page_item and "stamped" not in front_page_item.file_id:
-                # Generate the buffer using your ReportLab logic
-                stamped_buffer = test_local_pdf_stamping(cart.pickup_code)
-
-                # Define the new filename
-                s3_filename = f"uploads/{cart.id}/FrontPage_stamped.pdf"
-
-                # Upload to S3 and update the database
-                success_upload = upload_file_to_s3(stamped_buffer, s3_filename)
-                if success_upload:
-                    front_page_item.file_id = s3_filename
-                    front_page_item.display_name = "Receipt_Cover.pdf"
-                    front_page_item.save()
-
-
-            return redirect("success", shop_id=shop_id, user_id=user_id)
+            return redirect("cart", shop_id=shop_id, user_id=user_id)
         except Exception as e:
             return redirect("failure", shop_id=shop_id, user_id=user_id)
 
