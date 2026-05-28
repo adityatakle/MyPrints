@@ -22,7 +22,6 @@
 <div class="shops-container">
     <form action="{% url 'shops' %}" method="POST" class="shops_form">
         {% csrf_token %}
-        <input type="text" hidden id="user_id" name="user_id">
         <div id="shops-list">
             <p>Finding nearest shops...</p>
         </div>

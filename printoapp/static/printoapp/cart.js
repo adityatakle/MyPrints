@@ -7,11 +7,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
         const updateQueue = () => {
-            fetch(`/api/queue_size/${shopId}`, {
+            fetch(`/api/queue_size`, {
                 method: 'POST',
                 headers: {
                     'X-CSRFToken': csrfToken,
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'type': 'cart'
                 }
             })
             .then(response => response.json())
@@ -33,12 +34,10 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
 
             // Grab IDs
-            const shopId = document.querySelector('#shop_id').value;
-            const userId = document.querySelector('#user_id').value;
             const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
             // Fetch fresh order details
-            fetch(`/initiate-payment/${shopId}/${userId}/`, {
+            fetch(`/initiate-payment`, {
                 method: 'POST',
                 headers: {
                     'X-CSRFToken': csrfToken,

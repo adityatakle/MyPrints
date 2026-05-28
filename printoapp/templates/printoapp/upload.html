@@ -77,14 +77,8 @@
   <p class="up-eyebrow title">Upload Document</p>
   <h1 class="up-title">What are we<br>printing today?</h1>
 
-  <form
-    method="post"
-    action="{% url 'upload' user_id=user_id shop_id=shop_id %}"
-    enctype="multipart/form-data"
-    class="up-form"
-  >
+  <form method="post" action="{% url 'upload' %}" enctype="multipart/form-data" class="up-form">
     {% csrf_token %}
-    <input type="hidden" name="user_id" id="user_id" value="{{ user_id }}">
     <input type="hidden" name="shop_id" id="shop_id"  value="{{ shop_id }}">
 
     <!-- ── PHASE 1: DROP ZONE ───────────────────── -->
@@ -126,7 +120,7 @@
     </div>
 
     <!-- ── VIEW CART ─────────────────────────────── -->
-    <a href="{% url 'cart' shop_id=shop_id user_id=user_id %}"
+    <a href="{% url 'cart' %}"
        class=" cart-btn {% if not item_number or item_number == 0 %}is-empty{% endif %}"
        {% if not item_number or item_number == 0 %}aria-disabled="true"{% endif %}>
 

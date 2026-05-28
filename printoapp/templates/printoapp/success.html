@@ -8,7 +8,7 @@
 
 {% block body %}
 <input type="hidden" id="status_url" value="{% url 'cart_status' cart_id=cart.id %}">
-<input type="hidden" id="queue_url" value="/api/queue_size/{{ shop_id }}/{{ user_id }}">
+<input type="hidden" id="queue_url" value="/api/queue_size">
 <input type="hidden" id="csrf_token" value="{{ csrf_token }}">
 
 <div class="su-container">
@@ -64,9 +64,8 @@
         <h3 class="su-fb-title">Rate the Service</h3>
         <p class="su-fb-sub">Available after order collection</p>
         
-        <form method="POST" action="{% url 'success' shop_id=shop_id user_id=user_id %}" id="feedback-form">
+        <form method="POST" action="{% url 'success' %}" id="feedback-form">
             {% csrf_token %}
-            <input type="hidden" name="name" value="{{user_id}}">
             <div class="su-rating">
                 <input type="radio" name="rating" value="5" id="s5" required><label for="s5">★</label>
                 <input type="radio" name="rating" value="4" id="s4"><label for="s4">★</label>

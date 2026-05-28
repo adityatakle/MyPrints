@@ -4,8 +4,8 @@ from . import views
 urlpatterns = [
     path('', views.index, name='index'),
     path('shops', views.shops, name='shops'),
-    path('upload/<str:user_id>/<int:shop_id>', views.upload, name='upload'),
-    path('cart/<int:shop_id>/<str:user_id>', views.cart, name='cart'),
+    path('upload', views.upload, name='upload'),
+    path('cart', views.cart, name='cart'),
     path('my_shop/login', views.shop_login, name='shop_login'),
     path('my_shop/index', views.shop_index, name='shop_index'),
     path('my_shop/logout', views.shop_logout, name='shop_logout'),
@@ -16,20 +16,18 @@ urlpatterns = [
     path('my_shop/account', views.shop_account, name='shop_account'),
     path('privacy_policy', views.privacy_policy, name='privacy_policy'),
     path('tnc', views.tnc, name='tnc'),
-    path('payment-status/<int:shop_id>/<str:user_id>', views.payment_status, name='payment_status'),
-    path('success/<int:shop_id>/<str:user_id>', views.success, name='success'),
-    path('failure/<int:shop_id>/<str:user_id>', views.failure, name='failure'),
+    path('payment_status', views.payment_status, name='payment_status'),
+    path('success', views.success, name='success'),
+    path('failure', views.failure, name='failure'),
 
     #apis
-    path('initiate-payment/<int:shop_id>/<str:user_id>/', views.initiate_payment, name='initiate_payment'),
-    path('api/create_user', views.create_user, name='create_user'),
-    path('api/check_user/<str:uuid>', views.check_user, name='check_user'),
+    path('initiate-payment', views.initiate_payment, name='initiate_payment'),
+    path('api/user', views.user, name='user'),
     path('api/item_list/<int:shop_id>', views.item_list, name='item_list'),
     path('api/shop_list', views.shop_list, name='shop_list'),
     path('api/verify_cart', views.verify_cart, name='verify_cart'),
     path('api/cart_status/<int:cart_id>', views.cart_status, name='cart_status'),
-    path('api/queue_size/<int:shop_id>', views.queue_size, name='queue_size'),
-    path('api/queue_size/<int:shop_id>/<str:user_id>', views.queue_size, name='queue_size_user'),
+    path('api/queue_size', views.queue_size, name='queue_size'),
     path('api/create_preview_link/<str:file_id>', views.create_preview_link, name='create_preview_link'),
 
 

@@ -14,14 +14,14 @@
 <div class="body">
 
   <header class="ct-header">
-    <a href="{% url 'upload' user_id=user_id shop_id=shop_id %}" class="ct-back-btn" aria-label="Back">
+    <a href="{% url 'upload' %}" class="ct-back-btn" aria-label="Back">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
             <path d="M19 12H5M5 12l7 7M5 12l7-7"
               stroke="currentColor" stroke-width="2.2"
               stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
     </a>
-    <a href="{% url 'upload' user_id=user_id shop_id=shop_id %}" class="ct-logo">
+    <a href="{% url 'upload' %}" class="ct-logo">
       <img src="{% static 'printoapp/MyPrints_logo.svg' %}" alt="MyPrints Logo" class="nav-logo"> <span class="mp-beta-badge">BETA</span>
     </a>
     <div class="ct-header-right">
@@ -36,7 +36,7 @@
 
 </header>
 
-<form id="razorpay-form" action="{% url 'payment_status' shop_id=shop_id user_id=user_id %}" method="POST" style="display:none;">
+<form id="razorpay-form" action="{% url 'payment_status' %}" method="POST" style="display:none;">
     {% csrf_token %}
     <input type="hidden" name="razorpay_payment_id" id="razorpay_payment_id">
     <input type="hidden" name="razorpay_order_id" id="razorpay_order_id">
@@ -45,14 +45,11 @@
 
   <main class="ct-main">
 
-    <form method="post" action="{% url 'cart' user_id=user_id shop_id=shop_id %}">
+    <form method="post" action="{% url 'cart' %}">
         {% csrf_token %}
         <input type="hidden" id="cart_id_hidden" value="{{ cart.id }}">
-        <input type="hidden" name="user_id" id="user_id" value="{{ user_id }}">
-        <input type="hidden" name="shop_id" id="shop_id" value="{{ shop_id }}">
-        <input type="hidden" value="{{ user_id }}" name="user_id" id="user_id">
         <input type="hidden" value="{{ shop_id }}" name="shop_id" id="shop_id">
-        <input type="hidden" id="status_url" value="{{ request.scheme }}://{{ request.get_host }}{% url 'payment_status' shop_id=shop_id user_id=user_id %}">
+        <input type="hidden" id="status_url" value="{{ request.scheme }}://{{ request.get_host }}{% url 'payment_status' %}">
         {% if cart_items|length > 1 %}
 
         <p class="ct-eyebrow">Your Order</p>
@@ -292,7 +289,7 @@
           <div class="ct-empty-icon">🛒</div>
           <h2 class="ct-empty-title">Your cart is empty</h2>
           <p class="ct-empty-sub">Upload a PDF and configure your print job to get started.</p>
-          <a href="{% url 'upload' user_id=user_id shop_id=shop_id %}"
+          <a href="{% url 'upload' %}"
              class="ct-empty-btn">
             Upload a Document →
           </a>

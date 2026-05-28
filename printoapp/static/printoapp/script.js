@@ -2,15 +2,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const heading = document.querySelector('.shops-container');
     const title = document.querySelector('#doc');
     if (heading) {
-        let user_id = localStorage.getItem('printo_user_id');
-        if (!user_id){
-
-            create_user();
-        
-        }
-        else{
-            check_user(user_id);
-        }
+        get_or_create_user();
 
         getPreciseLocation((location) => {
             const shops = JSON.parse(document.getElementById('shops-data').textContent);
@@ -136,36 +128,26 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-function create_user(){
-    fetch("/api/create_user") // Added absolute path
-    .then(response => response.json())
-    .then(result => {
-        let user_id = result.user_id;
-        localStorage.setItem('printo_user_id', user_id);
-        
-        // Safely set inputs if they exist on the page
-        const idField = document.querySelector('#user_id');
-        if (idField) idField.value = user_id;
-        
-        const userLabel = document.querySelector('#current_user');
-        if (userLabel) userLabel.innerHTML = user_id;
-    });
-}
 
-function check_user(uuid){
-    fetch(`/api/check_user/${uuid}`) // Added absolute path
-    .then(response => response.json())
-    .then(result => {
-        if (result.status === 'Create new'){
-            create_user();
-        } else {
-            // CRITICAL FIX: If user exists, you MUST put their ID in the hidden form field!
-            const idField = document.querySelector('#user_id');
-            if (idField) {
-                idField.value = uuid;
+async function get_or_create_user(){
+    const uuid = localStorage.getItem('printo_user_id');
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+    try {
+        const response = await fetch('/api/user', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'uuid': uuid || ''
             }
+        });
+        
+        if (response.ok && uuid){
+            localStorage.removeItem('printo_user_id');
         }
-    });
+    } catch (error) {
+        console.error('User init failed:', error);
+    }
 }
 
 function display_info(file_name,result, selected_type) {

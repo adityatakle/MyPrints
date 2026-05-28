@@ -6,6 +6,7 @@ from django.http import JsonResponse, HttpResponseRedirect
 from django.urls import reverse
 from django.contrib.auth import authenticate, login, logout
 from django.utils import timezone
+from django.utils.text import get_valid_filename
 from django.db.models import F
 from django.db import transaction
 from django.db.models.functions import ExtractMonth, ExtractYear, TruncDate, TruncMonth
@@ -20,7 +21,7 @@ from django.db.models import Sum, Count
 import razorpay
 from django.conf import settings
 from datetime import timedelta, datetime
-from decimal import Decimal, ROUND_UP, ROUND_HALF_UP
+from decimal import Decimal, ROUND_UP
 import random
 from reportlab.pdfgen import canvas
 from reportlab.lib.colors import HexColor
@@ -481,25 +482,27 @@ def shops(request):
         })
 
     if request.method == "POST":
-        user_uuid = request.POST.get("user_id")
+        user_id = request.session.get('user_id')
         shop_id = request.POST.get("shop_id")
-        if Cart.objects.filter(user__user_id=user_uuid, shop_info_id=shop_id, is_paid=True, is_open=False, is_verified=False).exists():
-            return redirect("success", shop_id=shop_id, user_id=user_uuid)
-        return redirect('upload', user_id=user_uuid, shop_id=shop_id)
+        request.session['shop_id'] = str(shop_id)
+        if Cart.objects.filter(user__user_id=user_id, shop_info_id=shop_id, is_paid=True, is_open=False, is_verified=False).exists():
+            return redirect("success")
+        return redirect('upload')
 
     # Convert to JSON string safely
     context = {
-        "shops_json": shops_data,
+        "shops_json": shops_data
     }
     return render(request, "printoapp/shops.html", context)
 
 
-def upload(request, user_id, shop_id):
-    user_uuid = user_id
-    if not user_uuid or not shop_id:
+def upload(request):
+    user_id = request.session.get('user_id')
+    shop_id = request.session.get('shop_id')
+    if not user_id or not shop_id:
         return redirect('shops')
     try:
-        current_user = Client.objects.get(user_id=user_uuid)
+        current_user = Client.objects.get(user_id=user_id)
     except Exception as e:
         return redirect('shops')
 
@@ -552,6 +555,21 @@ def upload(request, user_id, shop_id):
             file_rename = request.POST.get('rename-file')
             is_color = request.POST.get('is_color') == 'True' or request.POST.get('is_color') == 'true'
             is_b2b = request.POST.get('is_b2b') == 'True' or request.POST.get('is_b2b') == 'true'
+            MAX_FILES_PER_CART = 20
+            if Cart_items.objects.filter(cart=cart).count() >= MAX_FILES_PER_CART:
+                return render(request, "printoapp/upload.html", {
+                    "error_message": "Maximum files per cart reached."
+                })
+            MAX_SIZE = 50 * 1024 * 1024  # 50MB
+            if file.size > MAX_SIZE:
+                return render(request, "printoapp/upload.html", {
+                    "error_message": "File too large. Maximum size is 50MB."
+                })
+            ALLOWED_TYPES = ['application/pdf']
+            if file.content_type not in ALLOWED_TYPES:
+                return render(request, "printoapp/upload.html", {
+                    "error_message": "Only PDF files are allowed."
+                })
             try:
                 quantity = int(request.POST.get('quantity', 1))
             except (ValueError, TypeError):
@@ -561,8 +579,6 @@ def upload(request, user_id, shop_id):
                 return render(request, "printoapp/upload.html", {
                     "error_message": "Copies cant be negative.",
                     "shop_item_list": shop_item_list,
-                    "shop_id": shop_id,
-                    "user_id": current_user,
                     "item_number": item_number
                 })
             if file_rename:
@@ -600,6 +616,13 @@ def upload(request, user_id, shop_id):
                     front_page_item.save()
 
             try:
+                file.seek(0)
+                header = file.read(4)
+                file.seek(0)
+                if header != b'%PDF':  # PDF magic bytes
+                    return render(request, "printoapp/upload.html", {
+                        "error_message": "Invalid file format."
+                    })
                 reader = PdfReader(file)
                 raw_pages_count = len(reader.pages)
                 size_warning = ""
@@ -640,8 +663,6 @@ def upload(request, user_id, shop_id):
                 return render(request, "printoapp/upload.html", {
                     "error_message": f"PDF parsing error: {e}",
                     "shop_item_list": shop_item_list,
-                    "shop_id": shop_id,
-                    "user_id": user_uuid,
                     "item_number": item_number
                 })
             try:
@@ -663,20 +684,17 @@ def upload(request, user_id, shop_id):
                 return render(request, "printoapp/upload.html", {
                     "error_message": f"Configuration does not match shop items. {e}",
                     "shop_item_list": shop_item_list,
-                    "shop_id": shop_id,
-                    "user_id": user_uuid,
                     "item_number": item_number
                 })
 
             total_amount = total_pages * (item.final_price) * quantity
+            file.name = get_valid_filename(file.name)
             s3_filename = f"uploads/{cart.id}/{file.name}"
 
             if Cart_items.objects.filter(cart=cart, file_id=s3_filename).exists():
                 return render(request, "printoapp/upload.html", {
                     "error_message": "This file is already in your cart.",
                     "shop_item_list": shop_item_list,
-                    "shop_id": shop_id,
-                    "user_id": user_uuid,
                     "item_number": item_number
                 })
 
@@ -686,8 +704,6 @@ def upload(request, user_id, shop_id):
                 return render(request, "printoapp/upload.html", {
                     "error_message": "Upload error (S3 Connection Failed).",
                     "shop_item_list": shop_item_list,
-                    "shop_id": shop_id,
-                    "user_id": user_uuid,
                     "item_number": item_number
                 })
 
@@ -712,14 +728,13 @@ def upload(request, user_id, shop_id):
             item_number = Cart_items.objects.filter(cart=cart).count()
 
             request.session['upload_success'] = message
-            return redirect('upload', user_id=user_uuid, shop_id=shop_id)
+            return redirect('upload')
 
     success_message = request.session.pop('upload_success', '')
 
     return render(request, "printoapp/upload.html", {
         "shop_item_list": shop_item_list,
         "shop_id": shop_id,
-        "user_id": user_uuid,
         "success_message": success_message,
         "error_message": "",
         "item_number": item_number
@@ -785,28 +800,31 @@ def update_cart_financial_records(cart):
     return total_data
 
 
-def cart(request, shop_id, user_id):
+def cart(request):
+    user_id = request.session.get('user_id')
+    shop_id = request.session.get('shop_id')
     cart = get_object_or_404(Cart, user__user_id=user_id, shop_info__id=shop_id, is_open=True)
     if cart.payment_id:
+        cart_total = get_object_or_404(Cart_total, cart=cart)
         if cart.is_paid and not cart.is_open:
-            return redirect("success", shop_id=shop_id, user_id=user_id)
+            return redirect("success")
         else:
             try:
                 rzp_order = razorpay_client.order.fetch(cart.payment_id)
-                if rzp_order['status'] == 'paid':
+                if rzp_order['status'] == 'paid' and rzp_order['amount'] == int(cart_total.grand_total * 100):
                     cart.is_paid = True
                     cart.is_open = False
                     cart.save()
-                    return redirect("success", shop_id=shop_id, user_id=user_id)
+                    return redirect("success")
                     
             except Exception as e:
-                return redirect("failure", shop_id=shop_id, user_id=user_id)
+                return redirect("failure")
     cart_items = Cart_items.objects.filter(cart=cart)
     if request.method == "POST":
         # Wrap modifications inside a transaction block to maintain absolute database integrity
         with transaction.atomic():
             if "subtract" in request.POST:
-                item = get_object_or_404(Cart_items, id=request.POST.get("subtract"))
+                item = get_object_or_404(Cart_items, id=request.POST.get("subtract"), cart=cart)
                 if item.quantity > 1:
                     item.quantity -= 1
                     item.total_amount = item.quantity * ((item.shop_item.final_price) * item.total_pages)
@@ -815,13 +833,13 @@ def cart(request, shop_id, user_id):
                     item.delete()
 
             elif "add" in request.POST:
-                item = get_object_or_404(Cart_items, id=request.POST.get("add"))
+                item = get_object_or_404(Cart_items, id=request.POST.get("add"), cart=cart)
                 item.quantity += 1
                 item.total_amount = item.quantity * ((item.shop_item.final_price) * item.total_pages)
                 item.save()
                 
             elif "remove-item" in request.POST:
-                item = get_object_or_404(Cart_items, id = request.POST.get("remove-item"))
+                item = get_object_or_404(Cart_items, id = request.POST.get("remove-item"), cart=cart)
                 delete_from_s3(item.file_id)
                 item.delete()
 
@@ -834,7 +852,7 @@ def cart(request, shop_id, user_id):
                 cart.save()
 
             elif "edit" in request.POST:
-                item = get_object_or_404(Cart_items, id=request.POST.get('edit'))
+                item = get_object_or_404(Cart_items, id=request.POST.get('edit'), cart=cart)
                 side_preference = request.POST.get('side') == 'True'
                 if side_preference != item.shop_item.is_b2b:
                     new_item = get_object_or_404(
@@ -861,7 +879,7 @@ def cart(request, shop_id, user_id):
             # Recalculate your ledger records BEFORE redirecting
             update_cart_financial_records(cart)
 
-        return redirect("cart", shop_id=shop_id, user_id=user_id)
+        return redirect("cart")
 
     # ─── GET REQUEST RENDERING ───
     # Run a fresh calculation check to capture context data cleanly
@@ -885,8 +903,6 @@ def cart(request, shop_id, user_id):
     return render(request, "printoapp/cart.html", {
         "cart": cart,
         "cart_items": cart_items,
-        "shop_id": shop_id,
-        "user_id": user_id,
         "display_subtotal": display_subtotal,
         "priority_fee": priority_fee,
         'needed_pages':needed_pages,
@@ -903,7 +919,9 @@ def cart(request, shop_id, user_id):
     })
 
 
-def create_order(request, amount, shop_id, user_id):
+def create_order(request, amount):
+    user_id = request.session.get('user_id')
+    shop_id = request.session.get('shop_id')
     cart = get_object_or_404(Cart, is_open=True, shop_info_id=shop_id, user__user_id=user_id)
     amount = int(amount * 100)
     currency = 'INR'
@@ -918,7 +936,9 @@ def create_order(request, amount, shop_id, user_id):
     razorpay_order = razorpay_client.order.create(data=data)
     return {"order-id":razorpay_order['id'], 'amount':amount}
 
-def initiate_payment(request, shop_id, user_id):
+def initiate_payment(request):
+    user_id = request.session.get('user_id')
+    shop_id = request.session.get('shop_id')
     if request.method == 'POST':
         cart = get_object_or_404(Cart, shop_info_id=shop_id, user__user_id=user_id, is_open=True)
         cart_total = Cart_total.objects.filter(cart=cart).first()
@@ -929,7 +949,7 @@ def initiate_payment(request, shop_id, user_id):
 
         if not cart.payment_id:
             # Create the actual Razorpay Order
-            order_data = create_order(request, total_amount, shop_id, user_id)
+            order_data = create_order(request, total_amount)
             
             cart.payment_id = order_data['order-id']
             cart.save()
@@ -950,7 +970,7 @@ def initiate_payment(request, shop_id, user_id):
 
 
 @csrf_exempt
-def payment_status(request, shop_id, user_id):
+def payment_status(request):
     if request.method == "POST":
         payment_id = request.POST.get('razorpay_payment_id')
         order_id = request.POST.get('razorpay_order_id')
@@ -962,12 +982,13 @@ def payment_status(request, shop_id, user_id):
                 'razorpay_payment_id': payment_id,
                 'razorpay_signature': signature
             })
-
-            return redirect("cart", shop_id=shop_id, user_id=user_id)
+            return redirect("cart")
         except Exception as e:
-            return redirect("failure", shop_id=shop_id, user_id=user_id)
+            return redirect("cart")
 
-def failure(request, user_id, shop_id):
+def failure(request):
+    user_id = request.session.get('user_id')
+    shop_id = request.session.get('shop_id')
     cart = Cart.objects.filter(
         user__user_id=user_id,
         shop_info_id=shop_id,
@@ -975,22 +996,20 @@ def failure(request, user_id, shop_id):
     ).order_by('-id').first() 
 
     if not cart:
-        return redirect('cart', shop_id=shop_id, user_id=user_id)
+        return redirect('cart')
     return render(request, 'printoapp/failure.html', {
-        'cart':cart,
-        'shop_id':shop_id,
-        'user_id':user_id
+        'cart':cart
     })
 
-def success(request, user_id, shop_id):
+def success(request):
+    user_id = request.session.get('user_id')
+    shop_id = request.session.get('shop_id')
     cart = Cart.objects.filter(
-        user__user_id=user_id,
-        shop_info_id=shop_id,
         is_paid=True
     ).order_by('-id').first()
 
     if not cart:
-        return redirect('cart', shop_id=shop_id, user_id=user_id)
+        return redirect('cart')
 
     if request.method == 'POST':
         name = request.POST.get('name')
@@ -1001,8 +1020,6 @@ def success(request, user_id, shop_id):
 
     return render(request, 'printoapp/success.html', {
         'cart': cart,
-        'shop_id':shop_id,
-        'user_id':user_id,
         'pickup_code': cart.pickup_code,
         'shop_lat': cart.shop_info.latitude,
         'shop_long': cart.shop_info.longitude,
@@ -1375,16 +1392,17 @@ def shop_account(request):
 
 # api routes
 
-def create_user(request):
-    new_user = Client.objects.create()
-    new_user.save()
-    return JsonResponse({'user_id': str(new_user.user_id)})
-
-def check_user(request, uuid):
-    if not Client.objects.filter(user_id=uuid).exists():
-        return JsonResponse({'status':'Create new'})
+def user(request):
+    uuid = request.headers.get('uuid')
+    if uuid and Client.objects.filter(user_id=uuid).exists():
+        request.session['user_id'] = str(uuid)
+        return JsonResponse({'status':'ok'})
     else:
-        return JsonResponse({'status':'Exists'})
+        if not Client.objects.filter(user_id=request.session.get('user_id')).exists():
+            new_user = Client.objects.create()
+            new_user.save()
+            request.session['user_id'] = str(new_user.user_id)
+        return JsonResponse({'status':'ok'})
 
 def item_list(request, shop_id):
     unique_keys = Shop_items.objects.filter(
@@ -1469,8 +1487,11 @@ def cart_status(request, cart_id):
         })
 
 
-def queue_size(request, shop_id, user_id=None):
+def queue_size(request):
     if request.method == 'POST':
+        shop_id = request.session.get('shop_id')
+        user_id = request.session.get('user_id')
+        type = request.headers.get('type')
         active_priority_queue = Cart.objects.filter(
             shop_info__id=shop_id,
             priority=1,
@@ -1485,7 +1506,7 @@ def queue_size(request, shop_id, user_id=None):
             is_verified=False,
             is_printed=False
         ).order_by('-is_processing', '-priority', 'created_at')
-        if not user_id:
+        if type == 'cart':
             return JsonResponse({'queue_size':active_queue.count(), 'priority_queue_size': active_priority_queue.count() })
         else:
             queue_list = list(active_queue.values_list('user__user_id', flat=True))
