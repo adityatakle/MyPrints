@@ -756,7 +756,7 @@ def update_cart_financial_records(cart):
     for item in cart_items:
         item_unit_price = (item.shop_item.final_price) * item.total_pages
         item_total = item_unit_price * item.quantity
-        page_count += item.raw_pages_count * item.quantity
+        page_count += item.total_pages * item.quantity
         sub_total += item_total
         shop_share += (item.shop_item.price) * item.total_pages * item.quantity
         platform_share += (item.shop_item.platform_price) * item.total_pages * item.quantity
