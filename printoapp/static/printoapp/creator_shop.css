@@ -208,3 +208,55 @@
 .inline-price-form {
     display: contents;
 }
+
+/* ─── ADD RECORD FORMS ─── */
+.section-header-inline {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.section-header-inline h3 {
+    margin: 0;
+}
+
+.add-record-form {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 15px;
+    padding: 12px;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px dashed #cbd5e1;
+    align-items: center;
+}
+
+.add-record-form input {
+    flex: 1;
+    min-width: 0; /* Prevents flex items from overflowing */
+    padding: 8px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.add-record-form input[type="datetime-local"] {
+    flex: 1.2; /* Give the date picker a tiny bit more room */
+}
+
+.add-record-form input:focus {
+    border-color: #007BFF;
+}
+
+@media (max-width: 1024px) {
+    .add-record-form {
+        flex-direction: column;
+    }
+    .add-record-form input, .add-record-form button {
+        width: 100%;
+    }
+}

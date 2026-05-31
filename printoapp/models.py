@@ -8,7 +8,6 @@ class Admin_dash(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
 class Settlements(models.Model):
-    admin = models.ForeignKey('Admin_dash', related_name='admin', on_delete=models.PROTECT)
     sett_id = models.CharField(max_length=255)
     sett_time = models.DateTimeField()
     sett_amount = models.DecimalField(max_digits=9, decimal_places=2)
@@ -30,9 +29,11 @@ class Shop_owner(models.Model):
     IFSC_code = models.CharField(max_length=255, blank=True)
     account_type = models.CharField(max_length=255, blank=True)
 
+
 class Client(models.Model):
     user_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
+
 
 class Shop_info(models.Model):
     name = models.CharField(max_length =100)

@@ -14,6 +14,7 @@ urlpatterns = [
     path('my_shop/file_update/', views.file_update, name='file_update'),
     path('my_shop/shop_catalogue', views.shop_catalogue, name='shop_catalogue'),
     path('my_shop/account', views.shop_account, name='shop_account'),
+    path('my_shop/settlements', views.shop_settlements, name='shop_settlements'),
     path('privacy_policy', views.privacy_policy, name='privacy_policy'),
     path('tnc', views.tnc, name='tnc'),
     path('payment_status', views.payment_status, name='payment_status'),

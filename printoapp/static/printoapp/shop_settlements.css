@@ -1,0 +1,56 @@
+.sd-section-subtitle {
+    color: var(--soft);
+    font-size: 0.9rem;
+    margin: 4px 0 0 0;
+}
+/* ─── SUMMARY TABLE SECTION ─── */
+
+/* Aligns the summary block to the right */
+.sd-summary-container {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 32px;
+}
+
+/* Styles the table to look like a clean invoice total */
+.sd-summary-table {
+    width: 100%;
+    max-width: 320px; /* Keeps it compact */
+    border-collapse: collapse;
+    background: #ffffff; /* Falls back to white if var is missing */
+    background: var(--card, #ffffff);
+    border: 1px solid var(--border, #e2e8f0);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.sd-summary-table td {
+    padding: 14px 18px;
+    font-size: 0.95rem;
+    border-bottom: 1px solid var(--border, #f1f5f9);
+}
+
+.summary-label {
+    color: var(--soft, #64748b);
+    font-weight: 500;
+    text-align: left;
+}
+
+.summary-value {
+    font-weight: 700;
+    text-align: right;
+    color: var(--dark, #0f172a);
+}
+
+/* Highlights the final overdue row */
+.summary-total-row td {
+    background: var(--off, #f8fafc);
+    font-size: 1.05rem;
+    border-bottom: none;
+    border-top: 2px solid var(--border, #e2e8f0);
+}
+
+/* Utility Colors for the numbers */
+.text-success { color: var(--green, #16a34a); }
+.text-danger { color: #dc2626; } /* Standard red for overdue */

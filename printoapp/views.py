@@ -301,6 +301,19 @@ def creator_shop_view(request):
             item = Shop_items.objects.get( id=shop_item_id)
             item.platform_price = platform_price
             item.save()
+
+        if request.POST.get('sett_id') and request.POST.get('sett_time') and request.POST.get('sett_amount'):
+            sett_id = request.POST.get('sett_id')
+            sett_time = request.POST.get('sett_time')
+            sett_amount = request.POST.get('sett_amount')
+            Settlements.objects.create(sett_id=sett_id, sett_time=sett_time, sett_amount=sett_amount, shop=shop)
+
+        if request.POST.get('trans_id') and request.POST.get('trans_time') and request.POST.get('trans_amount'):
+            trans_id = request.POST.get('trans_id')
+            trans_time = request.POST.get('trans_time')
+            trans_amount = request.POST.get('trans_amount')
+            Subscription_transactions.objects.create(trans_time=trans_time, trans_money=trans_amount, trans_id=trans_id, shop=shop)
+
         return render(request, 'printoapp/creator_shop_view.html', {
             'shop_id':shop_id,
             'shop_name':shop_name,
@@ -1278,6 +1291,27 @@ def shop_finance(request):
         'daily_ledger': daily_ledger,
     })
 
+
+@login_required
+def shop_settlements(request):
+    now_obj = timezone.localtime()
+    hour = now_obj.hour
+    greeting = "Morning" if 0 <= hour < 12 else "Noon" if hour == 12 else "Afternoon" if 12 < hour < 18 else "Evening"
+    shop = Shop_info.objects.get(shop_owner__user=request.user)
+    total_collection = Cart_total.objects.filter(cart__shop_info=shop, cart__is_verified=True).aggregate(total = Sum('shop_share'))
+    total_collection = total_collection['total'] or 0
+    settlements = Settlements.objects.filter(shop=shop)
+    total_settlement = settlements.aggregate(total=Sum('sett_amount'))
+    total_settlement = total_settlement['total'] or 0
+    overdue = total_collection - total_settlement
+    return render(request, 'printoapp/shop_settlements.html', {
+        'time':greeting,
+        'username':request.user.username,
+        'total_collection':total_collection,
+        'settlements':settlements,
+        'total_settlement':total_settlement,
+        'overdue':overdue
+    })
 
 @login_required
 def shop_catalogue(request):
