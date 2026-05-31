@@ -29,7 +29,7 @@
             {% for row in settlements %}
             <tr class="sd-row">
                 <td><span class="sd-pages-chip">{{ row.sett_id }}</span></td>
-                <td><strong>{{ row.sett_time|date:"M d, Y" }}</strong></td>
+                <td style="text-align: center;"><strong>{{ row.sett_time|date:"M d, Y" }}</strong></td>
                 <td style="text-align: right; color: var(--green); font-weight: 700; font-size: 1rem;">
                     ₹{{ row.sett_amount|floatformat:2 }}
                 </td>
