@@ -19,7 +19,6 @@ urlpatterns = [
     path('tnc', views.tnc, name='tnc'),
     path('payment_status', views.payment_status, name='payment_status'),
     path('success', views.success, name='success'),
-    path('failure', views.failure, name='failure'),
 
     #apis
     path('initiate-payment', views.initiate_payment, name='initiate_payment'),
