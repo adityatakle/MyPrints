@@ -35,7 +35,11 @@
     </div>
 
 </header>
-
+{% if request.session.payment_error %}
+    <div class="alert alert-error" style="background: #fee2e2; color: #991b1b; padding: 12px; border-radius: 8px; text-align: center; margin:10px 0;">
+    {{request.session.payment_error }}
+    </div>
+{% endif %}
 <form id="razorpay-form" action="{% url 'payment_status' %}" method="POST" style="display:none;">
     {% csrf_token %}
     <input type="hidden" name="razorpay_payment_id" id="razorpay_payment_id">

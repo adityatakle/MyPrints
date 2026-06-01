@@ -829,9 +829,10 @@ def cart(request):
                     cart.is_open = False
                     cart.save()
                     return redirect("success")
-                    
+                else:
+                    request.session['payment_error'] = 'Payment Failed. If your money has been debited please mail at adityatakle@myprints.in and it will solved soon.'
             except Exception as e:
-                return redirect("failure")
+                request.session['payment_error'] = 'Payment Failed. If your money has been debited please mail at adityatakle@myprints.in and it will solved soon.'
     cart_items = Cart_items.objects.filter(cart=cart)
     if request.method == "POST":
         # Wrap modifications inside a transaction block to maintain absolute database integrity
@@ -959,7 +960,8 @@ def initiate_payment(request):
 
         if total_amount <= 0:
             return JsonResponse({'error': 'Cart is empty'}, status=400)
-
+        if 'payment_error' in request.session:
+            del request.session['payment_error']
         if not cart.payment_id:
             # Create the actual Razorpay Order
             order_data = create_order(request, total_amount)
@@ -999,20 +1001,6 @@ def payment_status(request):
         except Exception as e:
             return redirect("cart")
 
-def failure(request):
-    user_id = request.session.get('user_id')
-    shop_id = request.session.get('shop_id')
-    cart = Cart.objects.filter(
-        user__user_id=user_id,
-        shop_info_id=shop_id,
-        is_open=True
-    ).order_by('-id').first() 
-
-    if not cart:
-        return redirect('cart')
-    return render(request, 'printoapp/failure.html', {
-        'cart':cart
-    })
 
 def success(request):
     user_id = request.session.get('user_id')
