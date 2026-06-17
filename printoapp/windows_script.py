@@ -331,14 +331,15 @@ if __name__ == "__main__":
                     cart_path = os.path.join(FOLDER_PATH, str(cart_id))
                     if os.path.exists(cart_path):
                         shutil.rmtree(cart_path)
-                        requests.post(f'{BASE_URL}/my_shop/file_update/', 
+                        clean_resp = requests.post(f'{BASE_URL}/my_shop/file_update/', 
                             headers={'Shop-Token': Shop_token, 'Shop-Id': shop_id, 'Cart-Id': str(cart_id), 'Update-Type': 'cleaned'})
-                        write_log(f"Cleaned up cart: {cart_id}")
+                        if clean_resp.status_code == 200:
+                            write_log(f"Cleaned up cart and updated database: {cart_id}")
                 except Exception as e:
                     write_log(f'Cleanup issue: {e}')
-
+            i = 0
             # mark 2 carts as processing and edit file_link
-            for i, cart in enumerate(print_carts):
+            for cart in print_carts:
                 if i >= 2:
                     break
                 if not cart['is_processing']:
@@ -346,117 +347,118 @@ if __name__ == "__main__":
                         resp = requests.post(f'{BASE_URL}/my_shop/file_update/', 
                             headers={'Shop-Token': Shop_token, 'Shop-Id': shop_id, 'Cart-Id': str(cart["id"]), 'Update-Type': 'processing'})
                         if resp.status_code == 200:
-                            data = resp.json()
-                            
-                            # Create a fast lookup map: { item_id: file_url }
-                            new_links = {link['id']: link['file_url'] for link in data.get('cart_data', [])}
-                            
-                            # 2. Update local items in one pass
-                            for item in cart['items']:
-                                if item['id'] in new_links:
-                                    item['file_url'] = new_links[item['id']]
-                            
-                            # Mark locally as processing
-                            cart['is_processing'] = True
+                            res_data = resp.json()
+                            if res_data['status'] == 'success':
+                                # Create a fast lookup map: { item_id: file_url }
+                                new_links = {link['id']: link['file_url'] for link in data.get('cart_data', [])}
+                                
+                                # 2. Update local items in one pass
+                                for item in cart['items']:
+                                    if item['id'] in new_links:
+                                        item['file_url'] = new_links[item['id']]
+                                
+                                # Mark locally as processing
+                                cart['is_processing'] = True
+                                i += 1
+                            elif res_data['status'] == 'Refund initiated':
+                                write_log(f"Cart {cart['id']} rejected by server: Auto-Refunded.")
                     except Exception as e:
                         write_log(f'Processing update error: {e}')
 
             # --- PRINTING LOOP ---
-            for i, cart in enumerate(print_carts):
-                if i >= 2: 
-                    break 
-                
-                cart_dir = os.path.join(FOLDER_PATH, str(cart['id']))
-                os.makedirs(cart_dir, exist_ok=True)
+            for cart in print_carts: 
+                if cart['is_processing'] and any(item.get('file_url') for item in cart['items']):
+                    cart_dir = os.path.join(FOLDER_PATH, str(cart['id']))
+                    os.makedirs(cart_dir, exist_ok=True)
 
 
-                usable_printers = []
-                try:
-                    with open(DATA_FILE, 'r') as r:
-                        printer_data = json.load(r)
-                        for printer in printer_data["printer_info"]:
-                            if printer["name"] not in ['OneNote (Desktop)', 'Microsoft Print to PDF']:
-                                if 'A4' in printer["page_types"] and not printer["is_color"] :        
-                                        if printer["is_b2b"] or not cart["is_b2b"]:
-                                            usable_printers.append({
-                                                'name':printer['name'],
-                                                'queue':get_status(printer['name']).get('queue_size', 0)
-                                            })
-                except Exception as e:
-                    write_log(f"Printer read error: {e}")
-
-                if not usable_printers:
-                    write_log(f"No printer for Cart {cart['id']}")
-                    continue
-
-                usable_printers.sort(key=lambda x: x.get('queue', 0))
-
-                # --- ITEM DOWNLOAD & PRINT ---
-                for item in cart['items']:
-                    success = False
-                    retries = 0
-                    while not success and retries < 3:
-                        for printer in usable_printers:
-                            status = get_status(printer['name'])
-                            if status['readable_status'] == 'Ready':
-                                file_path = os.path.join(cart_dir, item['file_name'])
-                                
-                                try:
-                                    # A. DOWNLOAD (Robust Chunked Method)
-                                    if not os.path.exists(file_path):
-                                        write_log(f"Downloading: {item['file_name']}...")
-                                        resp = requests.get(item['file_url'], stream=True, timeout=20)
-                                        
-                                        if resp.status_code == 200:
-                                            with open(file_path, "wb") as f:
-                                                for chunk in resp.iter_content(chunk_size=8192):
-                                                    if chunk:
-                                                        f.write(chunk)
-                                                f.flush() # Force write to buffer
-                                                os.fsync(f.fileno()) # Force write to disk (prevents Windows lock issues)
-                                            
-                                            write_log("Download complete. Syncing...")
-                                            time.sleep(1.5) # Final buffer for SSD latency
-                                        else:
-                                            write_log(f"Download rejected by server: {resp.status_code}")
-                                            retries += 1
-                                            break
-
-                                    # B. PRINT
-                                    success = print_file(file_path, printer['name'], item["page_type"], item["copies"], item["is_b2b"], item['is_color'])
-                                    if success:
-                                        write_log(f"SUCCESS: {item['file_name']} is at the spooler.")
-                                        # Notify backend
-                                        try:
-                                            requests.post(f'{BASE_URL}/my_shop/file_update/', 
-                                                headers={
-                                                    'Shop-Token': Shop_token, 
-                                                    'Shop-Id': shop_id, 
-                                                    'Item-Id': str(item["id"]), 
-                                                    'Update-Type': 'printed'
+                    usable_printers = []
+                    try:
+                        with open(DATA_FILE, 'r') as r:
+                            printer_data = json.load(r)
+                            for printer in printer_data["printer_info"]:
+                                if printer["name"] not in ['OneNote (Desktop)', 'Microsoft Print to PDF']:
+                                    if 'A4' in printer["page_types"] and not printer["is_color"] :        
+                                            if printer["is_b2b"] or not cart["is_b2b"]:
+                                                usable_printers.append({
+                                                    'name':printer['name'],
+                                                    'queue':get_status(printer['name']).get('queue_size', 0)
                                                 })
-                                            
-                                        except Exception as e:
-                                            write_log(f"Error while marking file {item['file_name']} as success: {e}")
-                                        break
-                                    else:
-                                        retries += 1
-                                        
+                    except Exception as e:
+                        write_log(f"Printer read error: {e}")
 
-                                except Exception as e:
-                                    write_log(f"Item Processing Error: {e}")
-                                    retries += 1
-                                    break 
-                            else:
-                                write_log(f" {printer['name']} not Ready...")
-                                if printer == usable_printers[-1]:
-                                    write_log(f" All printers are busy waiting 3sec before retrying...")
-                                    time.sleep(3) 
-                                continue
+                    if not usable_printers:
+                        write_log(f"No printer for Cart {cart['id']}")
+                        continue
+
+                    usable_printers.sort(key=lambda x: x.get('queue', 0))
+
+                    # --- ITEM DOWNLOAD & PRINT ---
+                    for item in cart['items']:
+                        success = False
+                        retries = 0
+                        while not success and retries < 3:
+                            for printer in usable_printers:
+                                status = get_status(printer['name'])
+                                if status['readable_status'] == 'Ready':
+                                    file_path = os.path.join(cart_dir, item['file_name'])
+                                    
+                                    try:
+                                        # A. DOWNLOAD (Robust Chunked Method)
+                                        if not os.path.exists(file_path):
+                                            write_log(f"Downloading: {item['file_name']}...")
+                                            resp = requests.get(item['file_url'], stream=True, timeout=20)
+                                            
+                                            if resp.status_code == 200:
+                                                with open(file_path, "wb") as f:
+                                                    for chunk in resp.iter_content(chunk_size=8192):
+                                                        if chunk:
+                                                            f.write(chunk)
+                                                    f.flush() # Force write to buffer
+                                                    os.fsync(f.fileno()) # Force write to disk (prevents Windows lock issues)
+                                                
+                                                write_log("Download complete. Syncing...")
+                                                time.sleep(1.5) # Final buffer for SSD latency
+                                            else:
+                                                write_log(f"Download rejected by server: {resp.status_code}")
+                                                retries += 1
+                                                break
+
+                                        # B. PRINT
+                                        success = print_file(file_path, printer['name'], item["page_type"], item["copies"], item["is_b2b"], item['is_color'])
+                                        if success:
+                                            write_log(f"SUCCESS: {item['file_name']} is at the spooler.")
+                                            # Notify backend
+                                            try:
+                                                requests.post(f'{BASE_URL}/my_shop/file_update/', 
+                                                    headers={
+                                                        'Shop-Token': Shop_token, 
+                                                        'Shop-Id': shop_id, 
+                                                        'Item-Id': str(item["id"]), 
+                                                        'Update-Type': 'printed'
+                                                    })
+                                                
+                                            except Exception as e:
+                                                write_log(f"Error while marking file {item['file_name']} as success: {e}")
+                                            break
+                                        else:
+                                            retries += 1
+                                            
+
+                                    except Exception as e:
+                                        write_log(f"Item Processing Error: {e}")
+                                        retries += 1
+                                        break 
+                                else:
+                                    write_log(f" {printer['name']} not Ready...")
+                                    if printer == usable_printers[-1]:
+                                        write_log(f" All printers are busy waiting 3sec before retrying...")
+                                        time.sleep(3) 
+                                    continue
+                            if not success:
+                                write_log(f'Tried retrying file {retries}/{3} times.')
                         if not success:
-                            write_log(f'Tried retrying file {retries}/{3} times.')
-                    if not success:
-                        write_log(f"GIVING UP on {item['file_name']} after {retries} attempts. Moving to next item.")                
+                            write_log(f"GIVING UP on {item['file_name']} after {retries} attempts. Moving to next item.")                
         except Exception as e:
             write_log(f"Main Loop Connection error: {e}")
         

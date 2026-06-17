@@ -23,6 +23,14 @@
         <p class="su-label">PICKUP CODE</p>
         <div class="su-otp-value">{{ pickup_code }}</div>
         <p class="su-sub-label">Share this code only at the counter</p>
+        
+        <div class="su-actions">
+            <a href="https://www.google.com/maps/dir/?api=1&destination={{ shop_lat }},{{ shop_long }}&travelmode=walking" 
+            target="_blank" class="su-btn-route">
+                <div class="route_pin"></div>
+                <span class="btn-text">Start Walking Route</span>
+            </a>
+        </div>
     </div>
 
     <div class="su-card su-card--status">
@@ -42,14 +50,72 @@
         </div>
     </div>
 
-    <div class="su-actions">
-        <a href="https://www.google.com/maps/dir/?api=1&destination={{ shop_lat }},{{ shop_long }}&travelmode=walking" 
-           target="_blank" class="su-btn-route">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" /><circle cx="12" cy="10" r="3" />
-            </svg>
-            Start Walking Route
-        </a>
+    <div class="su-card su-card--feedback su-feedback--locked" id="feedback-section">
+        <h3 class="su-fb-title">Rate the Experience</h3>
+        <p class="su-fb-sub">Available after order collection</p>
+        
+        <form method="POST" action="{% url 'success' %}" id="feedback-form">
+            {% csrf_token %}
+            <div class="rating">
+                <input value="5" name="rating" id="star5" type="radio" />
+                <label title="5 stars" for="star5">
+                    <svg stroke-linejoin="round" stroke-linecap="round" stroke-width="2" stroke="#000000" fill="none" viewBox="0 0 24 24" height="35" width="35" xmlns="http://www.w3.org/2000/svg" class="svgOne">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                    </svg>
+                    <svg stroke-linejoin="round" stroke-linecap="round" stroke-width="2" stroke="#000000" fill="none" viewBox="0 0 24 24" height="35" width="35" xmlns="http://www.w3.org/2000/svg" class="svgTwo">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                    </svg>
+                    <div class="ombre"></div>
+                </label>
+
+                <input value="4" name="rating" id="star4" type="radio" />
+                <label title="4 stars" for="star4">
+                    <svg stroke-linejoin="round" stroke-linecap="round" stroke-width="2" stroke="#000000" fill="none" viewBox="0 0 24 24"  height="35" width="35" xmlns="http://www.w3.org/2000/svg" class="svgOne">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                    </svg>
+                    <svg stroke-linejoin="round" stroke-linecap="round" stroke-width="2" stroke="#000000" fill="none" viewBox="0 0 24 24" height="35" width="35" xmlns="http://www.w3.org/2000/svg" class="svgTwo">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                    </svg>
+                    <div class="ombre"></div>
+                </label>
+
+                <input value="3" name="rating" id="star3" type="radio" />
+                <label title="3 stars" for="star3">
+                    <svg stroke-linejoin="round" stroke-linecap="round" stroke-width="2" stroke="#000000" fill="none" viewBox="0 0 24 24" height="35" width="35" xmlns="http://www.w3.org/2000/svg" class="svgOne">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                    </svg>
+                    <svg stroke-linejoin="round" stroke-linecap="round" stroke-width="2" stroke="#000000" fill="none" viewBox="0 0 24 24"  height="35" width="35" xmlns="http://www.w3.org/2000/svg" class="svgTwo">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                    </svg>
+                    <div class="ombre"></div>
+                </label>
+
+                <input value="2" name="rating" id="star2" type="radio" />
+                <label title="2 stars" for="star2">
+                    <svg stroke-linejoin="round" stroke-linecap="round" stroke-width="2" stroke="#000000" fill="none" viewBox="0 0 24 24" height="35" width="35" xmlns="http://www.w3.org/2000/svg" class="svgOne">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                    </svg>
+                    <svg stroke-linejoin="round" stroke-linecap="round" stroke-width="2" stroke="#000000" fill="none" viewBox="0 0 24 24" height="35" width="35" xmlns="http://www.w3.org/2000/svg" class="svgTwo">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                    </svg>
+                    <div class="ombre"></div>
+                </label>
+
+                <input value="1" name="rating" id="star1" type="radio" />
+                <label title="1 star" for="star1">
+                    <svg stroke-linejoin="round" stroke-linecap="round" stroke-width="2" stroke="#000000" fill="none" viewBox="0 0 24 24" height="35" width="35" xmlns="http://www.w3.org/2000/svg" class="svgOne">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                    </svg>
+                    <svg stroke-linejoin="round" stroke-linecap="round" stroke-width="2" stroke="#000000" fill="none" viewBox="0 0 24 24" height="35" width="35" xmlns="http://www.w3.org/2000/svg" class="svgTwo">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                    </svg>
+                    <div class="ombre"></div>
+                </label>
+                </div>
+
+            <textarea name="message" placeholder="Share your experience..." class="su-fb-input"></textarea>
+            <button type="submit" class="su-btn-submit" id="fb-submit-btn" disabled>Submit Feedback</button>
+        </form>
     </div>
     <div class="su-actions su-home-action" id="home-action-container" style="display: none;">
         <a href="{% url 'shops' %}" class="su-btn-home">
@@ -59,23 +125,6 @@
             </svg>
             Return to Shops
         </a>
-    </div>
-    <div class="su-card su-card--feedback su-feedback--locked" id="feedback-section">
-        <h3 class="su-fb-title">Rate the Service</h3>
-        <p class="su-fb-sub">Available after order collection</p>
-        
-        <form method="POST" action="{% url 'success' %}" id="feedback-form">
-            {% csrf_token %}
-            <div class="su-rating">
-                <input type="radio" name="rating" value="5" id="s5" required><label for="s5">★</label>
-                <input type="radio" name="rating" value="4" id="s4"><label for="s4">★</label>
-                <input type="radio" name="rating" value="3" id="s3"><label for="s3">★</label>
-                <input type="radio" name="rating" value="2" id="s2"><label for="s2">★</label>
-                <input type="radio" name="rating" value="1" id="s1"><label for="s1">★</label>
-            </div>
-            <textarea name="message" placeholder="Share your experience..." class="su-fb-input"></textarea>
-            <button type="submit" class="su-btn-submit" id="fb-submit-btn" disabled>Submit Feedback</button>
-        </form>
     </div>
 
 </div>

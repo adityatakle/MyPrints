@@ -7,3 +7,4 @@ db.sqlite3
 win7_env
 venv
 printoapp/shop_script_exe
+printoapp/compile_copyright.py

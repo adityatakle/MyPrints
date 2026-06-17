@@ -95,6 +95,7 @@ class Cart(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     priority = models.IntegerField(default=0)
     updated_at = models.DateTimeField(auto_now=True)
+    fp_timestamp = models.DateTimeField(blank=True, null=True)
     user = models.ForeignKey("Client", on_delete=models.PROTECT)
     shop_info = models.ForeignKey("Shop_info", related_name="cart", on_delete=models.CASCADE)
 

@@ -30,7 +30,6 @@ urlpatterns = [
     path('api/queue_size', views.queue_size, name='queue_size'),
     path('api/create_preview_link/<str:file_id>', views.create_preview_link, name='create_preview_link'),
 
-
     #creator
     path('creator_login', views.creator_login, name='creator_login'),
     path('creator_index', views.creator_index, name='creator_index'),

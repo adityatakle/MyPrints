@@ -627,6 +627,9 @@ def upload(request):
                     front_page_item.file_id = s3_filename
                     front_page_item.display_name = "Receipt_Cover.pdf"
                     front_page_item.save()
+                    cart = get_object_or_404(Cart, user__user_id=user_id, shop_info_id=shop_id, is_open=True)
+                    cart.fp_timestamp = timezone.now()
+                    cart.save()
 
             try:
                 file.seek(0)
@@ -947,8 +950,13 @@ def create_order(request, amount):
             'cart_id':cart_id
         }
     }
-    razorpay_order = razorpay_client.order.create(data=data)
-    return {"order-id":razorpay_order['id'], 'amount':amount}
+
+    try:
+        razorpay_order = razorpay_client.order.create(data=data)
+        return {"order-id": razorpay_order['id'], 'amount': amount}
+    except Exception as e:
+        print(f"Razorpay Order Creation Failed: {str(e)}")
+        return redirect("cart")   
 
 def initiate_payment(request):
     user_id = request.session.get('user_id')

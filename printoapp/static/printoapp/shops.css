@@ -20,7 +20,7 @@
 /* --- Sticky Header --- */
 
 .sticky-header {
-    position: left;
+    position: sticky;
     top: 0;
     z-index: 100;
     background: rgba(255, 255, 255, 0.9);
@@ -50,16 +50,10 @@
     transform: translateY(-20px); 
 }
 
-/* --- Main Layout Container --- */
-.shops-container {
-    max-width: 600px;
-    margin: 0 auto;
-}
-
 .shops_form {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    overflow: hidden;
 }
 
 
@@ -68,41 +62,21 @@
     background: var(--card-bg);
     border-radius: 20px;
     width: 100%;
+    max-width: 500px;
     align-items: center;
     margin-top: 20px;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-    appearance: none;
-    -webkit-appearance: none;
-    outline: none;
 }
 
 .shops_submit {
+    margin:0px;
+    padding-top: 0px;
     background: inherit;
     border: none;
-    padding: 30px 30px 0px 30px;
     text-align: left;
     cursor: pointer;
-    width:90%;
-}
-
-.shop_footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 90%;
-    padding: 10px 0 15px 10%;
-}
-
-
-.shop_footer a img {
-    width: 50px;
-    height: auto;
-    display: block;
-    transition: transform 0.2s;
-}
-
-.shop_footer a img:hover {
-    transform: scale(1.3);
+    width:100%;
+    border-radius: inherit;
 }
 
 
@@ -128,13 +102,15 @@
 /* --- Card Internal Elements --- */
 .shop-header {
     display: flex;
+    padding: 10px 20px;
+    flex-direction: row;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 12px;
 }
 
 .status-badge {
-    font-size: 11px;
+    align-items: center;
+    font-size: 12px;
     font-weight: 700;
     padding: 4px 10px;
     border-radius: 8px;
@@ -153,43 +129,108 @@
 }
 
 .shop-name {
-    font-size: 18px;
-    font-weight: 700;
+    font-size: 22px;
+    font-weight: bold;
     color: var(--text-main);
     margin-bottom: 6px;
     display: block;
 }
 
 .shop-meta {
-    font-size: 13px;
+    font-size: 15px;
     color: var(--text-muted);
     margin-bottom: 16px;
     line-height: 1.5;
+    white-space: normal;
+    word-break: break-word; 
+    overflow-wrap: break-word;
 }
 
-.shop-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding-top: 14px;
-    border-top: 1px solid #F4F4F5;
+
+.location_pin {
+  width: 12px;
+  height: 12px;
+  display: block;
+  margin: 15px;
+  box-sizing: border-box;
+  position: relative;
 }
 
-.time-info {
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--text-muted);
+.location_pin::after {
+  content: '';
+  /* 2x Container size */
+  width: 24px;
+  height: 24px;
+  
+  /* Absolute centering offset math */
+  left: 50%;
+  top: 50%;
+  position: absolute;
+  
+  border-radius: 50% 50% 0;
+  /* Proportional border thickness */
+  border: 7.5px solid red; 
+  box-sizing: border-box;
+  
+  /* Combined transforms to prevent shifting during rotation */
+  transform: translate(-50%, -50%) rotate(45deg);
+  animation: animMarker 0.7s ease-in-out infinite alternate;
 }
 
+.location_pin::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  margin: auto;
+  /* Placed proportionally below the 12px pin point */
+  bottom: -20px; 
+  
+  /* Hardcoded shadow size */
+  width: 16px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.2);
+  box-sizing: border-box;
+  animation: animShadow 0.7s ease-in-out infinite alternate;
+}
+
+/* KEYFRAMES MAINTAINING PIVOT ALIGNMENT */
+@keyframes animMarker {
+  0% {
+    transform: translate(-50%, -50%) rotate(45deg) translate(3px, 3px);
+  }
+  100% {
+    transform: translate(-50%, -50%) rotate(45deg) translate(-3px, -3px);
+  }
+}
+
+@keyframes animShadow {
+  0% {
+    transform: scale(0.5);
+  }
+  100% {
+    transform: scale(1.2);
+  }
+}
 
 /* --- Desktop Layout Enhancements --- */
-@media (min-width: 768px) {
-    .shops-container {
-        max-width: 900px;
+@media (min-width: 765px) {
+    .shops_container{
+        margin-top: 30px;
     }
-    .shops_form {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 20px;
+
+    .status-badge{
+        margin-top: 15px;
+        font-size: 22px;
+    }
+
+    .shop-name{
+        margin-top: 15px;
+        font-size: 28px;
+    }
+
+    .shop-meta{
+        font-size: 25px;
     }
 }
