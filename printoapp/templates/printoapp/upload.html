@@ -3,6 +3,12 @@
 
 {% block extra_head %}
 <link href="{% static 'printoapp/upload.css' %}" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
+<script>
+    if (typeof pdfjsLib !== 'undefined') {
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+    }
+</script>
 {% endblock %}
 
 {% block body %}
@@ -101,7 +107,7 @@
       </div>
       <!-- .main-text and .sub-text are targeted by script.js — keep as-is -->
       <h3 class="main-text up-dz-main">Choose a file or drag &amp; drop it here.</h3>
-      <p class="sub-text up-dz-sub">PDF format only &nbsp;·&nbsp; Max 40 MB</p>
+      <p class="sub-text up-dz-sub">PDF format only &nbsp;·&nbsp; Max 1 GB</p>
       <span class="up-dz-btn">Browse File</span>
     </label>
 

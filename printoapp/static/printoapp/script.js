@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (title){
         const toggleBtn = document.getElementById('catalogueToggle');
         const contentPanel = document.getElementById('catalogueContent');
-        
+        let pdf_pages;
         if (toggleBtn && contentPanel) {
             toggleBtn.addEventListener('click', function() {
                 const chevron = this.querySelector('.up-cat-chevron');
@@ -62,70 +62,89 @@ document.addEventListener('DOMContentLoaded', function() {
         title.addEventListener('change', function() {
             if (this.files && this.files.length > 0) {
                 const file = this.files[0];
-                const MAX_SIZE_MB = 40;
+                const MAX_SIZE_MB = 500;
                 const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
 
                 if (file.size > MAX_SIZE_BYTES) {
-                    alert(`File is too large! Max limit is ${MAX_SIZE_MB}MB.`);
+                    alert(`File is too large! Max limit is 500MB.`);
                     this.value = "";
                     return;
                 }
-                let shop_id = document.querySelector('#shop_id');
-                shop_id = shop_id.value;
+
+                let shop_id = document.querySelector('#shop_id').value;
                 let main_text = document.querySelector('.main-text');
                 let sub_text = document.querySelector('.sub-text');
-                let file_ext = this.files[0].name.slice(-4);
-                let file_name = this.files[0].name.slice(0,-4);
-                if (file_name.length > 10){
-                    file_name = `${file_name.slice(0,6)}...` ;
-                }
+                let file_name = file.name;
                 sub_text.style.display = 'none';
 
-                main_text.innerHTML = `Selected: ${file_name}${file_ext}`;
+                main_text.innerHTML = `Selected: ${file_name}`;
                 main_text.style.color = 'green';
-                
-                fetch(`/api/item_list/${shop_id}`)
-                .then(response => response.json())
-                .then(result => {
-                    let pageTypeContainer = document.querySelector('.page_type');
-                    pageTypeContainer.style.display = 'flex';
-                    pageTypeContainer.style.flexDirection = "column";
-                    
-                    // FIXED 1: Declare the innerHTML string helper first!
-                    let page_types_innerHTML = ``;
-                    let keys = Object.keys(result);
 
-                    for (let i = 0; i < keys.length; i++) {
-                        let value = keys[i];
-                        let checked = i === 0 ? "checked" : ""; 
-                        
-                        page_types_innerHTML += `
-                            <label class="radio">
-                                <input ${checked} name="page_type" value="${value}" type="radio" />
-                                <span class="name">${value}</span>
-                            </label>`;
-                    }
+                // Helper block to handle UI rendering once page count is known
+                function loadShopItemsAndRender(totalPages) {
+                    fetch(`/api/item_list/${shop_id}`)
+                        .then(response => response.json())
+                        .then(result => {
+                            let pageTypeContainer = document.querySelector('.page_type');
+                            pageTypeContainer.style.display = 'flex';
+                            pageTypeContainer.style.flexDirection = "column";
+                            
+                            let page_types_innerHTML = ``;
+                            let keys = Object.keys(result);
 
-                    // FIXED 2: Single clear injection. Old select element block removed completely!
-                    pageTypeContainer.innerHTML = `
-                        <div class='row-info'>
-                            <span>Page type: </span>   
-                            <div class="radio-inputs"> 
-                                ${page_types_innerHTML} 
-                            </div>
-                        </div>`;
-
-                    display_info(file_name, result, keys[0]);
-
-                    // FIXED 3: Event tracking updated to look for standard input name attributes
-                    if (keys.length > 1) {
-                        pageTypeContainer.addEventListener('change', function(e) {
-                            if (e.target.name === 'page_type') {
-                                display_info(file_name, result, e.target.value);
+                            for (let i = 0; i < keys.length; i++) {
+                                let value = keys[i];
+                                let checked = i === 0 ? "checked" : ""; 
+                                
+                                page_types_innerHTML += `
+                                    <label class="radio">
+                                        <input ${checked} name="page_type" value="${value}" type="radio" />
+                                        <span class="name">${value}</span>
+                                    </label>`;
                             }
+
+                            pageTypeContainer.innerHTML = `
+                                <div class='row-info'>
+                                    <span>Page type: </span>   
+                                    <div class="radio-inputs"> 
+                                        ${page_types_innerHTML} 
+                                    </div>
+                                </div>`;
+
+                            // Pass the verified page count down safely
+                            display_info(file_name, result, keys[0], totalPages);
+
+                            if (keys.length > 1) {
+                                pageTypeContainer.addEventListener('change', function(e) {
+                                    if (e.target.name === 'page_type') {
+                                        display_info(file_name, result, e.target.value, totalPages);
+                                    }
+                                });
+                            }
+                        })
+                        .catch(err => console.error("API fetch failed:", err));
+                }
+
+                // --- Execution Trigger Controller ---
+                if (file.type === "application/pdf" && typeof pdfjsLib !== 'undefined') {
+                    const reader = new FileReader();
+                    reader.onload = function() {
+                        const typedarray = new Uint8Array(this.result);
+                        pdfjsLib.getDocument(typedarray).promise.then(function(pdf) {
+                            pdf_pages = pdf.numPages;
+                            
+                            // Execute layout only after promise resolves
+                            loadShopItemsAndRender(pdf_pages);
+                        }).catch(function(err) {
+                            console.error("PDF parsing failed:", err);
+                            loadShopItemsAndRender(1); // Error fallback
                         });
-                    }
-                });
+                    };
+                    reader.readAsArrayBuffer(file);
+                } else {
+                    // Images, text documents, docx fallbacks default cleanly to 1 page
+                    loadShopItemsAndRender(1);
+                }
             }
         });
 
@@ -161,7 +180,7 @@ async function get_or_create_user(){
     }
 }
 
-function display_info(file_name,result, selected_type) {
+function display_info(file_name,result, selected_type, pdf_pages) {
     // 1. Select the container
     let itemInfoContainer = document.querySelector('.item-info');
     itemInfoContainer.style.display='flex';
@@ -181,6 +200,9 @@ function display_info(file_name,result, selected_type) {
             is_b2b.push(arr.is_b2b);
         }
     });
+    if (pdf_pages === 1){
+        is_b2b = [is_b2b[0]]
+    }
 
     // 3. Build Strings (Template Literals are cleaner than createElement)
     
@@ -224,9 +246,27 @@ function display_info(file_name,result, selected_type) {
                 ${b2b_options}
             </div>
         </div>
+        <div class="row-info page-range-row">
+            <span>Pages:</span>
+            <div class="cd-range-group">
+                <div class="range-field">
+                    <span class="range-label">From</span>
+                    <input type="number" class="form-control range-input" id="pageStart" name="page_start" placeholder="1" value="1" min="1" max="${pdf_pages}" oninput="validateRange()">
+                </div>
+                <div class="range-field">
+                    <span class="range-label">To</span>
+                    <input type="number" class="form-control range-input" id="pageEnd" name="page_end" placeholder="${pdf_pages}" value="${pdf_pages}" min="1" max="${pdf_pages}" oninput="validateRange()">
+                </div>
+            </div>
+        </div>
         <div class="row-info">
             <span>Copies:</span>
-            <input type="number" class="form-control" name="quantity" min="1" max="20" placeholder="1">
+            <div class="cd-stepper-pill">
+                <button type="button" class="stepper-action" id="back" onclick="adjustCopies(-1)"> - </button>
+                <span id="copiesDisplay" class="stepper-value">1</span>
+                <button type="button" class="stepper-action" id="front" onclick="adjustCopies(1)"> + </button>
+            </div>
+            <input type="hidden" name="quantity" id="hiddenQuantity" value="1">
         </div>
         <div class="row-info">
             <button class="wooden-cart-button" id='submit-btn' type='submit'>
@@ -236,11 +276,36 @@ function display_info(file_name,result, selected_type) {
                 <span class="button-text">Add to cart</span>
             </button>
         </div>`;
-
+    
+    let upload_icon = document.querySelector('.up-dz-icon-wrap');
+    upload_icon.style.display = 'none';
+    let browze_btn = document.querySelector('.up-dz-btn');
+    browze_btn.innerHTML = 'Browse another file.';
     let submit_btn = itemInfoContainer.querySelector('#submit-btn');
     submit_btn.style.marginTop ='20px';
     submit_btn.style.borderRadius='10px';
+    if (pdf_pages == 1){
+        let page_selection = document.querySelector('.page-range-row');
+        if (page_selection) {
+            page_selection.style.display = 'none';
+        }
+    }
 };
+
+function adjustCopies(change) {
+    const display = document.getElementById('copiesDisplay');
+    const hiddenInput = document.getElementById('hiddenQuantity');
+    
+    let current = parseInt(display.innerText, 10) || 1;
+    let updated = current + change;
+    
+    // Enforce limits (1 to 20 copies)
+    if (updated >= 1 && updated <= 20) {
+        display.innerText = updated;
+        hiddenInput.value = updated;
+        hiddenInput.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+}
 
 function getPreciseLocation(callback) {
     callback('error');

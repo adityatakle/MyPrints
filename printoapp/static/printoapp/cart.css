@@ -1105,3 +1105,51 @@ body.ct-body, body {
     from { opacity: 0; transform: translateY(-5px); }
     to { opacity: 1; transform: translateY(0); }
 }
+
+/* ── ADD MORE ITEMS STYLING ── */
+.ct-add-more-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin: 8px 0 20px 0;
+}
+
+.ct-add-more-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 14px;
+    background: #ffffff;
+    color: var(--blue);
+    border: 1px dashed rgba(0, 123, 255, 0.4);
+    border-radius: var(--r);
+    font-family: 'Readex Pro', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-decoration: none;
+    transition: all var(--transition);
+    box-shadow: var(--shadow-sm);
+}
+
+.ct-add-more-link svg {
+    transition: transform var(--transition);
+}
+
+/* Hover and Interactive feedback states */
+.ct-add-more-link:hover {
+    color: var(--blue-d);
+    background: var(--blue-pale);
+    border-color: var(--blue);
+    text-decoration: none;
+    box-shadow: var(--shadow-md);
+}
+
+.ct-add-more-link:hover svg {
+    transform: rotate(90deg); /* Playful minor rotation feedback loop */
+}
+
+.ct-add-more-link:active {
+    transform: scale(0.98);
+}

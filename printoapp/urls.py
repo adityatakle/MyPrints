@@ -29,6 +29,8 @@ urlpatterns = [
     path('api/cart_status/<int:cart_id>', views.cart_status, name='cart_status'),
     path('api/queue_size', views.queue_size, name='queue_size'),
     path('api/create_preview_link/<str:file_id>', views.create_preview_link, name='create_preview_link'),
+    path('api/shop_handshake', views.shop_handshake, name='shop_handshake'),
+    path('api/payment_data', views.payment_data, name='payment_data'),
 
     #creator
     path('creator_login', views.creator_login, name='creator_login'),

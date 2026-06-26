@@ -6,88 +6,278 @@
 {% endblock %}
 
 {% block sd_content %}
-<div class="dashboard-wrapper">
-    <div class="metrics-grid">
-        <div class="metric-card">
-            <h3>Today's Pages</h3>
-            <span class="value">{{ today_total_pages }}</span>
-            <p>{{ today_total_pages_printed }} Actually Printed</p>
-        </div>
-        <div class="metric-card">
-            <h3>Today's Revenue</h3>
-            <span class="value">₹{{ today_grand_total|floatformat:2 }}</span>
-            <p>Platform Share: ₹{{ today_my_share|floatformat:2 }}</p>
-        </div>
-        <div class="metric-card alert">
-            <h3>Settlements Pending</h3>
-            <span class="value">₹{{ to_pay|floatformat:2 }}</span>
-            <p>Owed to Shop Owners</p>
-        </div>
-        <div class="metric-card">
-            <h3>Avg. Order Value</h3>
-            <span class="value">₹{{ aov|floatformat:2 }}</span>
-            <p>Based on {{ all_time_cart_placed.count }} Orders</p>
-        </div>
+<div class="cd-page">
+
+    <!-- ══ Page Header ══ -->
+    <div class="cd-header">
+        <h1 class="cd-title">Dashboard</h1>
+        <p class="cd-subtitle">Creator overview · All figures in ₹</p>
     </div>
 
-    <div class="content-split">
-        <div class="chart-container">
-            <div class="section-header">
-                <h3>Subscription Revenue Trends</h3>
-            </div>
-            <canvas id="revenueChart"></canvas>
+    <!-- ══ Headline Stat Cards ══ -->
+    <div class="cd-stats">
+
+        <div class="cd-stat cd-stat--warn">
+            <span class="cd-stat__label">Settlements Pending</span>
+            <span class="cd-stat__value">₹{{ to_pay|floatformat:2 }}</span>
+            <span class="cd-stat__sub" style="margin-bottom: 12px;">Owed to shop owners</span>
+            
+            <button id="downloadPayoutsBtn" class="cd-btn-download">
+                <i class="fas fa-file-csv"></i> Download Bank CSV
+            </button>
+            <span id="downloadStatus" class="cd-download-status" style="display: none;">
+                Generating sheet...
+            </span>
         </div>
 
-        <div class="side-info">
-            <div class="info-card">
-                <h3>Network Status</h3>
-                <div class="info-row">
-                    <span>Active Hubs:</span>
-                    <strong>{{ active_shops_onboard }} / {{ total_shops_onboard }}</strong>
+        <div class="cd-stat">
+            <span class="cd-stat__label">Today's Revenue</span>
+            <span class="cd-stat__value">₹{{ today_grand_total|floatformat:2 }}</span>
+            <span class="cd-stat__sub">Platform: ₹{{ today_my_share|floatformat:2 }}</span>
+        </div>
+
+        <div class="cd-stat">
+            <span class="cd-stat__label">Avg. Order Value</span>
+            <span class="cd-stat__value">₹{{ aov|floatformat:2 }}</span>
+            <span class="cd-stat__sub">All-time</span>
+        </div>
+
+        <div class="cd-stat">
+            <span class="cd-stat__label">Customers</span>
+            <span class="cd-stat__value">{{ total_users }}</span>
+            <span class="cd-stat__sub">{{ active_shops_onboard }}&thinsp;/&thinsp;{{ total_shops_onboard }} shops active</span>
+        </div>
+
+    </div>
+
+    <!-- ══ Period Breakdown Table ══ -->
+    <section class="cd-card">
+        <h2 class="cd-card__title">Period Breakdown</h2>
+        <div class="cd-overflow-x">
+            <table class="cd-table">
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th>Today</th>
+                        <th>7 Days</th>
+                        <th>30 Days</th>
+                        <th>All Time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Pages -->
+                    <tr>
+                        <td class="cd-table__label">Pages Queued</td>
+                        <td>{{ today_total_pages }}</td>
+                        <td>{{ week_total_pages }}</td>
+                        <td>{{ month_total_pages }}</td>
+                        <td>{{ all_time_total_pages }}</td>
+                    </tr>
+                    <tr>
+                        <td class="cd-table__label">Pages Printed</td>
+                        <td>{{ today_total_pages_printed }}</td>
+                        <td>{{ week_total_pages_printed }}</td>
+                        <td>{{ month_total_pages_printed }}</td>
+                        <td>{{ all_time_total_pages_printed }}</td>
+                    </tr>
+
+                    <!-- Financials (section break) -->
+                    <tr class="cd-table__section-start">
+                        <td class="cd-table__label">Grand Total</td>
+                        <td>₹{{ today_grand_total|floatformat:2 }}</td>
+                        <td>₹{{ weekly_grand_total|floatformat:2 }}</td>
+                        <td>₹{{ month_grand_total|floatformat:2 }}</td>
+                        <td>₹{{ all_grand_total|floatformat:2 }}</td>
+                    </tr>
+                    <tr>
+                        <td class="cd-table__label cd-table__indent">Shop Share</td>
+                        <td>₹{{ today_shop_share|floatformat:2 }}</td>
+                        <td>₹{{ weekly_shop_share|floatformat:2 }}</td>
+                        <td>₹{{ month_shop_share|floatformat:2 }}</td>
+                        <td>₹{{ all_shop_share|floatformat:2 }}</td>
+                    </tr>
+                    <tr>
+                        <td class="cd-table__label cd-table__indent">Platform Share</td>
+                        <td class="cd-accent">₹{{ today_my_share|floatformat:2 }}</td>
+                        <td class="cd-accent">₹{{ weekly_my_share|floatformat:2 }}</td>
+                        <td class="cd-accent">₹{{ month_my_share|floatformat:2 }}</td>
+                        <td class="cd-accent">₹{{ all_my_share|floatformat:2 }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- ══ Bottom Two Columns ══ -->
+    <div class="cd-two-col">
+
+        <!-- Network & Financials -->
+        <section class="cd-card">
+            <h2 class="cd-card__title">Network &amp; Financials</h2>
+            <dl class="cd-kv">
+
+                <div class="cd-kv__row">
+                    <dt>Active shops</dt>
+                    <dd>{{ active_shops_onboard }}</dd>
                 </div>
-                <div class="info-row">
-                    <span>Total Customers:</span>
-                    <strong>{{ total_users }}</strong>
+                <div class="cd-kv__row">
+                    <dt>Total shops onboarded</dt>
+                    <dd>{{ total_shops_onboard }}</dd>
                 </div>
+
+                <!-- Shop activity pill bar -->
+                <div class="cd-kv__bar">
+                    {% if total_shops_onboard %}
+                    {% widthratio active_shops_onboard total_shops_onboard 100 as fill_percentage %}
+                    
+                    <div class="cd-kv__bar-fill"
+                        style="--bar-width: {{ fill_percentage }}%;"></div>
+                    {% endif %}
+                </div>
+
+                <div class="cd-kv__row">
+                    <dt>Total customers</dt>
+                    <dd>{{ total_users }}</dd>
+                </div>
+
+                <div class="cd-kv__sep"></div>
+
+                <div class="cd-kv__row">
+                    <dt>All-time revenue</dt>
+                    <dd>₹{{ all_grand_total|floatformat:2 }}</dd>
+                </div>
+                <div class="cd-kv__row">
+                    <dt>All-time shop share</dt>
+                    <dd>₹{{ all_shop_share|floatformat:2 }}</dd>
+                </div>
+                <div class="cd-kv__row">
+                    <dt>All-time platform share</dt>
+                    <dd class="cd-accent">₹{{ all_my_share|floatformat:2 }}</dd>
+                </div>
+                <div class="cd-kv__row">
+                    <dt>Total subscription revenue</dt>
+                    <dd>₹{{ all_time_subscription_revenue.total|default:0|floatformat:2 }}</dd>
+                </div>
+
+                <div class="cd-kv__sep"></div>
+
+                <div class="cd-kv__row cd-kv__row--warn">
+                    <dt>Pending settlements</dt>
+                    <dd>₹{{ to_pay|floatformat:2 }}</dd>
+                </div>
+
+            </dl>
+        </section>
+
+        <!-- Subscription History -->
+        <section class="cd-card">
+            <h2 class="cd-card__title">Subscription History</h2>
+            <div class="cd-overflow-x cd-overflow-y">
+                <table class="cd-table">
+                    <thead>
+                        <tr>
+                            <th>Billing Cycle</th>
+                            <th>Revenue</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for entry in monthly_subscription_revenue %}
+                        <tr>
+                            <td>{{ entry.month|stringformat:"02d" }}&thinsp;/&thinsp;{{ entry.year }}</td>
+                            <td class="cd-accent">₹{{ entry.total_revenue|floatformat:2 }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="2" class="cd-table__empty">
+                                No subscription revenue recorded yet.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
-        </div>
-    </div>
+        </section>
 
-    <div class="ledger-container">
-        <h3>Historical Subscription Data</h3>
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Billing Cycle</th>
-                    <th>Revenue Collected</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for entry in monthly_subscription_revenue %}
-                <tr>
-                    <td>{{ entry.month }}/{{ entry.year }}</td>
-                    <td>₹{{ entry.total_revenue|floatformat:2 }}</td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="2" class="empty-state">No subscription revenue recorded yet.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</div>
-<div class="content-split">
-    <div class="chart-container">
-        <div class="section-header">
-            <h3>Subscription Revenue Trends</h3>
-        </div>
-        <canvas id="revenueChart"></canvas>
-    </div>
-</div>
+    </div><!-- /.cd-two-col -->
 
-{{ monthly_subscription_revenue|json_script:"sub-revenue-data" }}
+</div><!-- /.cd-page -->
+<script>
+    document.getElementById('downloadPayoutsBtn').addEventListener('click', async function() {
+        const button = this;
+        const statusText = document.getElementById('downloadStatus');
+        
+        // 1. UI/UX State Management
+        button.disabled = true;
+        button.innerText = "Processing...";
+        statusText.style.display = 'inline-block';
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="{% static 'printoapp/creator_dashboard.js' %}"></script>
+        // 2. Fetch the Django CSRF token safely from browser storage
+        const csrfToken = getCookie('csrftoken');
+
+        try {
+            // 3. Fire the secure background POST request to your API route
+            const response = await fetch('/api/payment_data', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ 'requested_at': new Date().toISOString() })
+            });
+
+            // 4. Trap server-side errors or empty responses
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || errorData.error || `HTTP error ${response.status}`);
+            }
+
+            // Catch 200 responses that carry a message dictionary instead of a file stream
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                const jsonData = await response.json();
+                alert(jsonData.message || "No outstanding data found.");
+                return;
+            }
+
+            // 5. Convert stream data into a direct memory Blob download
+            const blob = await response.blob();
+            const downloadUrl = window.URL.createObjectURL(blob);
+            
+            const hiddenLink = document.createElement('a');
+            hiddenLink.href = downloadUrl;
+            hiddenLink.download = `bulk_payout_${new Date().toISOString().split('T')[0]}.csv`;
+            
+            document.body.appendChild(hiddenLink);
+            hiddenLink.click();
+            document.body.removeChild(hiddenLink);
+            
+            window.URL.revokeObjectURL(downloadUrl);
+
+        } catch (error) {
+            console.error('Download routine crashed:', error);
+            alert(`Export Aborted: ${error.message}`);
+        } finally {
+            // 6. Reset UI layout back to interactive baseline state
+            button.disabled = false;
+            button.innerHTML = '<i class="fas fa-file-csv"></i> Download Bank CSV';
+            statusText.style.display = 'none';
+        }
+    });
+
+    // Helper utility function to parse Django CSRF cookies dynamically
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
 {% endblock %}

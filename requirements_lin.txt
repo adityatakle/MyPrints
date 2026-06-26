@@ -11,3 +11,4 @@ cups
 pyinstaller
 razorpay
 reportlab
+pandas

@@ -284,7 +284,7 @@ body {
    We style them here.
 */
 .row-info {
-  display: flex !important;
+  display: flex;
   align-items: center;
   justify-content: center;
   width:100%;
@@ -413,7 +413,7 @@ body {
   width: 24px;
   height: 24px;
   margin-right: 10px;
-  fill: #5c4033; /* Dark brown color for icon */
+  fill: white; /* Dark brown color for icon */
   transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   transform: translateZ(10px);
 }
@@ -422,7 +422,7 @@ body {
 .button-text {
   position: relative;
   z-index: 1;
-  color: #5c3333; /* Dark brown color for text */
+  color: white; /* Dark brown color for text */
   font-family: Arial, sans-serif;
   font-weight: bold;
   font-size: 26px;
@@ -1267,4 +1267,112 @@ body {
   100% {
     opacity: 1;
   }
+}
+
+.cd-stepper-pill {
+    display: inline-flex;
+    align-items: center;
+    /* CHANGE: Matches the soft gray background of unselected buttons */
+    background: #f1f5f9; 
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    border-radius: 20px; /* Fully rounded pill shape */
+    padding: 2px;
+    height: 38px;
+}
+
+.stepper-action {
+    background: transparent;
+    border: none;
+    /* CHANGE: Uses the vibrant primary brand blue for icons/text */
+    color: #2563eb; 
+    width: 36px;
+    height: 100%;
+    font-size: 1.3rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background 0.2s;
+}
+
+.stepper-action:active {
+    /* CHANGE: Subtle blue background overlay on mobile tap */
+    background: rgba(37, 99, 235, 0.1); 
+}
+
+.stepper-value {
+    min-width: 32px;
+    text-align: center;
+    font-weight: 700;
+    /* CHANGE: Dark slate color to match your active text styles */
+    color: #1e293b; 
+    font-size: 1rem;
+    user-select: none;
+}
+
+#front {
+    margin-left: 5px;
+}
+
+#back {
+    margin-right: 5px;
+}
+
+/* Container adjustments */
+.page-range-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+}
+
+.cd-range-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #2563eb; 
+    border: none;
+    border-radius: 12px;
+    padding: 4px 8px;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.15);
+}
+
+.range-field {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1; /* 💡 FIX 1: Ensures From and To share space exactly 50/50 on small screens */
+}
+
+.range-label {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.8); 
+    text-transform: uppercase;
+}
+
+.range-input {
+    width: 55px;
+    height: 32px;
+    background: rgba(255, 255, 255, 0.2) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 6px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 0.95rem;
+    padding: 0 4px; /* 💡 FIX 2: Added subtle internal padding to prevent clipping */
+    
+    /* 💡 FIX 3: Fully strip native browser counter buttons everywhere */
+    -webkit-appearance: none !important;
+    -moz-appearance: textfield !important; /* Forces Firefox to treat it like a clean text entry */
+    appearance: none !important;
+}
+
+/* Hide native clunky up/down micro-arrows for WebKit engines (Chrome/Safari/Opera) */
+.range-input::-webkit-outer-spin-button,
+.range-input::-webkit-inner-spin-button {
+    -webkit-appearance: none !important;
+    margin: 0;
 }

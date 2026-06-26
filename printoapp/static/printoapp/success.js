@@ -38,7 +38,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // STOP ALL POLLING
                 clearInterval(pollingInterval);
-                console.log("Polling stopped: Journey Complete.");
             }
         })
         .catch(err => console.error("Status Sync Error:", err));

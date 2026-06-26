@@ -49,7 +49,6 @@ def get_presigned_preview_url(filename, expiration=300):
             },
             ExpiresIn=expiration
         )
-        print("DEBUG PRESIGNED URL:", url)
         return url
     except Exception as e:
         print(f"Link generation failed: {e}")
