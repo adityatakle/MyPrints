@@ -1376,3 +1376,36 @@ body {
     -webkit-appearance: none !important;
     margin: 0;
 }
+
+/* --- Blue Document Privacy Footer --- */
+
+.upload-security-footer-blue {
+    width: 100%;
+    margin-top: auto; /* Clean separation pushing it down to the page bottom */
+    padding: 16px 20px;
+    background-color: #f0f7ff; /* Soft tint matching your branding background accent */
+    border-top: 1px solid rgba(0, 123, 255, 0.08); /* Minimal blue border accent line */
+    box-sizing: border-box;
+}
+
+.security-footer-content-blue {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    color: black; /* Deep navy-blue for excellent typography readability */
+    text-align: center;
+    max-width: 520px;
+    margin: 0 auto;
+    line-height: 1.5;
+}
+
+/* Vector path icon color control overrides */
+.security-footer-content-blue stroke,
+.security-footer-content-blue svg {
+    flex-shrink: 0;
+    color: #3b82f6; /* Energetic primary blue accent tone */
+}

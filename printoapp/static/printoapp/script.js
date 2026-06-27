@@ -4,37 +4,133 @@ document.addEventListener('DOMContentLoaded', function() {
     if (heading) {
         get_or_create_user();
 
-        getPreciseLocation((location) => {
-            const shops = JSON.parse(document.getElementById('shops-data').textContent);
-            const shopsList = document.getElementById('shops-list');
+        const shops = JSON.parse(document.getElementById('shops-data').textContent);
+        const shopsList = document.getElementById('shops-list');
+        const filterWrapper = document.getElementById('filter-wrapper');
+        const cityFilter = document.getElementById('city-filter');
 
-            // Calculate distances safely
-            for (let shop of shops) {
-                if (location === 'error' || !shop.latitude) {
-                    shop.distance = Infinity;
-                } else {
-                    shop.distance = calculate_distance(location[0], location[1], shop.latitude, shop.longitude);
-                }
+        // Populate unique cities into dropdown filter
+        const uniqueCities = [...new Set(shops.map(shop => shop.city))];
+        uniqueCities.forEach(city => {
+            const option = document.createElement('option');
+            option.value = city;
+            option.textContent = city;
+            cityFilter.appendChild(option);
+        });
+
+        // Trigger Geolocation Verification
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const userLat = position.coords.latitude;
+                    const userLng = position.coords.longitude;
+                    
+                    // Filter shops within 15km using Haversine
+                    let nearbyShops = shops.filter(shop => {
+                        if (!shop.latitude || !shop.longitude) return false;
+                        shop.distance = calculate_real_distance(userLat, userLng, shop.latitude, shop.longitude);
+                        return shop.distance <= 15;
+                    });
+
+                    // Sort nearby matches by proximity
+                    nearbyShops.sort((a, b) => a.distance - b.distance);
+
+                    if (nearbyShops.length > 0) {
+                        renderShopsList(nearbyShops);
+                    } else {
+                        // Fallback if permission allowed but nothing within 15km
+                        shopsList.innerHTML = `<p style="padding:0 10px; color:var(--text-muted);">No print shops found within 15km of your location. Please select your city below.</p>`;
+                        showCityFilter(shops);
+                    }
+                },
+                (error) => {
+                    // Fallback if permission explicitly denied or timed out
+                    console.warn("Location access denied or unavailable.");
+                    shopsList.innerHTML = `<p style="padding:0 10px; color:var(--text-muted);">Location access disabled. Select your city to find print shops.</p>`;
+                    showCityFilter(shops);
+                },
+                { enableHighAccuracy: true, timeout: 6000 }
+            );
+        } else {
+            showCityFilter(shops);
+        }
+
+        // Helper setup to reveal dropdown selection UI
+        function showCityFilter(allShops) {
+        const filterWrapper = document.getElementById('filter-wrapper');
+        const dropdown = document.querySelector('.custom-dropdown');
+        const triggerBtn = document.getElementById('dropdown-trigger-btn');
+        const selectedText = document.getElementById('selected-city-text');
+        const customList = document.getElementById('custom-city-list');
+
+        filterWrapper.style.display = 'block';
+        renderShopsList(allShops);
+
+        // Populate unique cities into the custom menu
+        const uniqueCities = [...new Set(allShops.map(shop => shop.city))];
+        uniqueCities.forEach(city => {
+            const li = document.createElement('li');
+            li.className = 'dropdown-item';
+            li.setAttribute('data-value', city);
+            li.textContent = city;
+            customList.appendChild(li);
+        });
+
+        // Toggle menu dropdown open/close
+        triggerBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            dropdown.classList.toggle('is-open');
+        });
+
+        // Handle Item Selection
+        customList.addEventListener('click', function(e) {
+            const clickedItem = e.target.closest('.dropdown-item');
+            if (!clickedItem) return;
+
+            // Visual selection updates
+            customList.querySelectorAll('.dropdown-item').forEach(item => item.classList.remove('selected'));
+            clickedItem.classList.add('selected');
+            selectedText.textContent = clickedItem.textContent;
+            dropdown.classList.remove('is-open');
+
+            // Filter rendering execution
+            const selectedCity = clickedItem.getAttribute('data-value');
+            if (selectedCity === 'all') {
+                renderShopsList(allShops);
+            } else {
+                const filtered = allShops.filter(shop => shop.city === selectedCity);
+                renderShopsList(filtered);
             }
+        });
 
-            // Sort by distance
-            shops.sort((a, b) => a.distance - b.distance);
+        // Close menu when clicking anywhere else on screen
+        document.addEventListener('click', function() {
+            dropdown.classList.remove('is-open');
+        });
+    }
 
+        // Standardized card layout rendering loop engine
+        function renderShopsList(targetShops) {
+            if (targetShops.length === 0) {
+                shopsList.innerHTML = `<p style="padding:20px; text-align:center;">No shops available here.</p>`;
+                return;
+            }
+            
             let finalHTML = "";
-            for (let shop of shops) {
+            for (let shop of targetShops) {
                 let isClosed = !shop.is_open;
                 let btn_type = isClosed ? 'disabled' : '';
                 let status = isClosed ? 'closed' : 'open';
-                let status_info = isClosed ? 'Closed now' : 'Open now';
+                let distanceText = shop.distance && shop.distance !== Infinity ? ` • ${shop.distance.toFixed(1)} km away` : '';
 
                 finalHTML += `
                 <div class="shops_container">
                     <div class="shop-header">
-                            <span class="status-badge status-${status}">${isClosed ? 'Closed' : 'Open Now'}</span>
-                            <a href="https://maps.google.com/?q=${shop.latitude},${shop.longitude}" target="_blank">
+                        <span class="status-badge status-${status}">${isClosed ? 'Closed' : 'Open Now'}${distanceText}</span>
+                        <a href="https://maps.google.com/?q=${shop.latitude},${shop.longitude}" target="_blank">
                             <div class="location_pin"></div>
                         </a>
-                        </div>
+                    </div>
                     <button type="submit" ${btn_type} name="shop_id" value="${shop.id}" class="shops_submit">
                         <span class="shop-name">${shop.name}</span>
                         <div class="shop-meta">
@@ -42,11 +138,10 @@ document.addEventListener('DOMContentLoaded', function() {
                             ${shop.city}, ${shop.state}
                         </div>
                     </button>
-                    
                 </div>`;
             }
             shopsList.innerHTML = finalHTML;
-        });
+        }
     }
     if (title){
         const toggleBtn = document.getElementById('catalogueToggle');
@@ -333,6 +428,17 @@ function calculate_distance(user_lat, user_long, shop_lat, shop_long){
     return distance;
 };
 
+function calculate_real_distance(lat1, lon1, lat2, lon2) {
+    const R = 6371; // Earth's radius in kilometers
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+        Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+        Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c; 
+}
 
 // maps link with route https://www.google.com/maps/dir/?api=1&destination=${lat},${long}&travelmode=walking
 // maps link of a place https://www.google.com/maps/search/?api=1&query=${lat},${long}

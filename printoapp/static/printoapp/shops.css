@@ -234,3 +234,65 @@
         font-size: 25px;
     }
 }
+
+/* --- Premium Custom Dropdown UI --- */
+
+.filter-container {
+    display: none; /* Controlled by JS fallback */
+    max-width: 500px;
+    width: 100%;
+    margin: 24px auto 8px auto;
+    padding: 0 20px;
+    box-sizing: border-box;
+}
+
+.select-wrapper {
+    position: relative;
+    width: 100%;
+    display: block;
+}
+
+.city-select {
+    width: 100%;
+    padding: 14px 40px 14px 16px; /* Extra right padding so text never overlaps the arrow */
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text-main);
+    background-color: var(--card-bg);
+    border: 1.5px solid rgba(0, 0, 0, 0.08); /* Softened border matching card aesthetic */
+    border-radius: 14px; /* Matches card corner curves */
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    
+    /* 🔴 CRITICAL: Removes default operating system styling & arrow completely */
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Smooth Focus/Active State */
+.city-select:focus {
+    outline: none;
+    border-color: var(--primary); /* Snaps to primary blue on select */
+    box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.15);
+}
+
+/* Position and color the custom chevron arrow perfectly inside the element */
+.select-icon {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    pointer-events: none; /* Ensures clicking the arrow still opens the dropdown */
+    transition: transform 0.2s ease;
+}
+
+/* Optional: Slight micro-interaction rotation when user opens the control elements */
+.city-select:focus + .select-icon {
+    transform: translateY(-50%) rotate(180deg);
+    color: var(--primary);
+}
