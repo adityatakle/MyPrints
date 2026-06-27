@@ -21,3 +21,4 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path("", include("printoapp.urls"))
 ]
+handler404 = 'printoapp.views.custom_404_view'

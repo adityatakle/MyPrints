@@ -1,0 +1,308 @@
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  --paper:   #F5F1EB;
+  --ink:     #1C1917;
+  --muted:   #78716C;
+  --red:     #E63946;
+  --cyan:    rgba(0, 183, 235, 0.72);
+  --magenta: rgba(236, 0, 140, 0.72);
+  --yellow:  rgba(255, 213, 0, 0.72);
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'DM Sans', system-ui, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Halftone dot texture */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(28,25,23,0.075) 1px, transparent 1px);
+  background-size: 22px 22px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Corner crop marks ────────────────────────── */
+.crop-marks {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.cm {
+  position: absolute;
+  width: 36px;
+  height: 36px;
+}
+
+.cm--tl { top: 20px;    left: 20px; }
+.cm--tr { top: 20px;    right: 20px;   transform: scaleX(-1); }
+.cm--bl { bottom: 20px; left: 20px;   transform: scaleY(-1); }
+.cm--br { bottom: 20px; right: 20px;  transform: scale(-1, -1); }
+
+.cm::before,
+.cm::after {
+  content: '';
+  position: absolute;
+  background: var(--muted);
+  opacity: 0.28;
+}
+
+/* vertical arm */
+.cm::before { top: 0;    left: 16px; width: 1px;  height: 12px; }
+/* horizontal arm */
+.cm::after  { top: 16px; left: 0;    height: 1px; width: 12px; }
+
+/* Registration circle dot in corner */
+.cm-dot {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 12px;
+  height: 12px;
+}
+
+.cm-dot::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--muted);
+  border-radius: 50%;
+  opacity: 0.28;
+}
+
+/* ── Top brand label ───────────────────────────── */
+.brand-mark {
+  position: fixed;
+  top: 26px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--muted);
+  opacity: 0.55;
+  white-space: nowrap;
+  z-index: 2;
+}
+
+/* ── Main content ──────────────────────────────── */
+.page {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 2rem 2.5rem;
+  max-width: 580px;
+  width: 100%;
+}
+
+/* ── 404 with CMYK misregistration ─────────────── */
+.error-code {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-weight: 400;
+  font-size: clamp(7.5rem, 23vw, 17rem);
+  line-height: 0.82;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+  user-select: none;
+  margin-bottom: 2.25rem;
+  text-shadow:
+    -5px -3px 0 var(--cyan),
+     5px -1px 0 var(--magenta),
+     0    6px 0 var(--yellow);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .error-code {
+    animation: misreg 9s ease-in-out infinite;
+  }
+
+  @keyframes misreg {
+    0%, 100% {
+      text-shadow:
+        -5px -3px 0 var(--cyan),
+         5px -1px 0 var(--magenta),
+         0    6px 0 var(--yellow);
+    }
+    28% {
+      text-shadow:
+        -7px -1px 0 var(--cyan),
+         6px  3px 0 var(--magenta),
+        -2px  8px 0 var(--yellow);
+    }
+    55% {
+      text-shadow:
+        -4px -6px 0 var(--cyan),
+         8px -2px 0 var(--magenta),
+         1px  5px 0 var(--yellow);
+    }
+    78% {
+      text-shadow:
+        -6px -2px 0 var(--cyan),
+         4px  2px 0 var(--magenta),
+        -1px  9px 0 var(--yellow);
+    }
+  }
+}
+
+/* ── "Print error" divider ─────────────────────── */
+.error-tag {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 260px;
+  margin-bottom: 1.5rem;
+}
+
+.error-tag::before,
+.error-tag::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--ink);
+  opacity: 0.14;
+}
+
+.error-tag span {
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+/* ── Copy ──────────────────────────────────────── */
+.headline {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-style: italic;
+  font-size: clamp(1.3rem, 3.5vw, 1.85rem);
+  font-weight: 400;
+  line-height: 1.2;
+  color: var(--ink);
+  margin-bottom: 0.75rem;
+}
+
+.subtext {
+  font-size: 0.975rem;
+  font-weight: 400;
+  color: var(--muted);
+  line-height: 1.65;
+  max-width: 340px;
+  margin-bottom: 2.5rem;
+}
+
+/* ── Buttons ───────────────────────────────────── */
+.actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.btn {
+  display: inline-block;
+  padding: 0.7rem 1.8rem;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  border: none;
+  transition:
+    background   0.18s ease,
+    color        0.18s ease,
+    border-color 0.18s ease;
+}
+
+.btn-primary {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.btn-primary:hover,
+.btn-primary:focus-visible {
+  background: var(--red);
+  outline: none;
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--ink);
+  border: 1.5px solid var(--ink);
+}
+
+.btn-secondary:hover,
+.btn-secondary:focus-visible {
+  background: var(--ink);
+  color: var(--paper);
+  outline: none;
+}
+
+/* ── CMYK test strip ───────────────────────────── */
+.cmyk-strip {
+  position: fixed;
+  bottom: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  opacity: 0.32;
+  z-index: 2;
+}
+
+.dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.dot-c { background: #00B7EB; }
+.dot-m { background: #EC008C; }
+.dot-y { background: #FFD500; }
+.dot-k { background: #1C1917; }
+
+/* ── Responsive ────────────────────────────────── */
+@media (max-width: 420px) {
+  .cm {
+    display: none;
+  }
+
+  .actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .btn {
+    text-align: center;
+  }
+}

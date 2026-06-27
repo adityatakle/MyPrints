@@ -1,0 +1,53 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>404 — Page Not Found | myprints.in</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+    <link href="{% static 'printoapp/404.css' %}" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Top brand label -->
+  <span class="brand-mark" aria-hidden="true">myprints.in</span>
+
+  <!-- Corner crop + registration marks -->
+  <div class="crop-marks" aria-hidden="true">
+    <div class="cm cm--tl"><div class="cm-dot"></div></div>
+    <div class="cm cm--tr"><div class="cm-dot"></div></div>
+    <div class="cm cm--bl"><div class="cm-dot"></div></div>
+    <div class="cm cm--br"><div class="cm-dot"></div></div>
+  </div>
+
+  <main class="page">
+    <h1 class="error-code" aria-label="Error 404">404</h1>
+
+    <div class="error-tag" aria-hidden="true">
+      <span>Print error</span>
+    </div>
+
+    <p class="headline">This page didn't make the cut.</p>
+    <p class="subtext">
+      Looks like this link got trimmed somewhere along the way.
+      Double-check the URL, or head back to safety.
+    </p>
+
+    <div class="actions">
+      <a href="/" class="btn btn-primary">Back to home</a>
+    </div>
+  </main>
+
+  <!-- CMYK test strip (bottom) -->
+  <div class="cmyk-strip" aria-hidden="true">
+    <div class="dot dot-c"></div>
+    <div class="dot dot-m"></div>
+    <div class="dot dot-y"></div>
+    <div class="dot dot-k"></div>
+  </div>
+
+</body>
+</html>

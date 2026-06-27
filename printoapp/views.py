@@ -40,6 +40,8 @@ def index(request):
         return redirect('index')
     return render(request,"printoapp/index.html")
 
+def custom_404_view(request, exception=None):
+    return render(request, 'printoapp/404.html', status=404)
 
 def creator_login(request):
     if request.method == "POST":
