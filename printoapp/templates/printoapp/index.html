@@ -26,10 +26,15 @@
     <li><a href="#feedback">Give Feedback</a></li>
     <li><a href="#contact">For Shops</a></li>
   </ul>
-
+  {% if saved_shop %}
+  <a href="{% url 'upload' %}" class="mp-nav-pill" id="nav-order-btn">
+    Upload! →
+  </a>
+  {% else %}
   <a href="{% url 'shops' %}" class="mp-nav-pill" id="nav-order-btn">
     Select Shop! →
   </a>
+  {% endif %}
 </nav>
 
 <!-- ══════════════════════════════════════════════
@@ -41,11 +46,6 @@
   {# ── Left / text column ── #}
   <div class="mp-hero-text">
 
-    <div class="mp-hero-badge">
-      <span class="mp-badge-dot"></span>
-      Live on campus
-    </div>
-
     <h1>Print on the go.<br><em>Collect in seconds.</em></h1>
 
     <p class="mp-hero-sub">
@@ -53,10 +53,12 @@
       <strong>directly to the shop</strong>, and skip the queue.<br>
       <strong>Secure. Private. HassleFree</strong>
     </p>
+    {% if saved_shop %}
+        <a href="{% url 'upload' %}" class="mp-btn-hero" id="hero-order-btn"> Upload! →</a>
+    {% else %}
+        <a href="{% url 'shops' %}" class="mp-btn-hero" id="hero-order-btn"> Select Shop! → </a>
+    {% endif %}
 
-    <a href="{% url 'shops' %}" class="mp-btn-hero" id="hero-order-btn">
-      Select Shop &nbsp;→
-    </a>
 <!--
     <div class="mp-hero-trust">
       <div class="mp-avatars">
@@ -322,7 +324,7 @@
   <div class="mp-footer-bottom">
     <span>© 2026 MyPrints. All rights reserved.</span>
     <span class="mp-footer-bottom-right">
-      Made with ❤️ in India &nbsp;🇮🇳
+        Made with ❤️ in India &nbsp;🇮🇳
     </span>
   </div>
 
@@ -332,8 +334,15 @@
      STICKY MOBILE CTA
      (hidden on desktop via CSS, slides up on scroll on mobile)
 ════════════════════════════════════════════════ -->
-<div class="mp-sticky-cta hidden" id="mpStickyCta">
-  <a href="{% url 'shops' %}" id="sticky-order-btn">Select Shop! &nbsp;→</a>
-</div>
+
+  {% if saved_shop %}
+    <div class="mp-sticky-cta hidden" id="mpStickyCta">
+        <a href="{% url 'upload' %}" id="sticky-order-btn">Uplaod! &nbsp;→</a>
+    </div>
+  {% else %}
+    <div class="mp-sticky-cta hidden" id="mpStickyCta">
+        <a href="{% url 'shops' %}" id="sticky-order-btn">Select Shop! &nbsp;→</a>
+    </div>
+  {% endif %}
 
 {% endblock %}

@@ -31,6 +31,7 @@ urlpatterns = [
     path('api/create_preview_link/<str:file_id>', views.create_preview_link, name='create_preview_link'),
     path('api/shop_handshake', views.shop_handshake, name='shop_handshake'),
     path('api/payment_data', views.payment_data, name='payment_data'),
+    path('api/save_shop', views.save_shop, name='save_shop'),
 
     #creator
     path('creator_login', views.creator_login, name='creator_login'),

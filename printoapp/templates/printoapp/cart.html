@@ -167,7 +167,7 @@
                     <line x1="12" y1="5" x2="12" y2="19"></line>
                     <line x1="5" y1="12" x2="19" y2="12"></line>
                 </svg>
-                Add more files to print
+                Add more files
             </a>
         </div>
 
@@ -176,9 +176,14 @@
             <span>SHOP INFO</span>
           </div>
           <div class="ct-summary-divider"></div>
-          <div class="ct-summary-row">
-            <span>{{shop.name}}, <br>{{shop.location}}, <br>{{shop.landmark}}, <br>{{shop.city}}, <br>{{shop.state}}</span>
-          </div>
+            <div class="ct-summary-row">
+                <span>{{shop.name}}, <br>{{shop.location}}, <br>{{shop.landmark}}, <br>{{shop.city}}, <br>{{shop.state}}</span>
+            </div>
+            {% if saved_shop_id != shop.id or not saved_shop_id %}
+            <div class="ct-summary-row" id="default-div">
+                    <button type='submit' id='default-btn' name="default">Set Default.</button>
+            </div>
+            {% endif %}
         </div>
         <div class="ct-queue-card">
             <div class="ct-queue-header">
@@ -206,7 +211,7 @@
 
             <div class="ct-priority-content">
                 <h3 class="ct-priority-title">Shorten Queue</h3>
-                <p class="ct-priority-text">Jump to the front of the shop's print list for faster pickup.</p>
+                <p class="ct-priority-text">Jump to the front of the shop's queue for faster pickup.</p>
             </div>
 
             <div class="ct-priority-action">
@@ -349,13 +354,7 @@
               The iframe is stretched to fill this box absolutely.
             -->
             <div id="previewPaperWrap" class="pdf-paper-wrap">
-                <iframe
-                    id="pdfPreviewIframe"
-                    src=""
-                    class="pdf-paper-iframe"
-                    title="Document preview"
-                    allowfullscreen>
-                </iframe>
+                <iframe id="pdfPreviewIframe" src="" class="pdf-paper-iframe" title="Document preview" allowfullscreen></iframe>
             </div>
         </div>
 

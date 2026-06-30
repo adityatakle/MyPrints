@@ -32,6 +32,9 @@ import pandas as pd
 razorpay_client = razorpay.Client(auth=(settings.RAZORPAY_KEY_TEST, settings.RAZORPAY_SECRET_TEST))
 
 def index(request):
+    saved_shop = request.session.get('saved_shop_id')
+    if saved_shop:
+        return render(request,"printoapp/index.html", {'saved_shop':saved_shop})    
     if request.method == "POST":
         name = request.POST.get('name')
         message = request.POST.get('message')
@@ -526,8 +529,22 @@ def shops(request):
 
 
 def upload(request):
+    now = timezone.localtime()
     user_id = request.session.get('user_id')
     shop_id = request.session.get('shop_id')
+    if request.session.get('saved_shop_id'):
+        request.session['shop_id'] = str(request.session.get('saved_shop_id'))
+        current_time = now.time()
+        current_weekday = str(now.strftime("%A"))
+        shop_id = request.session.get('saved_shop_id')
+        shop = Shop_info.objects.get(id=shop_id)
+        timing = Shop_timing.objects.filter(shop=shop, weekday = current_weekday).first()
+        if timing:
+            if not (timing.start_time <= current_time <= timing.end_time):
+                return redirect('shops')
+        else:
+            return redirect('shops')  
+
     if not user_id or not shop_id:
         return redirect('shops')
     try:
@@ -880,6 +897,9 @@ def cart(request):
     cart_items = Cart_items.objects.filter(cart=cart)
     if request.method == "POST":
         # Wrap modifications inside a transaction block to maintain absolute database integrity
+        if "default" in request.POST:
+            request.session['saved_shop_id'] = shop_id
+            return redirect('cart')
         with transaction.atomic():
             if "subtract" in request.POST:
                 item = get_object_or_404(Cart_items, id=request.POST.get("subtract"), cart=cart)
@@ -957,7 +977,7 @@ def cart(request):
         needed_pages = 11 - total_data.total_pages
     is_round_down = round_up < 0
     abs_round_up = abs(round_up)
-    
+    saved_shop_id = int(request.session.get('saved_shop_id'))
     return render(request, "printoapp/cart.html", {
         "cart": cart,
         "cart_items": cart_items,
@@ -973,6 +993,7 @@ def cart(request):
         'is_round_down': is_round_down,
         "total_data": total_data,
         "total_amount": grand_total,
+        "saved_shop_id":saved_shop_id,
         "shop": Shop_info.objects.filter(id=shop_id).first()
     })
 
@@ -1611,6 +1632,30 @@ def shop_handshake(request):
                 page_types.append(item.page_type)
         return JsonResponse({'page_types':page_types, 'is_b2b':is_b2b, 'is_color':is_color}, status=200)
     return JsonResponse({'error': 'Method not allowed'}, status=405)
+'''
+def refund(request):
+
+    carts = Cart.objects.filter(is_paid=True, is_printed=False)
+    for cart in carts:
+        try:
+            refund_details = razorpay_client.payment.refund(cart.payment_id,{
+                "speed": "optimum",
+                "notes": {
+                    "payment_id": cart.payment_id
+                }})
+        except Exception as e:
+            print(f'Failure: {e}')
+        if refund_details['error']:
+            pass
+        else:
+            Refund.objects.create(
+                refund_id=refund_details['id']
+            )
+    pass
+'''
+def save_shop(request):
+    if request.method == 'POST':
+        request.session['saved_shop'] = request.POST.get('saved_shop_id')
 
 @login_required
 def payment_data(request):

@@ -384,7 +384,6 @@ body.ct-body, body {
 .ct-summary-row {
   display: flex;
   justify-content: space-between;
-  align-items: center;
   font-size: 0.88rem;
   color: var(--mid);
   padding: 4px 0;
@@ -1152,4 +1151,45 @@ body.ct-body, body {
 
 .ct-add-more-link:active {
     transform: scale(0.98);
+}
+
+#default-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-size: 0.9rem;
+  font-weight: bold;
+  padding: 7px 11px;
+  border-radius: 12px; /* Smooth card-matching corner radii */
+  color: #ffffff;
+  
+  /* Modern clean gradient (Soft Blue/Purple to Sleek Indigo) */
+  background-image: linear-gradient(135deg, #6366f1, #4f46e5);
+  border: none;
+  
+  /* Subtle elevation drop shadow instead of harsh outlines */
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease;
+}
+
+/* Smooth Hover & Focus States */
+#default-btn:hover,
+#default-btn:focus {
+  outline: none;
+  transform: translateY(-2px); /* Gentle float effect up */
+  box-shadow: 0 6px 16px rgba(79, 70, 229, 0.35);
+}
+
+/* Active Press State */
+#default-btn:active {
+  transform: translateY(0); /* Snaps cleanly back down on tap */
+  box-shadow: 0 2px 6px rgba(79, 70, 229, 0.2);
+}
+
+#default-div{
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
 }
