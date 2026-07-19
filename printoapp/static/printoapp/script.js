@@ -57,57 +57,57 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Helper setup to reveal dropdown selection UI
         function showCityFilter(allShops) {
-        const filterWrapper = document.getElementById('filter-wrapper');
-        const dropdown = document.querySelector('.custom-dropdown');
-        const triggerBtn = document.getElementById('dropdown-trigger-btn');
-        const selectedText = document.getElementById('selected-city-text');
-        const customList = document.getElementById('custom-city-list');
+            const filterWrapper = document.getElementById('filter-wrapper');
+            const dropdown = document.querySelector('.custom-dropdown');
+            const triggerBtn = document.getElementById('dropdown-trigger-btn');
+            const selectedText = document.getElementById('selected-city-text');
+            const customList = document.getElementById('custom-city-list');
 
-        filterWrapper.style.display = 'block';
-        renderShopsList(allShops);
+            filterWrapper.style.display = 'block';
+            renderShopsList(allShops);
 
-        // Populate unique cities into the custom menu
-        const uniqueCities = [...new Set(allShops.map(shop => shop.city))];
-        uniqueCities.forEach(city => {
-            const li = document.createElement('li');
-            li.className = 'dropdown-item';
-            li.setAttribute('data-value', city);
-            li.textContent = city;
-            customList.appendChild(li);
-        });
+            // Populate unique cities into the custom menu
+            const uniqueCities = [...new Set(allShops.map(shop => shop.city))];
+            uniqueCities.forEach(city => {
+                const li = document.createElement('li');
+                li.className = 'dropdown-item';
+                li.setAttribute('data-value', city);
+                li.textContent = city;
+                customList.appendChild(li);
+            });
 
-        // Toggle menu dropdown open/close
-        triggerBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            dropdown.classList.toggle('is-open');
-        });
+            // Toggle menu dropdown open/close
+            triggerBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                dropdown.classList.toggle('is-open');
+            });
 
-        // Handle Item Selection
-        customList.addEventListener('click', function(e) {
-            const clickedItem = e.target.closest('.dropdown-item');
-            if (!clickedItem) return;
+            // Handle Item Selection
+            customList.addEventListener('click', function(e) {
+                const clickedItem = e.target.closest('.dropdown-item');
+                if (!clickedItem) return;
 
-            // Visual selection updates
-            customList.querySelectorAll('.dropdown-item').forEach(item => item.classList.remove('selected'));
-            clickedItem.classList.add('selected');
-            selectedText.textContent = clickedItem.textContent;
-            dropdown.classList.remove('is-open');
+                // Visual selection updates
+                customList.querySelectorAll('.dropdown-item').forEach(item => item.classList.remove('selected'));
+                clickedItem.classList.add('selected');
+                selectedText.textContent = clickedItem.textContent;
+                dropdown.classList.remove('is-open');
 
-            // Filter rendering execution
-            const selectedCity = clickedItem.getAttribute('data-value');
-            if (selectedCity === 'all') {
-                renderShopsList(allShops);
-            } else {
-                const filtered = allShops.filter(shop => shop.city === selectedCity);
-                renderShopsList(filtered);
-            }
-        });
+                // Filter rendering execution
+                const selectedCity = clickedItem.getAttribute('data-value');
+                if (selectedCity === 'all') {
+                    renderShopsList(allShops);
+                } else {
+                    const filtered = allShops.filter(shop => shop.city === selectedCity);
+                    renderShopsList(filtered);
+                }
+            });
 
-        // Close menu when clicking anywhere else on screen
-        document.addEventListener('click', function() {
-            dropdown.classList.remove('is-open');
-        });
-    }
+            // Close menu when clicking anywhere else on screen
+            document.addEventListener('click', function() {
+                dropdown.classList.remove('is-open');
+            });
+        }
 
         // Standardized card layout rendering loop engine
         function renderShopsList(targetShops) {
@@ -147,6 +147,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const toggleBtn = document.getElementById('catalogueToggle');
         const contentPanel = document.getElementById('catalogueContent');
         let pdf_pages;
+        let activePdfInstance = null; // Reference pointer to active document
+        
         if (toggleBtn && contentPanel) {
             toggleBtn.addEventListener('click', function() {
                 const chevron = this.querySelector('.up-cat-chevron');
@@ -207,12 +209,12 @@ document.addEventListener('DOMContentLoaded', function() {
                                 </div>`;
 
                             // Pass the verified page count down safely
-                            display_info(file_name, result, keys[0], totalPages);
+                            display_info(file_name, result, keys[0], totalPages, activePdfInstance);
 
                             if (keys.length > 1) {
                                 pageTypeContainer.addEventListener('change', function(e) {
                                     if (e.target.name === 'page_type') {
-                                        display_info(file_name, result, e.target.value, totalPages);
+                                        display_info(file_name, result, e.target.value, totalPages, activePdfInstance);
                                     }
                                 });
                             }
@@ -227,17 +229,20 @@ document.addEventListener('DOMContentLoaded', function() {
                         const typedarray = new Uint8Array(this.result);
                         pdfjsLib.getDocument(typedarray).promise.then(function(pdf) {
                             pdf_pages = pdf.numPages;
+                            activePdfInstance = pdf; // Save PDF instance reference globally inside file scope
                             
                             // Execute layout only after promise resolves
                             loadShopItemsAndRender(pdf_pages);
                         }).catch(function(err) {
                             console.error("PDF parsing failed:", err);
+                            activePdfInstance = null;
                             loadShopItemsAndRender(1); // Error fallback
                         });
                     };
                     reader.readAsArrayBuffer(file);
                 } else {
                     // Images, text documents, docx fallbacks default cleanly to 1 page
+                    activePdfInstance = null;
                     loadShopItemsAndRender(1);
                 }
             }
@@ -275,7 +280,7 @@ async function get_or_create_user(){
     }
 }
 
-function display_info(file_name,result, selected_type, pdf_pages) {
+function display_info(file_name, result, selected_type, pdf_pages, activePdfInstance) {
     // 1. Select the container
     let itemInfoContainer = document.querySelector('.item-info');
     itemInfoContainer.style.display='flex';
@@ -319,12 +324,22 @@ function display_info(file_name,result, selected_type, pdf_pages) {
     is_b2b.forEach((val, index) => {
         let text = val ? "Back to Back" : "Single Side";
         let checked = index === 0 ? "checked" : "";
-        b2b_options += `
-            <label class="radio">
-                <input ${checked} name="is_b2b" value="${val}" type="radio" />
-                <span class="name">${text}</span>
-            </label>`;
-    });    
+        
+        // Add id="b2bRadioLabel" directly onto the Back to Back label tag element
+        if (val) {
+            b2b_options += `
+                <label class="radio" id="b2bRadioLabel">
+                    <input ${checked} name="is_b2b" value="${val}" type="radio" />
+                    <span class="name">${text}</span>
+                </label>`;
+        } else {
+            b2b_options += `
+                <label class="radio">
+                    <input ${checked} name="is_b2b" value="${val}" type="radio" />
+                    <span class="name">${text}</span>
+                </label>`;
+        }
+    });
 
     // 4. Inject everything at once using innerHTML
     // This is faster and cleaner than 3 separate appends
@@ -339,6 +354,49 @@ function display_info(file_name,result, selected_type, pdf_pages) {
             <span>Print Side:</span><br>
             <div class="radio-inputs">
                 ${b2b_options}
+            </div>
+        </div>
+        <div class="row-info" style="display: flex; flex-direction: column; align-items: stretch; gap: 8px; width: 100%;">
+            <div style="display: flex; justify-content: center; gap:1rem; align-items: center; width: 100%;">
+                <span>Page Orientation:</span>
+                <div class="radio-inputs">
+                    <label class="radio">
+                        <input checked name="is_portrait" value="true" type="radio"/>
+                        <span class="name"> Portrait </span>
+                    </label>
+                    <label class="radio">
+                        <input name="is_portrait" value="false" type="radio" />
+                        <span class="name"> Landscape </span>
+                    </label>
+                </div>
+            </div>
+            
+            <!-- ── NESTED BELOW THE BUTTONS INSIDE THE SAME BORDER ── -->
+            <div class="preview-stage-wrapper" style="display: none; justify-content: center; align-items: center; margin: 10px auto 5px auto; width: 100%; min-height: 282px;">
+                <div id="pdfThumbnailContainer" class="thumbnail-card" style="box-shadow: 0 4px 12px rgba(0,0,0,0.06); border-radius: 8px; overflow: hidden; background: #fff; border: 1px solid rgba(0,0,0,0.05); position: relative;">
+                    <canvas id="preview-thumbnail-canvas" style="display: block; max-width: 100%;"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="row-info" id="printStyleRow">
+            <span>Print Style:</span><br>
+            <div class="radio-inputs">
+                <label class="radio-option">
+                    <input type="radio" name="duplex_setting" value="long-edge" checked>
+                    <div class="option-card-content">
+                        <span class="option-title">Book Style</span>
+                        <span class="option-subtitle"><strong>Standard notes & PDFs</strong></span>
+                    </div>
+                </label>
+
+                <label class="radio-option">
+                    <input type="radio" name="duplex_setting" value="short-edge">
+                    <div class="option-card-content">
+                        <span class="option-title">Notepad Style</span>
+                        <span class="option-subtitle"><strong>For PPT slides</strong></span>
+                    </div>
+                </label>
             </div>
         </div>
         <div class="row-info page-range-row">
@@ -385,7 +443,177 @@ function display_info(file_name,result, selected_type, pdf_pages) {
             page_selection.style.display = 'none';
         }
     }
-};
+
+    // --- Live Event Observers for Preview Synchronization ---
+    if (activePdfInstance) {
+        const getFormOrientation = () => {
+            const selected = itemInfoContainer.querySelector('input[name="is_portrait"]:checked');
+            return selected ? selected.value : "true";
+        };
+
+        const applyColorFilter = () => {
+            const selectedColor = itemInfoContainer.querySelector('input[name="is_color"]:checked');
+            const canvas = document.getElementById('preview-thumbnail-canvas');
+            if (canvas && selectedColor) {
+                // Instantly swap filters between Color and Grayscale
+                canvas.style.filter = selectedColor.value === "true" ? 'none' : 'grayscale(100%) contrast(110%)';
+            }
+        };
+
+        const triggerThumbnailRefresh = () => {
+            const startPageInput = document.getElementById('pageStart');
+            const targetPage = startPageInput ? (parseInt(startPageInput.value, 10) || 1) : 1;
+            
+            if (targetPage >= 1 && targetPage <= pdf_pages) {
+                updateLiveThumbnail(activePdfInstance, targetPage, getFormOrientation(), applyColorFilter);
+            }
+        };
+
+        // Render initial presentation frame layout
+        triggerThumbnailRefresh();
+
+        // Attach orientation switch listeners
+        itemInfoContainer.querySelectorAll('input[name="is_portrait"]').forEach(radio => {
+            radio.addEventListener('change', triggerThumbnailRefresh);
+        });
+
+        // Attach dynamic color filter toggles
+        itemInfoContainer.querySelectorAll('input[name="is_color"]').forEach(radio => {
+            radio.addEventListener('change', applyColorFilter);
+        });
+
+        const pageStartInput = document.getElementById('pageStart');
+        if (pageStartInput) {
+            pageStartInput.addEventListener('input', triggerThumbnailRefresh);
+        }
+    }
+
+    // --- Dynamic Print Style & Side Auto-Toggle Engine ---
+    const printStyleRow = itemInfoContainer.querySelector('#printStyleRow');
+    
+    // TARGET THE LABEL ELEMENT SELECTION DIRECTLY NOW
+    const b2bRadioLabel = itemInfoContainer.querySelector('#b2bRadioLabel'); 
+    
+    const startInput = itemInfoContainer.querySelector('#pageStart');
+    const endInput = itemInfoContainer.querySelector('#pageEnd');
+    
+    const evaluatePrintStyleVisibility = () => {
+        if (!printStyleRow) return;
+        
+        // 1. Compute live targeted printed page count span
+        const startPage = startInput ? (parseInt(startInput.value, 10) || 1) : 1;
+        const endPage = endInput ? (parseInt(endInput.value, 10) || 1) : 1;
+        const activePagesSpan = (endPage - startPage) + 1;
+        
+        // 2. VANISH & RESET RULE: Toggle visibility of the label node element safely
+        if (activePagesSpan === 1) {
+            const singleSideRadio = itemInfoContainer.querySelector('input[name="is_b2b"][value="false"]');
+            if (singleSideRadio && !singleSideRadio.checked) {
+                singleSideRadio.checked = true;
+            }
+            // Hide the label tag completely out of the flex container layout tracking flow
+            if (b2bRadioLabel) b2bRadioLabel.style.display = 'none';
+        } else {
+            // Restore regular layout display styling configuration
+            if (b2bRadioLabel) b2bRadioLabel.style.display = ''; 
+        }
+
+        // 3. Re-evaluate target selections
+        const selectedSide = itemInfoContainer.querySelector('input[name="is_b2b"]:checked');
+        const isBackToBack = selectedSide && selectedSide.value === "true";
+        
+        // 4. Print Style layout container card rules logic
+        if (isBackToBack && activePagesSpan >= 2) {
+            printStyleRow.style.display = 'flex';
+        } else {
+            printStyleRow.style.display = 'none';
+        }
+    };
+
+    // Run evaluate sequence instantly on initialization parameters
+    evaluatePrintStyleVisibility();
+
+    // Listen for side configuration toggles
+    itemInfoContainer.querySelectorAll('input[name="is_b2b"]').forEach(radio => {
+        radio.addEventListener('change', evaluatePrintStyleVisibility);
+    });
+
+    // Listen for manual number input adjustments to page ranges
+    if (startInput) startInput.addEventListener('input', evaluatePrintStyleVisibility);
+    if (endInput) endInput.addEventListener('input', evaluatePrintStyleVisibility);
+}
+
+function updateLiveThumbnail(pdf, pageNumber, forcedPortrait, callback) {
+    const canvas = document.getElementById('preview-thumbnail-canvas');
+    const container = document.getElementById('pdfThumbnailContainer');
+    const wrapper = document.querySelector('.preview-stage-wrapper');
+    
+    if (!pdf || !canvas) return;
+    if (wrapper) wrapper.style.display = 'flex'; 
+
+    pdf.getPage(pageNumber).then(function(page) {
+        // 1. Read base viewport dimension limits, respecting the PDF's internal rotation tag
+        let baseViewport = page.getViewport({ scale: 1 });
+        if (page.rotate === 90 || page.rotate === 270) {
+            baseViewport = page.getViewport({ scale: 1, rotation: page.rotate });
+        }
+        
+        const isPortraitBool = forcedPortrait === "true";
+
+        // 1b. Only spin the content when a tall/portrait page is forced onto a
+        // landscape sheet — that's the one case where it needs to rotate to fill
+        // the sheet. A wide/landscape page assigned to a portrait sheet should
+        // just shrink to fit as-is, not be forced to rotate.
+        const contentIsPortrait = baseViewport.height >= baseViewport.width;
+        const needsExtraSpin = contentIsPortrait && !isPortraitBool;
+        const totalRotation = (page.rotate + (needsExtraSpin ? 90 : 0)) % 360;
+        if (needsExtraSpin) {
+            baseViewport = page.getViewport({ scale: 1, rotation: totalRotation });
+        }
+
+        // 2. FORCE EXPLICIT PRINT SHEET DIMENSIONS
+        // The sheet shape flips based on user choice, and the content now spins to match it.
+        const targetW = isPortraitBool ? 200 : 282;
+        const targetH = isPortraitBool ? 282 : 200;
+        
+        // 3. SCALE CONTENT TO SHEET ASPECT RATIO
+        // This mirrors the backend: scale the page content down uniformly until it completely fits inside the target sheet bounds.
+        const dpr = window.devicePixelRatio || 1;
+        const fitScale = Math.min(targetW / baseViewport.width, targetH / baseViewport.height);
+        
+        const finalViewport = page.getViewport({ 
+            scale: fitScale * dpr,
+            rotation: totalRotation
+        });
+
+        // 4. Set canvas pixel layout resolutions
+        canvas.width = finalViewport.width;
+        canvas.height = finalViewport.height;
+        
+        const displayW = finalViewport.width / dpr;
+        const displayH = finalViewport.height / dpr;
+        
+        canvas.style.width = `${displayW}px`;
+        canvas.style.height = `${displayH}px`;
+
+        // 5. HARD LOCK CONTAINER FRAME & CENTER CANVAS CONTENT
+        if (container) {
+            container.style.width = `${targetW}px`;
+            container.style.height = `${targetH}px`;
+            
+            canvas.style.position = 'absolute';
+            canvas.style.left = `${(targetW - displayW) / 2}px`;
+            canvas.style.top = `${(targetH - displayH) / 2}px`;
+        }
+
+        const context = canvas.getContext('2d');
+        context.clearRect(0, 0, canvas.width, canvas.height);
+
+        page.render({ canvasContext: context, viewport: finalViewport }).promise.then(() => {
+            if (typeof callback === 'function') callback();
+        });
+    }).catch(err => console.error("Thumbnail rendering engine execution dropped:", err));
+}
 
 function adjustCopies(change) {
     const display = document.getElementById('copiesDisplay');
@@ -421,12 +649,12 @@ function getPreciseLocation(callback) {
         },
         options
     ); */
-};
+}
 
 function calculate_distance(user_lat, user_long, shop_lat, shop_long){
     let distance = (shop_long-user_long)**2 + (shop_lat-user_lat)**2 ;
     return distance;
-};
+}
 
 function calculate_real_distance(lat1, lon1, lat2, lon2) {
     const R = 6371; // Earth's radius in kilometers
@@ -434,11 +662,7 @@ function calculate_real_distance(lat1, lon1, lat2, lon2) {
     const dLon = (lon2 - lon1) * Math.PI / 180;
     const a = 
         Math.sin(dLat/2) * Math.sin(dLat/2) +
-        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-        Math.sin(dLon/2) * Math.sin(dLon/2);
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     return R * c; 
 }
-
-// maps link with route https://www.google.com/maps/dir/?api=1&destination=${lat},${long}&travelmode=walking
-// maps link of a place https://www.google.com/maps/search/?api=1&query=${lat},${long}

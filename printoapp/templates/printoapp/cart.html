@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
   <link href="{% static 'printoapp/cart.css' %}" rel="stylesheet">
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="{% static 'printoapp/cart.js' %}" ></script>
 </head>
 <body class="ct-body">
@@ -82,7 +83,7 @@
             </div>
             <span class="ct-item-name">{{ item.display_name }}</span>
             <button type="button" class="ct-action-btn ct-edit-trigger" style="margin-left: auto; margin-right: 8px;"
-                onclick="handlePreviewClick('{{ item.id }}', '{{ item.display_name }}', '{{ item.shop_item.is_color }}', '{{ item.requires_scaling }}')">
+                onclick="handlePreviewClick('{{ item.id }}', '{{ item.display_name }}', '{{ item.shop_item.is_color }}', '{{ item.requires_scaling }}', '{{ item.is_portrait }}')">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             </button>
             <span class="ct-item-price">₹{{ item.total_amount|floatformat:"-2" }}</span>
@@ -99,6 +100,11 @@
                     <span class="ct-tag">↔️ Double side</span>
                 {% else %}
                     <span class="ct-tag">➡️ Single side</span>
+                {% endif %}
+                {% if item.is_portrait %}
+                    <span class="ct-tag">Portrait</span>
+                {% else %}
+                    <span class="ct-tag">Landscape</span>
                 {% endif %}
             </div>
 
@@ -145,6 +151,19 @@
                             </div>
                         </div>
                         {% endif %}
+                        <div class="ct-modal-section">
+                            <h4 class="ct-modal-label">Page Orientation</h4>
+                            <div class="ct-modal-options ct-modal-options--grid">
+                                <label class="ct-option">
+                                    <input type="radio" name="orientation-{{ item.id }}" value="True" {% if item.shop_item.is_portrait %}checked{% endif %}>
+                                    <div class="ct-option-content"><span>Portrait</span></div>
+                                </label>
+                                <label class="ct-option">
+                                    <input type="radio" name="orientation-{{ item.id }}" value="False" {% if not item.shop_item.is_portrait %}checked{% endif %}>
+                                    <div class="ct-option-content"><span>Landscape</span></div>
+                                </label>
+                            </div>
+                        </div>
                         <div class="ct-modal-actions">
                             <button type="button" class="ct-btn-secondary" onclick="closeEditModal('{{ item.id }}')">Cancel</button>
                             <button type="submit" name="edit" value="{{ item.id }}" class="ct-btn-primary" onclick="applyEditSettings('{{ item.id }}')">Save Changes</button>
@@ -346,15 +365,31 @@
             <button type="button" class="pdf-preview-close" onclick="closePdfPreview()" aria-label="Close preview">✕</button>
         </div>
 
+        <!-- ── Page navigation — shown only for multi-page documents ── -->
+        <div id="pdfPageNav" class="pdf-preview-pagenav" style="display:none;">
+            <button type="button" id="pdfPrevPage" class="pdf-page-btn" aria-label="Previous page">‹</button>
+            <span id="pdfPageIndicator" class="pdf-page-indicator">Page 1 of 1</span>
+            <button type="button" id="pdfNextPage" class="pdf-page-btn" aria-label="Next page">›</button>
+        </div>
+
         <!-- ── A4 paper viewport ── -->
         <!-- oncontextmenu disables right-click "Save as" on the PDF -->
         <div class="pdf-preview-stage" oncontextmenu="return false;">
             <!--
-              padding-bottom: 141.42% locks height = width × √2 (A4 portrait ratio).
-              The iframe is stretched to fill this box absolutely.
+              padding-bottom: 141.42% locks height = width × √2 (A4 portrait ratio),
+              or 70.71% for landscape — set dynamically in cart.js.
+              The canvas is rendered at exactly the fitted page size and
+              centered inside this box, so any leftover space shows as real
+              white margin — the same "scale to fit" behaviour the shop's
+              printer applies.
             -->
             <div id="previewPaperWrap" class="pdf-paper-wrap">
-                <iframe id="pdfPreviewIframe" src="" class="pdf-paper-iframe" title="Document preview" allowfullscreen></iframe>
+                <div class="pdf-page-stage">
+                    <canvas id="pdfPreviewCanvas" class="pdf-page-canvas"></canvas>
+                    <div id="pdfLoadingSpinner" class="pdf-loading-spinner" style="display:none;">
+                        <span class="pdf-spinner"></span>
+                    </div>
+                </div>
             </div>
         </div>
 

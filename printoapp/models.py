@@ -123,6 +123,8 @@ class Cart_items(models.Model):
     raw_pages_count = models.IntegerField()
     total_pages = models.IntegerField()
     total_amount = models.DecimalField(max_digits=9, decimal_places=2)
+    is_portrait = models.BooleanField(default=True)
+    is_long_edge = models.BooleanField(default=True)
     is_printed = models.BooleanField(default=False)
     is_cleaned = models.BooleanField(default=False) 
     cart = models.ForeignKey("Cart", related_name="cart_items", on_delete=models.CASCADE)

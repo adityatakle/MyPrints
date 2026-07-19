@@ -1,5 +1,5 @@
-import win32print
-import win32con
+import win32print # type: ignore
+import win32con # type: ignore
 import subprocess
 import os
 import requests
@@ -147,15 +147,20 @@ def decode_status_code(code):
     return ", ".join(active_errors)
 
 
-def print_file(file_path, printer_name, page_type, copies, is_duplex, is_color):
+def print_file(file_path, printer_name, page_type, copies, is_duplex, is_color, is_portrait, is_long_edge):
     """
     Sends a file to the specified printer using SumatraPDF.
     Dynamically decides between 'shrink' and 'fit' using pypdf.
     """
     color = 'monochrome,'
     side = 'simplex,'
-    if is_duplex:
+    orientation = 'portrait,'
+    if not is_portrait:
+        orientation = 'landscape,'
+    if is_duplex and is_long_edge:
         side = 'duplexlong,'
+    elif is_duplex and not is_long_edge:
+        side = 'duplexshort,'
     if is_color:
         color = 'color,'
     if not os.path.exists(file_path):
@@ -185,7 +190,7 @@ def print_file(file_path, printer_name, page_type, copies, is_duplex, is_color):
     except Exception as e:
         write_log(f"PDF Meta Error: {e}. Falling back to default 'shrink'.")
 
-    print_settings = f"{color}{side}{copies}x,paper={page_type},{scaling_logic}" 
+    print_settings = f"{color}{orientation}{side}{copies}x,paper={page_type},{scaling_logic}" 
     write_log(f"Print settings: {print_settings}")
     command = [
         SUMATRA_PATH,
@@ -425,7 +430,7 @@ if __name__ == "__main__":
                                                 break
 
                                         # B. PRINT
-                                        success = print_file(file_path, printer['name'], item["page_type"], item["copies"], item["is_b2b"], item['is_color'])
+                                        success = print_file(file_path, printer['name'], item["page_type"], item["copies"], item["is_b2b"], item['is_color'], item['is_portrait'], item['is_long_edge'])
                                         if success:
                                             write_log(f"SUCCESS: {item['file_name']} is at the spooler.")
                                             # Notify backend

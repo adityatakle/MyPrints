@@ -569,6 +569,8 @@ def upload(request):
         is_open=True
     )
     if created:
+        if 'payment_error' in request.session:
+            del request.session['payment_error']
         item = Shop_items.objects.filter(
             page_type='A4',
             is_color=False,
@@ -600,6 +602,7 @@ def upload(request):
             end_page = int(end_page)
             is_color = request.POST.get('is_color') == 'True' or request.POST.get('is_color') == 'true'
             is_b2b = request.POST.get('is_b2b') == 'True' or request.POST.get('is_b2b') == 'true'
+            is_portrait = request.POST.get('is_portrait') == 'True' or request.POST.get('is_portrait') == 'true'
             quantity = request.POST.get('quantity')
             quantity = int(quantity)
             MAX_FILES_PER_CART = 21
@@ -642,7 +645,13 @@ def upload(request):
                     "shop_item_list": shop_item_list,
                     "item_number": item_number
                 })
-
+            
+            is_long_edge = False
+            if is_b2b:
+                duplex_setting = request.POST.get('duplex_setting')
+                if duplex_setting == 'long-edge':
+                    is_long_edge = True
+            
             front_page_item = Cart_items.objects.filter(
                 file_id='FrontPage.pdf',
                 display_name='FrontPage.pdf',
@@ -786,6 +795,8 @@ def upload(request):
                 display_name=s3_filename.split('/')[-1],
                 quantity=quantity,
                 requires_scaling = requires_scaling,
+                is_portrait = is_portrait,
+                is_long_edge =is_long_edge,
                 total_pages=total_pages,
                 raw_pages_count = raw_pages_count,
                 total_amount=total_amount,
@@ -865,7 +876,11 @@ def update_cart_financial_records(cart):
     total_data.payment_gateway_total_fee = pg_total_fee
     raw_total = (sub_total + pg_total_fee + priority_fee + platform_fee).quantize(Decimal('0.01'))
 
-    rounded_total = raw_total.quantize(Decimal('1'), rounding=ROUND_UP).quantize(Decimal('0.01'))
+    # 🔄 NEW: Scale by 5, round up to the next integer, then multiply back by 5
+    scaled_total = (raw_total / Decimal('0.50')).quantize(Decimal('1'), rounding=ROUND_UP)
+    rounded_total = (scaled_total * Decimal('0.50')).quantize(Decimal('0.01'))
+
+    # Calculate the exact variance margin to keep your accounting records perfectly accurate
     total_data.round_up = rounded_total - raw_total
     total_data.raw_total = raw_total
     total_data.grand_total = rounded_total
@@ -932,6 +947,8 @@ def cart(request):
             elif "edit" in request.POST:
                 item = get_object_or_404(Cart_items, id=request.POST.get('edit'), cart=cart)
                 side_preference = request.POST.get('side') == 'True'
+                print("DEBUG POST DATA:", request.POST)
+                print("RESOLVED SIDE PREFERENCE:", request.POST.get('side') == 'True')
                 if side_preference != item.shop_item.is_b2b:
                     new_item = get_object_or_404(
                         Shop_items,
@@ -977,7 +994,10 @@ def cart(request):
         needed_pages = 11 - total_data.total_pages
     is_round_down = round_up < 0
     abs_round_up = abs(round_up)
-    saved_shop_id = int(request.session.get('saved_shop_id'))
+    if request.session.get('saved_shop_id'):
+        saved_shop_id = int(request.session.get('saved_shop_id'))
+    else:
+        saved_shop_id = ''
     return render(request, "printoapp/cart.html", {
         "cart": cart,
         "cart_items": cart_items,
@@ -1167,6 +1187,8 @@ def shop_connect(request):
                     'file_url': None,
                     'page_type': item.shop_item.page_type,
                     'is_color': item.shop_item.is_color,
+                    'is_portrait':item.is_portrait,
+                    'is_long_edge': item.is_long_edge,
                     'is_b2b': item.shop_item.is_b2b,
                     'copies': item.quantity
                 })
