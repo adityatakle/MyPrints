@@ -592,6 +592,9 @@ def upload(request):
 
     shop_item_list = Shop_items.objects.filter(shop_info_id=shop_id)
 
+    if cart.payment_id and cart.is_paid and not cart.is_open:
+        return redirect("success")
+
     if request.method == "POST":
         if "document" in request.FILES:
             page_type = request.POST.get('page_type')
