@@ -291,7 +291,7 @@ function display_info(file_name, result, selected_type, pdf_pages, activePdfInst
     let is_color = [];
     let is_b2b = [];
 
-    // 2. Extract unique values (Your logic)
+    // 2. Extract unique values
     result[selected_type].forEach(arr => {
         if (!is_color.includes(arr.is_color)) {
             is_color.push(arr.is_color);
@@ -301,16 +301,15 @@ function display_info(file_name, result, selected_type, pdf_pages, activePdfInst
         }
     });
     if (pdf_pages === 1){
-        is_b2b = [is_b2b[0]]
+        is_b2b = [is_b2b[0]];
     }
 
-    // 3. Build Strings (Template Literals are cleaner than createElement)
+    // 3. Build Strings
     
     // --- Color ---
     let color_options = "";
     is_color.forEach((val, index) => {
         let text = val ? "Color" : "Black & White";
-        // Checks the first radio element by default if no selection exists
         let checked = index === 0 ? "checked" : ""; 
         color_options += `
             <label class="radio">
@@ -325,7 +324,6 @@ function display_info(file_name, result, selected_type, pdf_pages, activePdfInst
         let text = val ? "Back to Back" : "Single Side";
         let checked = index === 0 ? "checked" : "";
         
-        // Add id="b2bRadioLabel" directly onto the Back to Back label tag element
         if (val) {
             b2b_options += `
                 <label class="radio" id="b2bRadioLabel">
@@ -341,8 +339,7 @@ function display_info(file_name, result, selected_type, pdf_pages, activePdfInst
         }
     });
 
-    // 4. Inject everything at once using innerHTML
-    // This is faster and cleaner than 3 separate appends
+    // 4. Inject innerHTML
     itemInfoContainer.innerHTML = `
         <div class="row-info">
             <span>Print Color:</span>
@@ -455,7 +452,6 @@ function display_info(file_name, result, selected_type, pdf_pages, activePdfInst
             const selectedColor = itemInfoContainer.querySelector('input[name="is_color"]:checked');
             const canvas = document.getElementById('preview-thumbnail-canvas');
             if (canvas && selectedColor) {
-                // Instantly swap filters between Color and Grayscale
                 canvas.style.filter = selectedColor.value === "true" ? 'none' : 'grayscale(100%) contrast(110%)';
             }
         };
@@ -472,7 +468,7 @@ function display_info(file_name, result, selected_type, pdf_pages, activePdfInst
         // Render initial presentation frame layout
         triggerThumbnailRefresh();
 
-        // Attach orientation switch listeners
+        // Attach thumbnail refresh on orientation change
         itemInfoContainer.querySelectorAll('input[name="is_portrait"]').forEach(radio => {
             radio.addEventListener('change', triggerThumbnailRefresh);
         });
@@ -490,10 +486,7 @@ function display_info(file_name, result, selected_type, pdf_pages, activePdfInst
 
     // --- Dynamic Print Style & Side Auto-Toggle Engine ---
     const printStyleRow = itemInfoContainer.querySelector('#printStyleRow');
-    
-    // TARGET THE LABEL ELEMENT SELECTION DIRECTLY NOW
     const b2bRadioLabel = itemInfoContainer.querySelector('#b2bRadioLabel'); 
-    
     const startInput = itemInfoContainer.querySelector('#pageStart');
     const endInput = itemInfoContainer.querySelector('#pageEnd');
     
@@ -505,25 +498,26 @@ function display_info(file_name, result, selected_type, pdf_pages, activePdfInst
         const endPage = endInput ? (parseInt(endInput.value, 10) || 1) : 1;
         const activePagesSpan = (endPage - startPage) + 1;
         
-        // 2. VANISH & RESET RULE: Toggle visibility of the label node element safely
+        // 2. Hide Back to Back option if single page
         if (activePagesSpan === 1) {
             const singleSideRadio = itemInfoContainer.querySelector('input[name="is_b2b"][value="false"]');
             if (singleSideRadio && !singleSideRadio.checked) {
                 singleSideRadio.checked = true;
             }
-            // Hide the label tag completely out of the flex container layout tracking flow
             if (b2bRadioLabel) b2bRadioLabel.style.display = 'none';
         } else {
-            // Restore regular layout display styling configuration
             if (b2bRadioLabel) b2bRadioLabel.style.display = ''; 
         }
 
         // 3. Re-evaluate target selections
         const selectedSide = itemInfoContainer.querySelector('input[name="is_b2b"]:checked');
-        const isBackToBack = selectedSide && selectedSide.value === "true";
+        const selectedView = itemInfoContainer.querySelector('input[name="is_portrait"]:checked');
         
-        // 4. Print Style layout container card rules logic
-        if (isBackToBack && activePagesSpan >= 2) {
+        // Check for B2B (true) AND Landscape (false)
+        const isB2BAndLandscape = selectedSide && selectedView && selectedSide.value === "true" && selectedView.value === "false";
+        
+        // 4. Print Style row visibility rule
+        if (isB2BAndLandscape && activePagesSpan >= 2) {
             printStyleRow.style.display = 'flex';
         } else {
             printStyleRow.style.display = 'none';
@@ -533,12 +527,17 @@ function display_info(file_name, result, selected_type, pdf_pages, activePdfInst
     // Run evaluate sequence instantly on initialization parameters
     evaluatePrintStyleVisibility();
 
-    // Listen for side configuration toggles
+    // Listen for side configuration toggles (Single Side / B2B)
     itemInfoContainer.querySelectorAll('input[name="is_b2b"]').forEach(radio => {
         radio.addEventListener('change', evaluatePrintStyleVisibility);
     });
 
-    // Listen for manual number input adjustments to page ranges
+    // Listen for orientation toggles (Portrait / Landscape)
+    itemInfoContainer.querySelectorAll('input[name="is_portrait"]').forEach(radio => {
+        radio.addEventListener('change', evaluatePrintStyleVisibility);
+    });
+
+    // Listen for page range adjustments
     if (startInput) startInput.addEventListener('input', evaluatePrintStyleVisibility);
     if (endInput) endInput.addEventListener('input', evaluatePrintStyleVisibility);
 }
@@ -552,41 +551,25 @@ function updateLiveThumbnail(pdf, pageNumber, forcedPortrait, callback) {
     if (wrapper) wrapper.style.display = 'flex'; 
 
     pdf.getPage(pageNumber).then(function(page) {
-        // 1. Read base viewport dimension limits, respecting the PDF's internal rotation tag
-        let baseViewport = page.getViewport({ scale: 1 });
-        if (page.rotate === 90 || page.rotate === 270) {
-            baseViewport = page.getViewport({ scale: 1, rotation: page.rotate });
-        }
+        // 1. Force rotation = 0 to match SumatraPDF's `disable-auto-rotation`
+        const baseViewport = page.getViewport({ scale: 1, rotation: 0 });
         
         const isPortraitBool = forcedPortrait === "true";
 
-        // 1b. Only spin the content when a tall/portrait page is forced onto a
-        // landscape sheet — that's the one case where it needs to rotate to fill
-        // the sheet. A wide/landscape page assigned to a portrait sheet should
-        // just shrink to fit as-is, not be forced to rotate.
-        const contentIsPortrait = baseViewport.height >= baseViewport.width;
-        const needsExtraSpin = contentIsPortrait && !isPortraitBool;
-        const totalRotation = (page.rotate + (needsExtraSpin ? 90 : 0)) % 360;
-        if (needsExtraSpin) {
-            baseViewport = page.getViewport({ scale: 1, rotation: totalRotation });
-        }
-
-        // 2. FORCE EXPLICIT PRINT SHEET DIMENSIONS
-        // The sheet shape flips based on user choice, and the content now spins to match it.
+        // 2. Set Sheet Frame Dimensions (A4 Ratio Box)
         const targetW = isPortraitBool ? 200 : 282;
         const targetH = isPortraitBool ? 282 : 200;
         
-        // 3. SCALE CONTENT TO SHEET ASPECT RATIO
-        // This mirrors the backend: scale the page content down uniformly until it completely fits inside the target sheet bounds.
+        // 3. Fit Content to Sheet (Matches scaling_logic = "shrink")
         const dpr = window.devicePixelRatio || 1;
         const fitScale = Math.min(targetW / baseViewport.width, targetH / baseViewport.height);
         
         const finalViewport = page.getViewport({ 
             scale: fitScale * dpr,
-            rotation: totalRotation
+            rotation: 0
         });
 
-        // 4. Set canvas pixel layout resolutions
+        // 4. Set Canvas Resolution
         canvas.width = finalViewport.width;
         canvas.height = finalViewport.height;
         
@@ -596,7 +579,7 @@ function updateLiveThumbnail(pdf, pageNumber, forcedPortrait, callback) {
         canvas.style.width = `${displayW}px`;
         canvas.style.height = `${displayH}px`;
 
-        // 5. HARD LOCK CONTAINER FRAME & CENTER CANVAS CONTENT
+        // 5. Center Canvas inside Sheet Frame
         if (container) {
             container.style.width = `${targetW}px`;
             container.style.height = `${targetH}px`;
