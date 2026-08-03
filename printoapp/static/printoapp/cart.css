@@ -1175,7 +1175,7 @@ body.ct-body, body {
 }
 
 #default-btn {
-  display: inline-flex;
+  display: none;
   align-items: center;
   justify-content: center;
   font-family: 'DM Sans', system-ui, sans-serif;
