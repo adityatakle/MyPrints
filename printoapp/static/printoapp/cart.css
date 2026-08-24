@@ -39,6 +39,7 @@ body.ct-body, body {
   color: var(--dark);
   margin: 0; padding: 0;
   -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
   text-size-adjust: 100%;
   -webkit-font-smoothing: antialiased;
 }
@@ -55,8 +56,8 @@ body.ct-body, body {
   height: 58px;
   padding: 0 16px;
   background: rgba(255,255,255,0.88);
-  backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
   border-bottom: 1px solid var(--border);
 }
 
@@ -951,12 +952,11 @@ body.ct-body, body {
 .pdf-preview-stage {
     flex: 1;
     overflow-y: auto;
-    background: #525659;            /* classic Acrobat grey */
+    background: #525659;
     display: flex;
     align-items: flex-start;
     justify-content: center;
     padding: 20px;
-    -webkit-overflow-scrolling: touch;
 }
 
 /*

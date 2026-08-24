@@ -259,15 +259,16 @@
                     <span>₹{{ priority_fee|floatformat:"2" }}</span>
                 </div>
             {% endif %}
+            <!-- disabling for nowwwww.....
             <div class="ct-summary-row">
                 <span>Platform fees {%if total_data.total_pages < 6%}  (Add {{ needed_pages }} more page{%if needed_pages > 1%}s{%endif%} to make it 0){%endif%}</span>
                 <span>₹{{ platform_fee|floatformat:"2" }}</span>
             </div>
-
+            -->
             <div class="ct-summary-row" style="display: block;">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                     <span>
-                        Gateway & Platform
+                        Payment Gateway Fees
                         <button type="button" class="ct-info-link" onclick="document.getElementById('pg-details').classList.toggle('show')">
                             (detailed info)
                         </button>
