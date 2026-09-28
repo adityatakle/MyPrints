@@ -9,6 +9,7 @@
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
     }
 </script>
+<script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
 {% endblock %}
 
 {% block body %}
@@ -82,9 +83,12 @@
   <p class="up-eyebrow title">Upload Document</p>
   <h1 class="up-title">What are we<br>printing today?</h1>
 
-  <form method="post" action="{% url 'upload' %}" enctype="multipart/form-data" class="up-form">
+  <form method="post" action="{% url 'upload' %}" class="up-form">
     {% csrf_token %}
     <input type="hidden" name="shop_id" id="shop_id"  value="{{ shop_id }}">
+    <input type="hidden" name="file_name" id="file_name"  value="">
+    <input type="hidden" name="display_name" id="display_name"  value="">
+    <input type="hidden" name="cart_id" id="cart_id" value="{{cart_id}}">
 
     <!-- ── PHASE 1: DROP ZONE ───────────────────── -->
     <input type="file" name="document" id="doc" class="hidden-doc" accept=".pdf">
@@ -172,7 +176,7 @@
     </div>
 
     <!-- ── VIEW CART ─────────────────────────────── -->
-    {% if item_number > 1 %}
+    {% if item_number > 0 %}
         <a href="{% url 'cart' %}"
         class=" cart-btn {% if not item_number or item_number == 0 %}is-empty{% endif %}"
         {% if not item_number or item_number == 0 %}aria-disabled="true"{% endif %}>
@@ -188,7 +192,7 @@
             </div>
             <div class="up-cart-text">
             <span class="up-cart-label">View Cart</span>
-            <span class="up-cart-sublabel">{% if item_number and item_number|add:"-1" > 0 %}{{ item_number|add:"-1" }} item{% if item_number|add:"-1" > 1 %}s{% endif %} ready{% else %}Your cart is empty{% endif %}</span>
+            <span class="up-cart-sublabel">{% if item_number and item_number > 0 %}{{ item_number }} item{% if item_number > 1 %}s{% endif %} ready{% else %}Your cart is empty{% endif %}</span>
             </div>
             <div class="up-cart-arrow">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none">

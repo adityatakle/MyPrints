@@ -3,12 +3,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const title = document.querySelector('#doc');
     if (heading) {
         get_or_create_user();
-
         const shops = JSON.parse(document.getElementById('shops-data').textContent);
         const shopsList = document.getElementById('shops-list');
         const filterWrapper = document.getElementById('filter-wrapper');
         const cityFilter = document.getElementById('city-filter');
-
+        /* NO CITY FILTER
         // Populate unique cities into dropdown filter
         const uniqueCities = [...new Set(shops.map(shop => shop.city))];
         uniqueCities.forEach(city => {
@@ -17,7 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
             option.textContent = city;
             cityFilter.appendChild(option);
         });
-
+        */
         // Trigger Geolocation Verification
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
@@ -63,7 +62,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const selectedText = document.getElementById('selected-city-text');
             const customList = document.getElementById('custom-city-list');
 
-            filterWrapper.style.display = 'block';
+            filterWrapper.style.display = 'none';
             renderShopsList(allShops);
 
             // Populate unique cities into the custom menu
@@ -156,14 +155,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 chevron.classList.toggle('is-rotated');
             });
         }
+        let file;
+        let file_name;
         title.addEventListener('change', function() {
             if (this.files && this.files.length > 0) {
-                const file = this.files[0];
-                const MAX_SIZE_MB = 500;
+                file = this.files[0];
+                const MAX_SIZE_MB = 1000;
                 const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
 
                 if (file.size > MAX_SIZE_BYTES) {
-                    alert(`File is too large! Max limit is 500MB.`);
+                    alert(`File is too large! Max limit is 1GB.`);
                     this.value = "";
                     return;
                 }
@@ -171,11 +172,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 let shop_id = document.querySelector('#shop_id').value;
                 let main_text = document.querySelector('.main-text');
                 let sub_text = document.querySelector('.sub-text');
-                let file_name = file.name;
-                sub_text.style.display = 'none';
-
-                main_text.innerHTML = `Selected: ${file_name}`;
-                main_text.style.color = 'green';
+                file_name = file.name;
+                
 
                 // Helper block to handle UI rendering once page count is known
                 function loadShopItemsAndRender(totalPages) {
@@ -240,40 +238,133 @@ document.addEventListener('DOMContentLoaded', function() {
                         });
                     };
                     reader.readAsArrayBuffer(file);
+                    sub_text.style.display = 'none';
+                    main_text.innerHTML = `Selected: ${file_name}`;
+                    main_text.style.color = 'green';
                 } else {
                     // Images, text documents, docx fallbacks default cleanly to 1 page
-                    activePdfInstance = null;
-                    loadShopItemsAndRender(1);
+                    alert('Not a pdf file.')
+                    this.value='';
+                    return;
                 }
             }
         });
 
         // Show loading overlay on form submission
-        document.querySelector('.up-form').addEventListener('submit', function() {
-            const loading = document.querySelector('.loading-panel');
-            const overlay = document.querySelector('.up-config-panel');
-            overlay.style.display = 'none';
-            loading.style.display = 'flex';
+        document.querySelector('.up-form').addEventListener('submit', async function(e) {
+            e.preventDefault()
+            let cart_id = document.querySelector('#cart_id').value;
+            let start_page = Number(document.querySelector('#pageStart').value);
+            let end_page = Number(document.querySelector('#pageEnd').value);
+            let quantity = Number(document.querySelector('#hiddenQuantity').value);
+
+            if (start_page < 1 || start_page > end_page || end_page > pdf_pages){
+                alert('Page range invalid');
+                return;
+            }
+            if (quantity < 1){
+                alert('Copies should be more than 0');
+                return;
+            }
+
+            file = await extractPageRange(file, start_page, end_page)
+            const cleanFileName = file_name.replace(/\.pdf$/i, '');
+            const upload_name = `uploads/${cart_id}/${cleanFileName}_${start_page}_to_${end_page}.pdf`
+            await upload_to_aws(upload_name, file, cart_id);
+            document.querySelector('#display_name').value = `${cleanFileName}.pdf`;
+            document.querySelector('#file_name').value = upload_name;
+            e.target.submit();
         });
     }
 });
 
+async function extractPageRange(file, startPage, endPage) {
+    // Load original PDF
+    const arrayBuffer = await file.arrayBuffer();
+    const srcDoc = await PDFLib.PDFDocument.load(arrayBuffer);
+    const slicedDoc = await PDFLib.PDFDocument.create();
 
-async function get_or_create_user(){
-    const uuid = localStorage.getItem('printo_user_id');
-    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-    
+    // Create array of 0-based page indices
+    const pageIndices = [];
+    for (let i = startPage - 1; i < endPage; i++) {
+        pageIndices.push(i);
+    }
+
+    // Copy selected pages into the new document
+    const copiedPages = await slicedDoc.copyPages(srcDoc, pageIndices);
+    copiedPages.forEach((page) => slicedDoc.addPage(page));
+
+    // Save as binary buffer and wrap in a new File object
+    const pdfBytes = await slicedDoc.save();
+    return new File([pdfBytes], file.name, { type: 'application/pdf' });
+}
+
+async function upload_to_aws(filename, file, cart_id){
     try {
-        const response = await fetch('/api/user', {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': csrfToken,
-                'uuid': uuid || ''
-            }
+        const response = await fetch(`api/get_presigned_upload_url?filename=${filename}&cart_id=${cart_id}`, {
         });
         
-        if (response.ok && uuid){
-            localStorage.removeItem('printo_user_id');
+        if (!response.ok) {
+            throw new Error('Failed to fetch upload URL from backend');
+        }
+
+        const data = await response.json();
+        if (data.status) {
+            alert('File already in cart');
+            document.querySelector('#doc').value = '';
+            return;
+        }
+        const presignedUrl = data.url;
+        
+        const loading = document.querySelector('.loading-panel');
+        const overlay = document.querySelector('.up-config-panel');
+        overlay.style.display = 'none';
+        loading.style.display = 'flex';
+        // Upload the file DIRECTLY to AWS S3 using the presigned URL
+        const uploadResponse = await fetch(presignedUrl, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/pdf'
+            },
+            body: file
+        });
+
+        if (uploadResponse.ok) {
+            await uploadResponse.text();
+            console.log('File successfully uploaded to S3!');
+
+        } else {
+            console.error('S3 Upload failed with status:', uploadResponse.status);
+        }
+    } catch (error) {
+        console.log(error)
+    }
+}
+
+// Migrate from local storage based to session based.
+async function get_or_create_user() {
+    const uuid = localStorage.getItem('printo_user_id');
+    const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+    const csrfToken = csrfInput ? csrfInput.value : getCookie('csrftoken');
+
+    try {
+        const headers = { 'X-CSRFToken': csrfToken };
+        if (uuid) {
+            headers['uuid'] = uuid;
+        }
+
+        const response = await fetch('/api/user', {
+            method: 'POST',
+            headers: headers
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            if (uuid) {
+                localStorage.removeItem('printo_user_id');
+            }
+            
+            return data.user_id;
         }
     } catch (error) {
         console.error('User init failed:', error);

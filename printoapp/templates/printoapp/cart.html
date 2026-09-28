@@ -2,15 +2,25 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cart — MyPrints</title>
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
-  <link href="{% static 'printoapp/cart.css' %}" rel="stylesheet">
-  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <script src="{% static 'printoapp/cart.js' %}" ></script>
+    <link rel="manifest" href="{% static 'printoapp/manifest.json' %}">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="MyPrints">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cart — MyPrints</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link href="{% static 'printoapp/cart.css' %}" rel="stylesheet">
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="{% static 'printoapp/cart.js' %}" ></script>
 </head>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js');
+  }
+</script>
 <body class="ct-body">
 <div class="body">
 
@@ -27,9 +37,9 @@
     </a>
     <div class="ct-header-right">
     {% if cart_items %}
-        {% with display_count=cart_items|length|add:"-1" %}
+        {% with display_count=cart_items|length %}
         <span class="ct-item-count">
-        {{ display_count }} item{% if display_count != "1" %}s{% endif %}
+        {{ display_count }} item{% if display_count != 1 %}s{% endif %}
         </span>
         {% endwith %}
     {% endif %}
@@ -55,14 +65,13 @@
         <input type="hidden" id="cart_id_hidden" value="{{ cart.id }}">
         <input type="hidden" value="{{ shop_id }}" name="shop_id" id="shop_id">
         <input type="hidden" id="status_url" value="{{ request.scheme }}://{{ request.get_host }}{% url 'payment_status' %}">
-        {% if cart_items|length > 1 %}
+        {% if cart_items %}
 
         <p class="ct-eyebrow">Your Order</p>
         <h1 class="ct-title">Review &amp; Pay</h1>
 
         <div class="ct-list">
           {% for item in cart_items %}
-          {% if not forloop.first %}  {# This hides the FrontPage.pdf #}
           <div class="ct-item" id="ct-item-{{ item.id }}">
             {% if item.requires_scaling %}
                 <span class="ct-tag ct-tag--warning">
@@ -82,10 +91,11 @@
                 </svg>
             </div>
             <span class="ct-item-name">{{ item.display_name }}</span>
+            <!-- off for now 
             <button type="button" class="ct-action-btn ct-edit-trigger" style="margin-left: auto; margin-right: 8px;"
                 onclick="handlePreviewClick('{{ item.id }}', '{{ item.display_name }}', '{{ item.shop_item.is_color }}', '{{ item.requires_scaling }}', '{{ item.is_portrait }}')">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-            </button>
+            </button>-->
             <span class="ct-item-price">₹{{ item.total_amount|floatformat:"-2" }}</span>
             </div>
 
@@ -120,17 +130,18 @@
                 </div>
 
                 <div class="ct-actions-group">
+                    <!-- eidt buton off
                     {% if item.total_pages > 1 %}
                     <button type="button" class="ct-action-btn ct-edit-trigger" onclick="openEditModal('{{ item.id }}')">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                     </button>
-                    {% endif %}
+                    {% endif %} -->
                     <button type="submit" name="remove-item" value="{{ item.id }}" class="ct-action-btn ct-btn-remove">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
                     </button>
                 </div>
                 </div>
-
+                
                 <div id="modal-{{ item.id }}" class="ct-modal-overlay">
                     <div class="ct-modal-card">
                         <h3 class="ct-modal-title">Edit Print Settings</h3>
@@ -176,7 +187,6 @@
                 </div>
 
           </div>
-          {% endif %}
 
           {% endfor %}
         </div>
@@ -189,7 +199,7 @@
                 Add more files
             </a>
         </div>
-
+        <!-- off for now
         <div class="ct-summary">
           <div class="ct-summary-row ct-summary-total">
             <span>SHOP INFO</span>
@@ -202,8 +212,8 @@
             <div class="ct-summary-row" id="default-div">
                     <button type='submit' id='default-btn' name="default">Set Default.</button>
             </div>
-            {% endif %}
-        </div>
+            {% endif %} 
+        </div> -->
         <div class="ct-queue-card">
             <div class="ct-queue-header">
                 <span class="ct-queue-dot"></span>
@@ -259,6 +269,11 @@
                     <span>₹{{ priority_fee|floatformat:"2" }}</span>
                 </div>
             {% endif %}
+            
+            <div class="ct-summary-row">
+                <span>Platform fees </span>
+                <span>₹{{ platform_fee|floatformat:"2" }}</span>
+            </div>
             <!-- disabling for nowwwww.....
             <div class="ct-summary-row">
                 <span>Platform fees {%if total_data.total_pages < 6%}  (Add {{ needed_pages }} more page{%if needed_pages > 1%}s{%endif%} to make it 0){%endif%}</span>

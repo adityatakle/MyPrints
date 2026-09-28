@@ -1,30 +1,23 @@
 from django.shortcuts import render, redirect, reverse, get_object_or_404
-from .models import Client, Shop_owner, Shop_info, Shop_items, Cart, Cart_items, Feedback, Shop_timing, Cart_total, Shop_coupons, Admin_dash, Subscription_transactions, Settlements
+from .models import Client, Shop_owner, Shop_info, Shop_items, Cart, Cart_items, Feedback, Shop_timing, Cart_total, Shop_coupons, Subscription_transactions, Settlements
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse, HttpResponseRedirect, HttpResponse
+from django.http import JsonResponse, HttpResponseRedirect
+from django.views.decorators.http import require_POST
 from django.urls import reverse
 from django.contrib.auth import authenticate, login, logout
 from django.utils import timezone
-from django.utils.text import get_valid_filename
 from django.db.models import F
 from django.db import transaction
 from django.db.models.functions import ExtractMonth, ExtractYear, TruncDate, TruncMonth
-import os
-from pypdf import PdfReader, PdfWriter
-from .file_upload import upload_file_to_s3, get_presigned_preview_url, get_presigned_url, delete_from_s3 
-import re
-import os
+from .file_upload import get_presigned_preview_url, get_presigned_url, delete_from_s3, upload_presigned_url
 from django.views.decorators.csrf import csrf_exempt
-from io import BytesIO
 from django.db.models import Sum, Count
 import razorpay
 from django.conf import settings
 from datetime import timedelta, datetime
 from decimal import Decimal, ROUND_UP
 import random
-from reportlab.pdfgen import canvas
-from reportlab.lib.colors import HexColor
 import uuid
 import pandas as pd
 # Create your views here.
@@ -571,22 +564,11 @@ def upload(request):
     if created:
         if 'payment_error' in request.session:
             del request.session['payment_error']
-        item = Shop_items.objects.filter(
-            page_type='A4',
-            is_color=False,
-            is_b2b=False,
-            shop_info_id=shop_id
-        ).first()
-        Cart_items.objects.create(
-            file_id='FrontPage.pdf',
-            display_name='FrontPage.pdf',
-            quantity=1,
-            total_pages=1,
-            raw_pages_count=1,
-            total_amount=1*item.final_price,
-            cart=cart,
-            shop_item=item
-        )
+        cart = get_object_or_404(Cart, user__user_id=user_id, shop_info_id=shop_id, is_open=True)
+        cart.fp_timestamp = timezone.now()
+        cart.save()
+        
+    cart = get_object_or_404(Cart, user__user_id=user_id, shop_info_id=shop_id, is_open=True)   
     # Get context data
     item_number = Cart_items.objects.filter( cart__user__user_id=user_id, cart__shop_info_id=shop_id, cart__is_open=True).count()
 
@@ -596,9 +578,9 @@ def upload(request):
         return redirect("success")
 
     if request.method == "POST":
-        if "document" in request.FILES:
+            file_name = request.POST.get('file_name')
+            display_name = request.POST.get('display_name')
             page_type = request.POST.get('page_type')
-            file = request.FILES["document"]
             start_page = request.POST.get('page_start')
             end_page = request.POST.get('page_end')
             start_page = int(start_page)
@@ -608,196 +590,42 @@ def upload(request):
             is_portrait = request.POST.get('is_portrait') == 'True' or request.POST.get('is_portrait') == 'true'
             quantity = request.POST.get('quantity')
             quantity = int(quantity)
-            MAX_FILES_PER_CART = 21
-            if Cart_items.objects.filter(cart=cart).count() >= MAX_FILES_PER_CART:
-                return render(request, "printoapp/upload.html", {
-                    "error_message": "Maximum files per cart reached.",
-                    "shop_item_list": shop_item_list,
-                    "item_number": item_number
-                })
-            if start_page < 1:
-                return render(request, "printoapp/upload.html", {
-                    "error_message": "Invalid input page range.",
-                    "shop_item_list": shop_item_list,
-                    "item_number": item_number
-                })
-            if end_page < start_page:
-                return render(request, "printoapp/upload.html", {
-                    "error_message": "Invalid page range.",
-                    "shop_item_list": shop_item_list,
-                    "item_number": item_number
-                })
-            MAX_SIZE = 500 * 1024 * 1024  # 500MB
-            if file.size > MAX_SIZE:
-                return render(request, "printoapp/upload.html", {
-                    "error_message": "File too large. Maximum size is 500MB.",
-                    "shop_item_list": shop_item_list,
-                    "item_number": item_number
-                })
-            ALLOWED_TYPES = ['application/pdf']
-            if file.content_type not in ALLOWED_TYPES:
-                return render(request, "printoapp/upload.html", {
-                    "error_message": "Only PDF files are allowed.",
-                    "shop_item_list": shop_item_list,
-                    "item_number": item_number
-                })
-
-            if quantity < 1:
-                return render(request, "printoapp/upload.html", {
-                    "error_message": "Quantity cant be less than 1.",
-                    "shop_item_list": shop_item_list,
-                    "item_number": item_number
-                })
             
+            if quantity < 1:
+                return redirect('upload')
+
+            raw_pages_count = (end_page - start_page) + 1
             is_long_edge = False
             if is_b2b:
                 duplex_setting = request.POST.get('duplex_setting')
                 if duplex_setting == 'long-edge':
                     is_long_edge = True
+
+            total_pages = 0
+            if not is_b2b:
+                total_pages = raw_pages_count
+            else:
+                if raw_pages_count %2 == 0:
+                    total_pages = raw_pages_count // 2
+                else:
+                    total_pages = (raw_pages_count // 2 ) + 1
             
-            front_page_item = Cart_items.objects.filter(
-                file_id='FrontPage.pdf',
-                display_name='FrontPage.pdf',
-                cart=cart
-            ).first()
-
-            if front_page_item and "stamped" not in front_page_item.file_id:
-                cart = get_object_or_404(Cart, user__user_id=user_id, shop_info_id=shop_id, is_open=True)
-                while True:
-                    pickup_code = random.randint(10,9999)
-                    if not Cart.objects.filter(shop_info_id=shop_id,
-                                            is_verified=False,
-                                            pickup_code=pickup_code).exists():
-                        cart.pickup_code = pickup_code
-                        cart.save()
-                        break
-
-                # Generate the buffer using your ReportLab logic
-                stamped_buffer = test_local_pdf_stamping(cart.pickup_code)
-
-                # Define the new filename
-                s3_filename = f"uploads/{cart.id}/FrontPage_stamped.pdf"
-
-                # Upload to S3 and update the database
-                success_upload = upload_file_to_s3(stamped_buffer, s3_filename)
-                if success_upload:
-                    front_page_item.file_id = s3_filename
-                    front_page_item.display_name = "Receipt_Cover.pdf"
-                    front_page_item.save()
-                    cart = get_object_or_404(Cart, user__user_id=user_id, shop_info_id=shop_id, is_open=True)
-                    cart.fp_timestamp = timezone.now()
-                    cart.save()
-
-            try:
-                file.seek(0)
-                header = file.read(4)
-                file.seek(0)
-                if header != b'%PDF':  # PDF magic bytes
-                    return render(request, "printoapp/upload.html", {
-                        "error_message": "Invalid file format.",
-                        "shop_item_list": shop_item_list,
-                        "item_number": item_number
-                    })
-                reader = PdfReader(file)
-                if len(reader.pages) < 1:
-                    return render(request, "printoapp/upload.html", {
-                        "error_message": "Invalid pdf.",
-                        "shop_item_list": shop_item_list,
-                        "item_number": item_number
-                    })
-                
-                if end_page > len(reader.pages):
-                    return render(request, "printoapp/upload.html", {
-                        "error_message": "Invalid end_page input.",
-                        "shop_item_list": shop_item_list,
-                        "item_number": item_number
-                    })
-                size_warning = ""
-                output_stream = BytesIO()
-                writer = PdfWriter()                
-                pages_to_process = [start_page, end_page] # replace with desired page numbers
-                processed_pages = []
-                # A4 bounds with a ~5% margin
-                MAX_WIDTH, MAX_HEIGHT = 625.0, 885.0
-                MIN_WIDTH, MIN_HEIGHT = 565.0, 800.0
-                requires_scaling = False
-                for i, page in enumerate(reader.pages):
-                    if (i+1 >= pages_to_process[0]) and (i+1 <= pages_to_process[1]):
-                        writer.add_page(page)
-                        processed_pages.append(i+1)
-                        width = float(page.mediabox.width)
-                        height = float(page.mediabox.height)
-                        if (width > MAX_WIDTH or height > MAX_HEIGHT) or (width < MIN_WIDTH or height < MIN_HEIGHT):
-                            size_warning = "⚠️ (Note: One or more pages will be scaled to fit.)"
-                            requires_scaling = True
-                    elif (i+1 > pages_to_process[1]):
-                        break
-                raw_pages_count = len(processed_pages)
-
-                if not is_b2b:
-                    total_pages = raw_pages_count
-                else:
-                    if len(processed_pages) %2 == 0:
-                        total_pages = len(processed_pages) // 2
-                    else:
-                        total_pages = (len(processed_pages) // 2 ) + 1
-                writer.write(output_stream)
-                output_stream.seek(0)
-            except Exception as e:
-                return render(request, "printoapp/upload.html", {
-                    "error_message": f"PDF parsing error: {e}",
-                    "shop_item_list": shop_item_list,
-                    "item_number": item_number
-                })
-            try:
-                if raw_pages_count == 1:
-                    item = Shop_items.objects.get(
-                        is_color=is_color,
-                        is_b2b=False,
-                        page_type=page_type,
-                        shop_info__id=shop_id
-                    )
-                else:
-                    item = Shop_items.objects.get(
-                        is_color=is_color,
-                        is_b2b=is_b2b,
-                        page_type=page_type,
-                        shop_info__id=shop_id
-                    )
-            except Exception as e:
-                return render(request, "printoapp/upload.html", {
-                    "error_message": f"Configuration does not match shop items. {e}",
-                    "shop_item_list": shop_item_list,
-                    "item_number": item_number
-                })
+            item = Shop_items.objects.get(
+                is_color=is_color,
+                is_b2b=is_b2b,
+                page_type=page_type,
+                shop_info__id=shop_id
+            )
 
             total_amount = total_pages * (item.final_price) * quantity
-            file_name = get_valid_filename(file.name)
-            base_name, extension = file_name.rsplit('.', 1)
-            file.name = f"{base_name}_{start_page}_to_{end_page}.{extension}"
-            s3_filename = f"uploads/{cart.id}/{file.name}"
+            
+            if Cart_items.objects.filter(cart=cart, file_id=file_name).exists():
+                return redirect('upload')
 
-            if Cart_items.objects.filter(cart=cart, file_id=s3_filename).exists():
-                return render(request, "printoapp/upload.html", {
-                    "error_message": "This file is already in your cart.",
-                    "shop_item_list": shop_item_list,
-                    "item_number": item_number
-                })
-
-            success = upload_file_to_s3(output_stream, s3_filename)
-
-            if not success:
-                return render(request, "printoapp/upload.html", {
-                    "error_message": "Upload error (S3 Connection Failed).",
-                    "shop_item_list": shop_item_list,
-                    "item_number": item_number
-                })
-
-            cart_item = Cart_items.objects.create(
-                file_id=s3_filename,
-                display_name=s3_filename.split('/')[-1],
+            Cart_items.objects.create(
+                file_id=file_name,
+                display_name=display_name,
                 quantity=quantity,
-                requires_scaling = requires_scaling,
                 is_portrait = is_portrait,
                 is_long_edge =is_long_edge,
                 total_pages=total_pages,
@@ -812,7 +640,7 @@ def upload(request):
 
             cart.save()
 
-            message = f"{file.name} added to cart successfully. \n{size_warning}"
+            message = f"{display_name} added to cart successfully."
             item_number = Cart_items.objects.filter(cart=cart).count()
 
             request.session['upload_success'] = message
@@ -825,8 +653,10 @@ def upload(request):
         "shop_id": shop_id,
         "success_message": success_message,
         "error_message": "",
-        "item_number": item_number
+        "item_number": item_number,
+        "cart_id": cart.id
     })
+
 
 def update_cart_financial_records(cart):
     """
@@ -838,9 +668,8 @@ def update_cart_financial_records(cart):
     sub_total = Decimal('0.00')
     shop_share = Decimal('0.00')
     platform_share = Decimal('0.00')
-    fp_price = Decimal('0.00')
     page_count = 0
-    platform_fee = Decimal('0.00')
+    platform_fee = 3
     for item in cart_items:
         item_unit_price = (item.shop_item.final_price) * item.total_pages
         item_total = item_unit_price * item.quantity
@@ -848,9 +677,6 @@ def update_cart_financial_records(cart):
         sub_total += item_total
         shop_share += (item.shop_item.price) * item.total_pages * item.quantity
         platform_share += (item.shop_item.platform_price) * item.total_pages * item.quantity
-        if item.display_name == 'FrontPage.pdf' or item.display_name == 'Receipt_Cover.pdf':
-            fp_price = item.shop_item.final_price * item.total_pages * item.quantity
-            sub_total -= fp_price
 
     cart.total_pages = page_count
     cart.save()
@@ -861,8 +687,6 @@ def update_cart_financial_records(cart):
     total_data.subtotal = sub_total
     total_data.shop_share = shop_share
     total_data.platform_share = platform_share
-    if cart.total_pages < 1:
-        platform_fee = fp_price
     total_data.platform_fee = platform_fee
     # Cast fields using explicit String to Decimal formatting bounds
     pg_fee_percent = Decimal(str(total_data.payment_gateway_percent))
@@ -907,6 +731,14 @@ def cart(request):
                     cart.is_paid = True
                     cart.is_open = False
                     cart.save()
+                    while True:
+                        pickup_code = random.randint(10,9999)
+                        if not Cart.objects.filter(shop_info_id=shop_id,
+                                                is_verified=False,
+                                                pickup_code=pickup_code).exists():
+                            cart.pickup_code = pickup_code
+                            cart.save()
+                            break
                     return redirect("success")
                 else:
                     request.session['payment_error'] = 'Payment Failed. If your money has been debited please mail at adityatakle@myprints.in and it will solved soon.'
@@ -961,14 +793,13 @@ def cart(request):
                         is_b2b=side_preference
                     )
 
-                    if item.file_id != 'FrontPage.pdf':
-                        if not side_preference:
-                            item.total_pages = item.raw_pages_count
+                    if not side_preference:
+                        item.total_pages = item.raw_pages_count
+                    else:
+                        if item.raw_pages_count % 2 == 0:
+                            item.total_pages = item.raw_pages_count // 2
                         else:
-                            if item.raw_pages_count % 2 == 0:
-                                item.total_pages = item.raw_pages_count // 2
-                            else:
-                                item.total_pages = (item.raw_pages_count // 2) + 1
+                            item.total_pages = (item.raw_pages_count // 2) + 1
 
                     item.shop_item = new_item
                     item.total_amount = item.quantity * ((new_item.final_price )* item.total_pages)
@@ -992,9 +823,6 @@ def cart(request):
     raw_total = total_data.raw_total
     round_up = total_data.round_up
     grand_total = total_data.grand_total
-    needed_pages = 0
-    if total_data.total_pages < 1:
-        needed_pages = 1 - total_data.total_pages
     is_round_down = round_up < 0
     abs_round_up = abs(round_up)
     if request.session.get('saved_shop_id'):
@@ -1002,11 +830,10 @@ def cart(request):
     else:
         saved_shop_id = ''
     return render(request, "printoapp/cart.html", {
-        "cart": cart,
-        "cart_items": cart_items,
-        "display_subtotal": display_subtotal,
-        "priority_fee": priority_fee,
-        'needed_pages':needed_pages,
+        'cart': cart,
+        'cart_items': cart_items,
+        'display_subtotal': display_subtotal,
+        'priority_fee': priority_fee,
         'platform_fee':platform_fee,
         'payment_gateway_percent':payment_gateway_percent,
         'payment_gateway_gst_percent':payment_gateway_gst_percent,
@@ -1014,10 +841,10 @@ def cart(request):
         'round_up':round_up,
         'abs_round_up': abs_round_up,
         'is_round_down': is_round_down,
-        "total_data": total_data,
-        "total_amount": grand_total,
-        "saved_shop_id":saved_shop_id,
-        "shop": Shop_info.objects.filter(id=shop_id).first()
+        'total_data': total_data,
+        'total_amount': grand_total,
+        'saved_shop_id':saved_shop_id,
+        'shop': Shop_info.objects.filter(id=shop_id).first()
     })
 
 
@@ -1178,12 +1005,8 @@ def shop_connect(request):
         print_carts = []
         for cart in print_query:
             items_list = []
-            requires_b2b = False
-
+            requires_b2b = True
             for item in cart.cart_items.all():
-                if item.shop_item.is_b2b:
-                    requires_b2b = True
-
                 items_list.append({
                     'id': item.id,
                     'file_name': item.display_name,
@@ -1202,7 +1025,8 @@ def shop_connect(request):
                 'priority': cart.priority,
                 'is_b2b': requires_b2b,
                 'is_color': False,
-                'items': items_list
+                'items': items_list,
+                'pickup_code':cart.pickup_code
             })
 
         # 3. Get Carts for CLEANUP (Verified/Picked up, but NOT yet deleted locally)
@@ -1507,6 +1331,13 @@ def shop_account(request):
 
 # api routes
 
+def get_presigned_upload_url(request):
+    filename = request.GET.get('filename')
+    cart_id = request.GET.get('cart_id')
+    if not Cart_items.objects.filter(cart_id=cart_id, file_id = filename).exists():
+        return JsonResponse({'url':upload_presigned_url(filename)})
+    return JsonResponse({'status':'Already exists'})
+'''
 def user(request):
     uuid = request.headers.get('uuid')
     if uuid and Client.objects.filter(user_id=uuid).exists():
@@ -1518,6 +1349,33 @@ def user(request):
             new_user.save()
             request.session['user_id'] = str(new_user.user_id)
         return JsonResponse({'status':'ok'})
+'''
+@require_POST
+def user(request):
+    header_uuid = request.headers.get('uuid')
+    
+    # 1. Validate UUID format before querying database
+    valid_header_uuid = None
+    if header_uuid:
+        try:
+            valid_header_uuid = str(uuid.UUID(str(header_uuid)))
+        except ValueError:
+            valid_header_uuid = None
+
+    # 2. Check if valid UUID from header exists in DB
+    if valid_header_uuid and Client.objects.filter(user_id=valid_header_uuid).exists():
+        request.session['user_id'] = valid_header_uuid
+        return JsonResponse({'status': 'ok', 'user_id': valid_header_uuid})
+
+    # 3. Check existing session user or create a new user
+    session_user_id = request.session.get('user_id')
+    
+    if not session_user_id or not Client.objects.filter(user_id=session_user_id).exists():
+        new_user = Client.objects.create()  # Automatically saved to DB
+        session_user_id = str(new_user.user_id)
+        request.session['user_id'] = session_user_id
+
+    return JsonResponse({'status': 'ok', 'user_id': session_user_id})
 
 def item_list(request, shop_id):
     unique_keys = Shop_items.objects.filter(
@@ -1681,118 +1539,3 @@ def refund(request):
 def save_shop(request):
     if request.method == 'POST':
         request.session['saved_shop'] = request.POST.get('saved_shop_id')
-
-@login_required
-def payment_data(request):
-    if request.method == 'POST':
-        # 1. Fetch data aggregates
-        shop_info = Shop_info.objects.all().values_list(
-            'id', 'shop_owner__payee_name', 'shop_owner__IFSC_code', 'shop_owner__account_number'
-        )
-        # FIX: Explicitly name this annotation 'total_earned' to match downstream steps
-        total_amount = Cart_total.objects.filter(
-            cart__is_paid=True, cart__is_verified=True
-        ).values('cart__shop_info__id').annotate(total_earned=Sum('shop_share'))
-        
-        settled_amount = Settlements.objects.all().values_list('shop__id').annotate(
-            total_settled=Sum('sett_amount')
-        )
-
-        # Step A: Load base frames
-        df_shops = pd.DataFrame(
-            list(shop_info), 
-            columns=['shop_id', 'BeneficiaryName', 'IFSC', 'AccountNumber']
-        )
-        df_earned = pd.DataFrame(list(total_amount))
-        df_settled = pd.DataFrame(list(settled_amount))
-
-        # Step C: Left Join data pools safely
-        if not df_earned.empty:
-            df_shops = df_shops.merge(df_earned, left_on='shop_id', right_on='cart__shop_info__id', how='left')
-        else:
-            df_shops['total_earned'] = 0.0
-
-        if not df_settled.empty:
-            df_shops = df_shops.merge(df_settled, left_on='shop_id', right_on='shop__id', how='left')
-        else:
-            df_shops['total_settled'] = 0.0
-
-        # Step D: Fill gaps & calculate current balances
-        df_shops['total_earned'] = df_shops['total_earned'].fillna(0.0).astype(float)
-        df_shops['total_settled'] = df_shops['total_settled'].fillna(0.0).astype(float)
-
-        # Directly compute into the bank required header string 'PaymentAmount'
-        df_shops['PaymentAmount'] = df_shops['total_earned'] - df_shops['total_settled']
-
-        # Step E: Keep only actual payable targets
-        df_payouts = df_shops[df_shops['PaymentAmount'] > 0].copy()
-
-        if df_payouts.empty:
-            return JsonResponse({'message': 'No outstanding payouts to process at this time.'}, status=200)
-
-        # Step F: FIX -> Rename and Format to match your template image explicitly
-        df_payouts['Remarks'] = "MyPrints Settlements."
-        df_payouts['BeneficiaryBankIFSCCode'] = df_payouts['IFSC'].astype(str).str.strip().str.upper()
-        df_payouts['BeneficiaryAccountNo'] = df_payouts['AccountNumber'].astype(str).str.strip()
-
-        # Step G: Map to the exact order specified in your file image
-        final_columns = ['BeneficiaryName', 'BeneficiaryAccountNo', 'BeneficiaryBankIFSCCode', 'PaymentAmount', 'Remarks']
-        
-        # 2. Build HTTP live stream attachment download
-        response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename="bulk_payment_final.csv"'
-        
-        # Stream directly out of pandas memory buffer onto the user browser download stream
-        df_payouts[final_columns].to_csv(path_or_buf=response, index=False, encoding='utf-8')
-        return response
-
-    return JsonResponse({'error': 'Method not allowed'}, status=405)
-
-#helper function
-
-def test_local_pdf_stamping(pickup_code="0000"):
-    static_base   = os.path.join(settings.BASE_DIR, 'printoapp', 'static', 'printoapp')
-    template_path = os.path.join(static_base, 'FP_template.pdf')
-
-    if not os.path.exists(template_path):
-        return None
-
-    PW, PH = 1860.0, 2631.12
-    otp_str = str(pickup_code).zfill(4)
-
-    buf = BytesIO()
-    c = canvas.Canvas(buf, pagesize=(PW, PH))
-
-    # Box 1 — top-left small reference box
-    c.setFont("Helvetica-Bold", 52)
-    c.setFillColor(HexColor("#000000"))
-    tw = c.stringWidth(otp_str, "Helvetica-Bold", 52)
-    c.drawString(178 - tw/2, 2426 - 26, otp_str)
-
-    # Box 2 — main center inner box (large OTP number)
-    c.setFont("Helvetica-Bold", 260)
-    c.setFillColor(HexColor("#000000"))
-    tw = c.stringWidth(otp_str, "Helvetica-Bold", 260)
-    c.drawString(1090 - tw/2, 1371 - 260*0.35, otp_str)
-
-    # Box 3 — bottom-right small reference box
-    c.setFont("Helvetica-Bold", 52)
-    c.setFillColor(HexColor("#000000"))
-    tw = c.stringWidth(otp_str, "Helvetica-Bold", 52)
-    c.drawString(1674 - tw/2, 153 - 26, otp_str)
-
-    c.save()
-    buf.seek(0)
-
-    template_reader = PdfReader(template_path)
-    overlay_reader  = PdfReader(buf)
-    main_page = template_reader.pages[0]
-    main_page.merge_page(overlay_reader.pages[0])
-
-    writer = PdfWriter()
-    writer.add_page(main_page)
-
-    final_pdf_buffer = BytesIO()
-    writer.write(final_pdf_buffer)
-    final_pdf_buffer.seek(0)
-    return final_pdf_buffer
