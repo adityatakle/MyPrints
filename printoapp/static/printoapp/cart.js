@@ -25,8 +25,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
         updateQueue();
 
-        // Refresh every 7 seconds
-        setInterval(updateQueue, 7000);
+        // Refresh every 10 seconds
+        setInterval(updateQueue, 10000);
     }
 
     if (payBtn) {

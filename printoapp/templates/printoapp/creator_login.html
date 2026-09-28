@@ -2,6 +2,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="manifest" href="{% static 'printoapp/manifest.json' %}">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="MyPrints">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MyPrints | Creator Portal</title>
@@ -10,6 +14,11 @@
     
     <link rel="stylesheet" href="{% static 'printoapp/creator_login.css' %}">
 </head>
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js');
+  }
+</script>
 <body class="glitch-effect">
     <div class="scanline"></div>
 

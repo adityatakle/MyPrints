@@ -16,9 +16,20 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-
+import os
+from django.contrib.staticfiles import finders
+from django.http import HttpResponse, Http404
+from django.views.static import serve
+def service_worker(request):
+    # Finds sw.js anywhere in your Django static locations
+    sw_path = finders.find('printoapp/sw.js')
+    if sw_path:
+        with open(sw_path, 'rb') as f:
+            return HttpResponse(f.read(), content_type='application/javascript')
+    raise Http404("sw.js not found")
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('sw.js', service_worker, name='service_worker'),
     path("", include("printoapp.urls"))
 ]
 handler404 = 'printoapp.views.custom_404_view'

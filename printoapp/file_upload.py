@@ -13,17 +13,22 @@ s3_client = boto3.client(
     )                                      #   instead of virtual-hosted: bucket.s3.amazonaws.com/key
 )
 
-def upload_file_to_s3(file_obj, destination_filename):
+def upload_presigned_url(filename, expiration=1000):
     try:
-        s3_client.upload_fileobj(
-            file_obj,
-            settings.AWS_BUCKET_NAME,
-            destination_filename
+        url = s3_client.generate_presigned_url( 
+            "put_object",
+            Params={
+                "Bucket": settings.AWS_BUCKET_NAME, 
+                "Key": filename,
+                "ContentType": 'application/pdf'
+                }, 
+            ExpiresIn=expiration
         )
-        return True
+        return url
     except Exception as e:
-        print(f'Upload failed: {e}')
-        return False
+        print(f'Upload url generation issue: {e}')
+        return None
+
 
 def get_presigned_url(filename, expiration=3600):
     try:

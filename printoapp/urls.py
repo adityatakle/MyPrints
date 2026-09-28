@@ -1,7 +1,15 @@
 from django.urls import path
 from . import views
+from django.conf import settings
+import os
+from django.urls import path
+from django.views.static import serve
 
 urlpatterns = [
+    path('sw.js', serve, {
+        'document_root': os.path.join(settings.BASE_DIR, 'static', 'printoapp'),
+        'path': 'sw.js',
+    }),
     path('', views.index, name='index'),
     path('shops', views.shops, name='shops'),
     path('upload', views.upload, name='upload'),
@@ -21,6 +29,7 @@ urlpatterns = [
     path('success', views.success, name='success'),
 
     #apis
+    path('api/get_presigned_upload_url', views.get_presigned_upload_url, name='get_presigned_upload_url'),
     path('initiate-payment', views.initiate_payment, name='initiate_payment'),
     path('api/user', views.user, name='user'),
     path('api/item_list/<int:shop_id>', views.item_list, name='item_list'),
