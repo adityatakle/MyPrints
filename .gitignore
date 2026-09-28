@@ -9,3 +9,6 @@ venv
 printoapp/shop_script_exe
 printoapp/compile_copyright.py
 printoapp/migrations
+sqlite3.exe
+SumatraPDF-3.5.2-64.exe
+SumatraPDF-settings.txt
