@@ -228,8 +228,7 @@ def printer_info():
         
         for p_name in printers:
             try:
-                json_str = get_printer_capabilities(p_name)
-                p_data = json.loads(json_str)
+                p_data = get_printer_capabilities(p_name)
                 details = p_data["printer_info"]['name']
                 new_inventory.append(details)
             except Exception as e:
@@ -289,10 +288,31 @@ def test_local_pdf_stamping(pickup_code="0000", prepend_blank=False):
     final_pdf_buffer.seek(0)
     return final_pdf_buffer
 
+def not_processing_helper(cart_id, cart_dir):
+    while True:
+        try:
+            resp = requests.post(f'{BASE_URL}/my_shop/file_update/', 
+            headers={'Shop-Token': shop_token, 'Shop-Id': shop_id, 'Cart-Id': str(cart_id), 'Update-Type': 'not_processing'})
+            if resp.status_code == 200:
+                res_data = resp.json()
+                if res_data['status'] == 'success':
+                    break
+                else:
+                    write_log(f'Update issue {res_data.status_code} \n Retrying in 10secs')
+                    time.sleep(10)
+            else:
+                write_log(f'Update issue\n Retrying in 10secs')
+                time.sleep(10)
+        except Exception as e:        
+            write_log(f'Update issue : {e} \n Retrying in 10secs')
+            time.sleep(10)
+    shutil.rmtree(cart_dir, ignore_errors=True)
+                                            
+    
 if __name__ == "__main__":
 
-    shop_token = 'ax89sdMr37p1itJwDzwknOKgrw-Sgtg4HF72bViGSc0'
-    shop_id = '3'
+    shop_token = ''
+    shop_id = ''
     printer_name = ''
     DATA_FILE = "shop_data.json"
     DEFAULT_CONFIG = {
@@ -311,30 +331,32 @@ if __name__ == "__main__":
     except Exception as e:
         write_log(f"DATA_FILE read error: {e}")
         sys.exit()
-
-    try:
-        resp = requests.post(f'{BASE_URL}/api/shop_handshake', 
-                             headers ={'Shop-Id':shop_id,'Shop-Token':shop_token})
-        if resp.status_code == 200:
-            resp_data = resp.json()
-            page_types = resp_data['page_types'] or []
-            is_color = resp_data['is_color'] or False
-            is_b2b = resp_data['is_b2b'] or False
-            printer_names = printer_info()
-            if printer_name in printer_names:
-                capabilities = get_printer_capabilities(printer_name)
-                result = capabilities['printer_info']
-                check_page_type = bool(set(page_types) & set(result['page_types']))
-                check_color = not is_color or result['is_color']
-                check_b2b = not is_b2b or result['is_b2b']
-                if not (check_page_type and check_b2b and check_color):
-                    write_log('Set Printer doesnt have set configs.')
-                    sys.exit()
-        else:
-            write_log(f'Error connecting server: {resp.status_code}')
-    except Exception as e:
-        write_log(f'SHOP HANDSHAKE ERROR: {e}')
-        sys.exit()
+    while True:
+        try:
+            resp = requests.post(f'{BASE_URL}/api/shop_handshake', 
+                                headers ={'Shop-Id':shop_id,'Shop-Token':shop_token})
+            if resp.status_code == 200:
+                resp_data = resp.json()
+                page_types = resp_data['page_types'] or []
+                is_color = resp_data['is_color'] or False
+                is_b2b = resp_data['is_b2b'] or False
+                printer_names = printer_info()
+                if printer_name in printer_names:
+                    capabilities = get_printer_capabilities(printer_name)
+                    result = capabilities['printer_info']
+                    check_page_type = bool(set(page_types) & set(result['page_types']))
+                    check_color = not is_color or result['is_color']
+                    check_b2b = not is_b2b or result['is_b2b']
+                    if not (check_page_type and check_b2b and check_color):
+                        write_log('Set Printer doesnt have set configs.')
+                        sys.exit()
+                    break
+            else:
+                write_log(f'Error connecting server: {resp.status_code}')
+        except Exception as e:
+            write_log(f'SHOP HANDSHAKE ERROR: {e}')
+            write_log(f'Retrying handshake in 10 secs.')
+            time.sleep(10)
         
 
     while True:
@@ -344,7 +366,7 @@ if __name__ == "__main__":
             response = requests.post(url, headers={'Shop-Token': shop_token, 'Shop-Id': shop_id})
             
             if response.status_code != 200:
-                write_log(f" Error connecting server: {response.status_code}")
+                write_log(f" Error connecting server: {response}")
                 time.sleep(5)
                 continue
             
@@ -360,10 +382,16 @@ if __name__ == "__main__":
                     cart_path = os.path.join(FOLDER_PATH, str(cart_id))
                     if os.path.exists(cart_path):
                         shutil.rmtree(cart_path)
+                    while True:
                         clean_resp = requests.post(f'{BASE_URL}/my_shop/file_update/', 
                             headers={'Shop-Token': shop_token, 'Shop-Id': shop_id, 'Cart-Id': str(cart_id), 'Update-Type': 'cleaned'})
                         if clean_resp.status_code == 200:
                             write_log(f"Cleaned up cart and updated database: {cart_id}")
+                            break
+                        else:
+                            write_log(f"Cart cleanup issue {clean_resp}")
+                            write_log(f"Retrying in 10 secs.")
+                            time.sleep(10)
                 except Exception as e:
                     write_log(f'Cleanup issue: {e}')
             i = 0
@@ -372,115 +400,111 @@ if __name__ == "__main__":
                 if i >= 2:
                     break
                 if not cart['is_processing']:
-                    try:
-                        resp = requests.post(f'{BASE_URL}/my_shop/file_update/', 
-                            headers={'Shop-Token': shop_token, 'Shop-Id': shop_id, 'Cart-Id': str(cart["id"]), 'Update-Type': 'processing'})
-                        if resp.status_code == 200:
-                            res_data = resp.json()
-                            if res_data['status'] == 'success':
-                                
-                                # 💡 FIX: Pull from res_data (the file_update endpoint response payload)
-                                new_links = {link['id']: link['file_url'] for link in res_data.get('cart_data', [])}
-                                
-                                # 2. Update local items in one pass
-                                for item in cart['items']:
-                                    if item['id'] in new_links:
-                                        item['file_url'] = new_links[item['id']]
-                                
-                                # Mark locally as processing
-                                cart['is_processing'] = True
-                                i += 1
-                    except Exception as e:
-                        write_log(f'Processing update error: {e}')
+                    while True:
+                        try:
+                            resp = requests.post(f'{BASE_URL}/my_shop/file_update/', 
+                                headers={'Shop-Token': shop_token, 'Shop-Id': shop_id, 'Cart-Id': str(cart["id"]), 'Update-Type': 'processing'})
+                            if resp.status_code == 200:
+                                res_data = resp.json()
+                                if res_data['status'] == 'success':
+                                    new_links = res_data['cart_data']
+                                    for item in cart['items']:
+                                        for link in new_links:
+                                            if link['id'] == item['id']:
+                                                item['file_url'] = link['file_url']
+                                                break
+                                    # Mark locally as processing
+                                    cart['is_processing'] = True
+                                    i += 1
+                                    break
+                            else:
+                                write_log(f"Issue while updating cart isd processing : {resp}")
+                                write_log(f"Retrying in 10 secs")
+                                time.sleep(10)
+                        except Exception as e:
+                            write_log(f'Processing update error: {e}')
 
-            # --- PRINTING LOOP ---
             for cart in print_carts: 
                 if cart['is_processing'] and any(item.get('file_url') for item in cart['items']):
                     cart_dir = os.path.join(FOLDER_PATH, str(cart['id']))
                     os.makedirs(cart_dir, exist_ok=True)
 
-                    printer_queue = get_status(printer_name).get('queue_size', 0)
-                    if printer_queue > 10:
-                        time.sleep(10)
-
-                    otp = cart['pickup_code']
-                    fp = test_local_pdf_stamping(otp)
-                    file_path = os.path.join(cart_dir, 'front_page.pdf')
-                    with open(file_path, 'wb') as f:
-                        f.write(fp.getvalue() if hasattr(fp, 'getvalue') else fp)
-                    print_file(file_path, printer_name, 'A4', 1, False, False, True, False)
-
-
-                    # --- ITEM DOWNLOAD & PRINT ---
+                    # --- ITEMS DOWNLOAD ---
+                    download = True
                     for item in cart['items']:
-                        success = False
-                        retries = 0
+                        file_path = os.path.join(cart_dir, item['file_name'])
+                        try:
+                            if not os.path.exists(file_path):
+                                resp = requests.get(item['file_url'], stream=True, timeout=20)
 
-                        while not success:
-                            status = get_status(printer_name)
-                            if status['readable_status'] == 'Ready':
-                                file_path = os.path.join(cart_dir, item['file_name'])
-
+                                if resp.status_code == 200:
+                                    length = int(resp.headers.get('content-length', 0))
+                                    with open(file_path, 'wb') as f:
+                                        for chunk in resp.iter_content(chunk_size=8192):
+                                            if chunk:
+                                                f.write(chunk)
+                                        f.flush()
+                                        os.fsync(f.fileno())
+                                    time.sleep(2)
+                                    actual = os.path.getsize(file_path)
+                                    if length and actual != length:
+                                        not_processing_helper(str(cart["id"]), cart_dir)
+                                        cart['is_processing'] = False
+                                        download = False
+                                        break
+                                else:
+                                    not_processing_helper(str(cart["id"]), cart_dir)
+                                    cart['is_processing'] = False
+                                    download = False
+                                    break
+                                    
+                        except Exception as e:
+                            write_log(f"{cart['id']} failed... {e}")
+                            not_processing_helper(str(cart["id"]), cart_dir)
+                            cart['is_processing'] = False
+                            download = False
+                            break
+                    if download:
+                        while True:
+                            printer_queue = get_status(printer_name).get('queue_size', 0)
+                            if printer_queue <= 10:
+                                break
+                            time.sleep(10)
+                        otp = cart['pickup_code']
+                        fp = test_local_pdf_stamping(otp)
+                        file_path = os.path.join(cart_dir, 'front_page.pdf')
+                        with open(file_path, 'wb') as f:
+                            f.write(fp.getvalue() if hasattr(fp, 'getvalue') else fp)
+                        print_file(file_path, printer_name, 'A4', 1, False, False, True, False)
+                        for item in cart['items']:
+                            file_path = os.path.join(cart_dir, item['file_name'])
+                            print_file(file_path, printer_name, item["page_type"], item["copies"], item["is_b2b"], item['is_color'], item['is_portrait'], item['is_long_edge'])
+                        otp = cart['pickup_code']
+                        lp = test_local_pdf_stamping(otp,True)
+                        file_path = os.path.join(cart_dir, 'last_page.pdf')
+                        with open(file_path, 'wb') as f:
+                            f.write(lp.getvalue() if hasattr(lp, 'getvalue') else lp)
+                        print_file(file_path, printer_name, 'A4', 1, True, False, True, True)
+                        for item in cart['items']:
+                            while True:
                                 try:
-                                    # A. DOWNLOAD (Robust Chunked Method)
-                                    if not os.path.exists(file_path):
-                                        write_log(f"Downloading: {item['file_name']}...")
-                                        resp = requests.get(item['file_url'], stream=True, timeout=20)
-                                            
-                                        if resp.status_code == 200:
-                                            with open(file_path, "wb") as f:
-                                                for chunk in resp.iter_content(chunk_size=8192):
-                                                    if chunk:
-                                                        f.write(chunk)
-                                                f.flush() # Force write to buffer
-                                                os.fsync(f.fileno()) # Force write to disk (prevents Windows lock issues)
-                                                
-                                            write_log("Download complete. Syncing...")
-                                            time.sleep(1.5) # Final buffer for SSD latency
-                                        else:
-                                            write_log(f"Download rejected by server: {resp.status_code}")
-                                            time.sleep(15)
-                                            continue
-
-                                    # B. PRINT
-                                    success = print_file(file_path, printer_name, item["page_type"], item["copies"], item["is_b2b"], item['is_color'], item['is_portrait'], item['is_long_edge'])
-                                    if success:
-                                        write_log(f"SUCCESS: {item['file_name']} is at the spooler.")
-                                        # Notify backend
-                                        try:
-                                            requests.post(f'{BASE_URL}/my_shop/file_update/', 
-                                                headers={
-                                                    'Shop-Token': shop_token, 
-                                                    'Shop-Id': shop_id, 
-                                                    'Item-Id': str(item["id"]), 
-                                                    'Update-Type': 'printed'
-                                                })
-                                            
-                                        except Exception as e:
-                                            write_log(f"Error while marking file {item['file_name']} as success: {e}")
+                                    r = requests.post(f'{BASE_URL}/my_shop/file_update/', 
+                                            headers={
+                                                'Shop-Token': shop_token, 
+                                                'Shop-Id': shop_id, 
+                                                'Item-Id': str(item["id"]), 
+                                                'Update-Type': 'printed'
+                                            })
+                                    if r.status_code == 200:
                                         break
                                     else:
-                                        retries += 1
-                                            
-
+                                        write_log(f"Error while marking file {item['file_name']} as success: {r.status_code}")
+                                        write_log(f"Retrying in 10 secs")
+                                        time.sleep(10)
                                 except Exception as e:
-                                    write_log(f"Item Processing Error: {e}")
-                                    time.sleep(5)
-
-                            else:
-                                write_log(f" {printer_name} not Ready...")
-                                time.sleep(5)
-                        if not success:
-                            write_log(f'Tried retrying file {retries}/{3} times.')
-                    if not success:
-                        write_log(f"GIVING UP on {item['file_name']} after {retries} attempts. Moving to next item.")
-                    otp = cart['pickup_code']
-                    lp = test_local_pdf_stamping(otp,True)
-                    file_path = os.path.join(cart_dir, 'last_page.pdf')
-                    with open(file_path, 'wb') as f:
-                        f.write(lp.getvalue() if hasattr(lp, 'getvalue') else lp)
-                    print_file(file_path, printer_name, 'A4', 1, True, False, True, True)           
+                                    write_log(f"Error while marking file {item['file_name']} as success: {e}")
+                                    write_log(f"Retrying in 10 secs")
+                                    time.sleep(10)
         except Exception as e:
-            write_log(f"Main Loop Connection error: {e}")
-        
+                    write_log(f"Main Loop Connection error: {e}")        
         time.sleep(5)

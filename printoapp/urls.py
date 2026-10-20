@@ -39,7 +39,7 @@ urlpatterns = [
     path('api/queue_size', views.queue_size, name='queue_size'),
     path('api/create_preview_link/<str:file_id>', views.create_preview_link, name='create_preview_link'),
     path('api/shop_handshake', views.shop_handshake, name='shop_handshake'),
-    path('api/payment_data', views.payment_data, name='payment_data'),
+    path('api/payment_data', views.payment_status, name='payment_data'),
     path('api/save_shop', views.save_shop, name='save_shop'),
 
     #creator

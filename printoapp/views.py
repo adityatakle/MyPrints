@@ -923,8 +923,19 @@ def payment_status(request):
 
 
 def success(request):
+    user_id = request.session.get('user_id')
+    shop_id = request.session.get('shop_id')
+    if not user_id or not shop_id:
+        return redirect('shops')
+    try:
+        current_user = Client.objects.get(user_id=user_id)
+    except Exception as e:
+        return redirect('shops')
+
     cart = Cart.objects.filter(
-        is_paid=True
+        is_paid=True,
+        user = current_user,
+        shop_info__id = shop_id
     ).order_by('-id').first()
 
     if not cart:
@@ -1007,9 +1018,10 @@ def shop_connect(request):
             items_list = []
             requires_b2b = True
             for item in cart.cart_items.all():
+                file_id = item.file_id.split('/')[2:][0]
                 items_list.append({
                     'id': item.id,
-                    'file_name': item.display_name,
+                    'file_name': file_id,
                     'file_url': None,
                     'page_type': item.shop_item.page_type,
                     'is_color': item.shop_item.is_color,
@@ -1068,6 +1080,12 @@ def file_update(request):
                     'file_url':file_url
                 })
             return JsonResponse({'status': 'success', 'update': 'cart_processing', 'cart_data':cart_data})
+
+        elif update_type == 'not_processing' and cart_id:
+            cart = get_object_or_404(Cart, id=cart_id, shop_info_id=shop_id)
+            cart.is_processing = False
+            cart.save()
+            return JsonResponse({'status':'success'})
 
         elif update_type == 'printed' and item_id:
             item = get_object_or_404(Cart_items, id=item_id, cart__shop_info_id=shop_id)
