@@ -12,5 +12,5 @@ printoapp/migrations
 sqlite3.exe
 SumatraPDF-3.5.2-64.exe
 SumatraPDF-settings.txt
-printoapp/windows_script.exe
+printoapp/windows_script.py
 printo/__pycache__
