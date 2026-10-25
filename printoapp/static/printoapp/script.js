@@ -114,32 +114,59 @@ document.addEventListener('DOMContentLoaded', function() {
                 shopsList.innerHTML = `<p style="padding:20px; text-align:center;">No shops available here.</p>`;
                 return;
             }
-            
-            let finalHTML = "";
-            for (let shop of targetShops) {
-                let isClosed = !shop.is_open;
-                let btn_type = isClosed ? 'disabled' : '';
-                let status = isClosed ? 'closed' : 'open';
-                let distanceText = shop.distance && shop.distance !== Infinity ? ` • ${shop.distance.toFixed(1)} km away` : '';
 
-                finalHTML += `
-                <div class="shops_container">
-                    <div class="shop-header">
-                        <span class="status-badge status-${status}">${isClosed ? 'Closed' : 'Open Now'}${distanceText}</span>
-                        <a href="https://maps.google.com/?q=${shop.latitude},${shop.longitude}" target="_blank">
-                            <div class="location_pin"></div>
-                        </a>
-                    </div>
-                    <button type="submit" ${btn_type} name="shop_id" value="${shop.id}" class="shops_submit">
-                        <span class="shop-name">${shop.name}</span>
-                        <div class="shop-meta">
-                            ${shop.location}, ${shop.landmark}<br>
-                            ${shop.city}, ${shop.state}
-                        </div>
-                    </button>
-                </div>`;
+            // Build the cards with DOM APIs and textContent so shop-supplied
+            // fields (name, address, etc.) are never parsed as HTML.
+            const fragment = document.createDocumentFragment();
+            for (const shop of targetShops) {
+                const isClosed = !shop.is_open;
+                const status = isClosed ? 'closed' : 'open';
+                const distanceText = shop.distance && shop.distance !== Infinity ? ` • ${shop.distance.toFixed(1)} km away` : '';
+
+                const container = document.createElement('div');
+                container.className = 'shops_container';
+
+                const header = document.createElement('div');
+                header.className = 'shop-header';
+
+                const badge = document.createElement('span');
+                badge.className = `status-badge status-${status}`;
+                badge.textContent = `${isClosed ? 'Closed' : 'Open Now'}${distanceText}`;
+
+                const mapLink = document.createElement('a');
+                mapLink.href = `https://maps.google.com/?q=${encodeURIComponent(shop.latitude)},${encodeURIComponent(shop.longitude)}`;
+                mapLink.target = '_blank';
+                mapLink.rel = 'noopener noreferrer';
+                const pin = document.createElement('div');
+                pin.className = 'location_pin';
+                mapLink.appendChild(pin);
+
+                header.append(badge, mapLink);
+
+                const button = document.createElement('button');
+                button.type = 'submit';
+                button.disabled = isClosed;
+                button.name = 'shop_id';
+                button.value = String(shop.id);
+                button.className = 'shops_submit';
+
+                const nameEl = document.createElement('span');
+                nameEl.className = 'shop-name';
+                nameEl.textContent = shop.name;
+
+                const meta = document.createElement('div');
+                meta.className = 'shop-meta';
+                meta.append(
+                    document.createTextNode(`${shop.location}, ${shop.landmark}`),
+                    document.createElement('br'),
+                    document.createTextNode(`${shop.city}, ${shop.state}`)
+                );
+
+                button.append(nameEl, meta);
+                container.append(header, button);
+                fragment.appendChild(container);
             }
-            shopsList.innerHTML = finalHTML;
+            shopsList.replaceChildren(fragment);
         }
     }
     if (title){
