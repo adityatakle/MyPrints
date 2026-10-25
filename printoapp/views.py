@@ -1120,7 +1120,8 @@ def file_update(request):
         }, status=400)
 
     except Exception as e:
-         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+        print(f' Issue while updating file between shop and server: {e}')
+        return JsonResponse({'status': 'error', 'message': 'SOmething went wrong. Try again.'}, status=500)
 
 
 @login_required
