@@ -239,7 +239,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     };
                     reader.readAsArrayBuffer(file);
                     sub_text.style.display = 'none';
-                    main_text.innerHTML = `Selected: ${file_name}`;
+                    main_text.textContent = `Selected: ${file_name}`;
                     main_text.style.color = 'green';
                 } else {
                     // Images, text documents, docx fallbacks default cleanly to 1 page

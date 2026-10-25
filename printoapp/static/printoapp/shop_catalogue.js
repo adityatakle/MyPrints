@@ -330,13 +330,20 @@ function handleDelete(id, type) {
         form.method = 'POST';
         const csrf = document.querySelector('[name=csrfmiddlewaretoken]').value;
         
-        form.innerHTML = `
-            <input type="hidden" name="csrfmiddlewaretoken" value="${csrf}">
-            <input type="hidden" name="request_type" value="${type}">
-            <input type="hidden" name="item_id" value="${id}">
-            <input type="hidden" name="timing_id" value="${id}">
-            <input type="hidden" name="coupon_id" value="${id}">
-        `;
+        const fields = {
+            csrfmiddlewaretoken: csrf,
+            request_type: type,
+            item_id: id,
+            timing_id: id,
+            coupon_id: id
+        };
+        for (const [name, value] of Object.entries(fields)) {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = name;
+            input.value = String(value);
+            form.appendChild(input);
+        }
         document.body.appendChild(form);
         form.submit();
     }
